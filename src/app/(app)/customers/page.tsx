@@ -1,7 +1,9 @@
+
 "use client";
 
-import { useState } from "react";
-import type { Customer, Contractor } from "@/types";
+import { useState, useMemo } from "react";
+import Link from 'next/link';
+import type { Customer } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,17 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
   Table,
   TableBody,
   TableCell,
@@ -29,168 +20,96 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/icons";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
-type ProfileType = 'customer' | 'contractor';
+const initialCustomers: Customer[] = [
+    // You can add mock data here if needed for initial testing
+];
 
-const AddProfileDialog = ({ type, onAdd }: { type: ProfileType, onAdd: (profile: Customer | Contractor) => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
-  const [address, setAddress] = useState("");
-
-  const title = type === 'customer' ? 'Kunde' : 'Auftragnehmer';
-
-  const handleAdd = () => {
-    if (name && contact && address) {
-      onAdd({ id: Date.now().toString(), name, contact, address });
-      setName("");
-      setContact("");
-      setAddress("");
-      setIsOpen(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="link" className="text-primary">
-          <Icons.add className="mr-2 h-4 w-4" />
-          Neuen {title} hinzufügen
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Neuen {title} hinzufügen</DialogTitle>
-          <DialogDescription>
-            Geben Sie die Details für den neuen {title} ein. Diese Daten sind temporär und gehen beim Aktualisieren der Seite verloren.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">Name</Label>
-            <Input id="name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="contact" className="text-right">Kontakt</Label>
-            <Input id="contact" value={contact} onChange={e => setContact(e.target.value)} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="address" className="text-right">Adresse</Label>
-            <Input id="address" value={address} onChange={e => setAddress(e.target.value)} className="col-span-3" />
-          </div>
-        </div>
-        <DialogFooter>
-            <Button onClick={() => setIsOpen(false)} variant="ghost" size="sm">Abbrechen</Button>
-            <Button onClick={handleAdd} size="sm">Speichern</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-
-const ProfileTable = ({ profiles, type }: { profiles: (Customer | Contractor)[], type: ProfileType }) => (
-  <Card>
-    <CardHeader>
-      <div className="flex justify-between items-center">
-        <div>
-            <CardTitle>{type === 'customer' ? 'Kunden' : 'Auftragnehmer'}</CardTitle>
-            <CardDescription>Liste der aktuell verwalteten {type === 'customer' ? 'Kunden' : 'Auftragnehmer'}.</CardDescription>
-        </div>
-        <AddProfileDialog type={type} onAdd={
-            (profile) => {
-                // This is a bit of a hack to get the parent component to re-render.
-                // A better solution would involve lifting state up.
-                window.dispatchEvent(new CustomEvent(`add${type}`, { detail: profile }));
-            }
-        } />
-      </div>
-    </CardHeader>
-    <CardContent className="p-0">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Kontakt</TableHead>
-            <TableHead>Adresse</TableHead>
-            <TableHead className="text-right">Aktionen</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {profiles.length > 0 ? (
-            profiles.map((profile) => (
-              <TableRow key={profile.id}>
-                <TableCell className="font-medium">{profile.name}</TableCell>
-                <TableCell>{profile.contact}</TableCell>
-                <TableCell>{profile.address}</TableCell>
-                <TableCell className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Icons.more className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
-                Noch keine {type === 'customer' ? 'Kunden' : 'Auftragnehmer'} hinzugefügt.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </CardContent>
-  </Card>
-);
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Since we can't easily lift state from the dialog, we use window events.
-  // This is a workaround for the session-only data requirement.
-  useState(() => {
-    const addCustomerHandler = (event: Event) => {
-        const customEvent = event as CustomEvent;
-        setCustomers(prev => [...prev, customEvent.detail]);
-    };
-    const addContractorHandler = (event: Event) => {
-        const customEvent = event as CustomEvent;
-        setContractors(prev => [...prev, customEvent.detail]);
-    };
+  const filteredCustomers = useMemo(() => {
+    if (!searchTerm) return customers;
+    const lowercasedTerm = searchTerm.toLowerCase();
+    return customers.filter(customer => 
+      customer.firmenname.toLowerCase().includes(lowercasedTerm) ||
+      customer.kundennummer.toLowerCase().includes(lowercasedTerm) ||
+      customer.ort.toLowerCase().includes(lowercasedTerm)
+    );
+  }, [customers, searchTerm]);
 
-    window.addEventListener('addcustomer', addCustomerHandler);
-    window.addEventListener('addcontractor', addContractorHandler);
-
-    return () => {
-        window.removeEventListener('addcustomer', addCustomerHandler);
-        window.removeEventListener('addcontractor', addContractorHandler);
-    };
-  });
 
   return (
-    <Tabs defaultValue="customers">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="customers">Kunden</TabsTrigger>
-        <TabsTrigger value="contractors">Auftragnehmer</TabsTrigger>
-      </TabsList>
-      <TabsContent value="customers">
-        <ProfileTable profiles={customers} type="customer" />
-      </TabsContent>
-      <TabsContent value="contractors">
-        <ProfileTable profiles={contractors} type="contractor" />
-      </TabsContent>
-    </Tabs>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+            <div>
+                <CardTitle>Kundenstamm</CardTitle>
+                <CardDescription>Übersicht aller Kunden.</CardDescription>
+            </div>
+            <Button asChild variant="link" className="text-primary">
+                <Link href="/customers/new">
+                    <Icons.add className="mr-2 h-4 w-4" />
+                    Neuer Kunde
+                </Link>
+            </Button>
+        </div>
+      </CardHeader>
+        <div className="p-4 border-b border-t">
+             <Input 
+                placeholder="Kunden durchsuchen (Firma, Kundennr., Ort)..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="max-w-md h-9"
+            />
+        </div>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Firma</TableHead>
+              <TableHead>Kundennr.</TableHead>
+              <TableHead>Ort</TableHead>
+              <TableHead>Telefon</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Aktionen</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredCustomers.length > 0 ? (
+              filteredCustomers.map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell className="font-medium">{customer.firmenname}</TableCell>
+                  <TableCell>{customer.kundennummer}</TableCell>
+                  <TableCell>{customer.ort}</TableCell>
+                  <TableCell>{customer.telefon}</TableCell>
+                  <TableCell>
+                    <Badge variant={customer.aktiv ? "default" : "destructive"} className="text-white">
+                        {customer.aktiv ? 'Aktiv' : 'Inaktiv'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild variant="link" size="sm">
+                       <Link href={`/customers/${customer.id}`}>Details</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Keine Kunden gefunden.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

@@ -7,11 +7,65 @@ export type Vehicle = {
   capacity: string;
 };
 
+export type Kontakt = {
+    id: string;
+    kundenId: string;
+    anrede: string;
+    vorname: string;
+    nachname: string;
+    position: string;
+    telefon: string;
+    mobil: string;
+    email: string;
+    bemerkung: string;
+};
+
 export type Customer = {
-  id: string;
-  name: string;
-  contact: string;
-  address: string;
+    id: string;
+    // Stammdaten
+    firmenname: string;
+    kundennummer: string;
+    ustId: string;
+    steuernummer: string;
+    firmenbuchnummer: string;
+
+    // Adresse
+    strasse: string;
+    hausnummer: string;
+    plz: string;
+    ort: string;
+    land: string;
+
+    // Kontakt
+    telefon: string;
+    fax: string;
+    email: string;
+    website: string;
+
+    // Finanzielle Info
+    zahlungsbedingungen: string;
+    zahlungsziel: number;
+    waehrung: string;
+    kreditlimit: number;
+    skontoProzent: number;
+    skontoTage: number;
+
+    // Bankverbindung
+    bankname: string;
+    iban: string;
+    bic: string;
+    kontoinhaber: string;
+
+    // Overige
+    aktiv: boolean;
+    bemerkung: string;
+    erstelltAm: string;
+    bearbeitetAm: string;
+    
+    // Legacy fields for contractors, can be removed if not needed.
+    name: string;
+    contact: string;
+    address: string;
 };
 
 export type Contractor = Customer;
