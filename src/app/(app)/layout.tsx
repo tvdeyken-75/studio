@@ -28,6 +28,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       '/address-insights': 'Standort-Analyse',
       '/fleet': 'Fahrzeugflotte',
       '/customers': 'Kunden & Auftragnehmer',
+      '/master-data/addresses': 'Stammdaten',
+      '/master-data/countries': 'Stammdaten',
     };
     const title = pathMap[pathname] || pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard';
     return title.charAt(0).toUpperCase() + title.slice(1);

@@ -28,3 +28,17 @@ export type ChartData = {
   onTime: number;
   delayed: number;
 };
+
+export interface Address {
+    id: string;
+    street: string;
+    zipCode: string;
+    city: string;
+    country: string;
+}
+
+export interface Country {
+    id: string;
+    name: string;
+    code: string;
+}

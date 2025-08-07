@@ -18,6 +18,7 @@ const navItems = [
   { href: '/address-insights', label: 'Standort-Analyse', icon: Icons.address },
   { href: '/fleet', label: 'Fahrzeugflotte', icon: Icons.fleet },
   { href: '/customers', label: 'Kunden & Auftragnehmer', icon: Icons.customers },
+  { href: '/master-data/addresses', label: 'Stammdaten', icon: Icons.database },
 ];
 
 export function SidebarNav() {
@@ -35,7 +36,7 @@ export function SidebarNav() {
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
-              isActive={pathname === item.href}
+              isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
               tooltip={item.label}
             >
               <Link href={item.href}>
