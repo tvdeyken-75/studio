@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   type: 'LKW' | 'Transporter' | 'Sprinter';
@@ -31,14 +32,21 @@ export type ChartData = {
 
 export interface Address {
     id: string;
-    street: string;
-    zipCode: string;
-    city: string;
-    country: string;
+    kurzname: string;
+    name: string;
+    strasse: string;
+    plz: string;
+    stadt: string;
+    land: string;
+    koordinaten: string;
+    tourPOI: boolean;
+    kundenAdresse: boolean;
+    mitarbeiterAdresse: boolean;
 }
 
 export interface Country {
     id: string;
-    name: string;
-    code: string;
+    iso_code: string;
+    kurzname: string;
+    official_country_name: string;
 }
