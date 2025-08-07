@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -42,7 +43,7 @@ const initialSuppliers: Customer[] = [
     {
         id: 'sup-1',
         firmenname: 'Bürobedarf-Express',
-        kundennummer: 'LIEF-555',
+        kundennummer: 'LIEF-001',
         ustId: 'DE999888777',
         steuernummer: '999/888/7777',
         firmenbuchnummer: 'HRA 11223',
@@ -176,7 +177,7 @@ export default function SuppliersPage() {
                 <CardDescription>Übersicht aller Lieferanten.</CardDescription>
             </div>
             <Button asChild variant="link" className="text-primary">
-                <Link href="/customers/new">
+                <Link href="/customers/suppliers/new">
                     <Icons.add className="mr-2 h-4 w-4" />
                     Neuer Lieferant
                 </Link>
@@ -259,7 +260,7 @@ export default function SuppliersPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                    <Link href={`/customers/${supplier.id}`} className="w-full cursor-pointer">Bearbeiten</Link>
+                                    <Link href={`/customers/suppliers/${supplier.id}`} className="w-full cursor-pointer">Bearbeiten</Link>
                                 </DropdownMenuItem>
                                  <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                                 <DropdownMenuSeparator />

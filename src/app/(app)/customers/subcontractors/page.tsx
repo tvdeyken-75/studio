@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -175,7 +176,7 @@ export default function SubcontractorsPage() {
                 <CardDescription>Übersicht aller Subunternehmer.</CardDescription>
             </div>
             <Button asChild variant="link" className="text-primary">
-                <Link href="/customers/new">
+                <Link href="/customers/subcontractors/new">
                     <Icons.add className="mr-2 h-4 w-4" />
                     Neuer Subunternehmer
                 </Link>
@@ -258,7 +259,7 @@ export default function SubcontractorsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                    <Link href={`/customers/${subcontractor.id}`} className="w-full cursor-pointer">Bearbeiten</Link>
+                                    <Link href={`/customers/subcontractors/${subcontractor.id}`} className="w-full cursor-pointer">Bearbeiten</Link>
                                 </DropdownMenuItem>
                                  <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                                 <DropdownMenuSeparator />

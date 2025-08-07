@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import type { Customer, Kontakt, Address } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,7 @@ import { SlidersHorizontal } from "lucide-react";
 const MOCK_CUSTOMERS: Customer[] = [{
     id: '1',
     firmenname: 'Musterfirma GmbH',
-    kundennummer: 'KD-12345',
+    kundennummer: 'KN-0001',
     ustId: 'DE123456789',
     steuernummer: '123/456/7890',
     firmenbuchnummer: 'HRB 12345',
@@ -90,6 +90,74 @@ const MOCK_CUSTOMERS: Customer[] = [{
     contact: 'info@musterfirma.de',
     address: 'Musterstraße 123, 12345 Musterstadt',
 }];
+const MOCK_SUPPLIERS: Customer[] = [{
+    id: 'sup-1',
+    firmenname: 'Bürobedarf-Express',
+    kundennummer: 'LIEF-001',
+    ustId: 'DE999888777',
+    steuernummer: '999/888/7777',
+    firmenbuchnummer: 'HRA 11223',
+    strasse: 'Lieferweg',
+    hausnummer: '5A',
+    plz: '10115',
+    ort: 'Berlin',
+    land: 'DE',
+    telefon: '030-987654',
+    fax: '030-987655',
+    email: 'bestellung@buero-express.de',
+    website: 'www.buero-express.de',
+    zahlungsbedingungen: 'Vorkasse',
+    zahlungsziel: 0,
+    waehrung: 'EUR',
+    kreditlimit: 0,
+    skontoProzent: 0,
+    skontoTage: 0,
+    bankname: 'Hauptstadt Bank',
+    iban: 'DE98765432109876543210',
+    bic: 'BEVODEBBXXX',
+    kontoinhaber: 'Bürobedarf-Express e.K.',
+    aktiv: true,
+    bemerkung: 'Liefert Büromaterial.',
+    erstelltAm: new Date().toISOString(),
+    bearbeitetAm: new Date().toISOString(),
+    name: 'Bürobedarf-Express',
+    contact: 'bestellung@buero-express.de',
+    address: 'Lieferweg 5A, 10115 Berlin',
+}];
+const MOCK_SUBCONTRACTORS: Customer[] = [{
+    id: 'sub-1',
+    firmenname: 'Sub-Transport AG',
+    kundennummer: 'SUB-001',
+    ustId: 'DE111222333',
+    steuernummer: '111/222/3333',
+    firmenbuchnummer: 'HRB 99887',
+    strasse: 'Subunternehmer-Allee',
+    hausnummer: '10',
+    plz: '20095',
+    ort: 'Hamburg',
+    land: 'DE',
+    telefon: '040-123456',
+    fax: '040-123457',
+    email: 'info@sub-transport.de',
+    website: 'www.sub-transport.de',
+    zahlungsbedingungen: '45 Tage netto',
+    zahlungsziel: 45,
+    waehrung: 'EUR',
+    kreditlimit: 25000,
+    skontoProzent: 1.5,
+    skontoTage: 10,
+    bankname: 'Hafenbank',
+    iban: 'DE12345678901234567891',
+    bic: 'HASPDEHHXXX',
+    kontoinhaber: 'Sub-Transport AG',
+    aktiv: true,
+    bemerkung: 'Spezialisiert auf Kühltransporte.',
+    erstelltAm: new Date().toISOString(),
+    bearbeitetAm: new Date().toISOString(),
+    name: 'Sub-Transport AG',
+    contact: 'info@sub-transport.de',
+    address: 'Subunternehmer-Allee 10, 20095 Hamburg',
+}];
 const MOCK_KONTAKTE: Kontakt[] = [
     { id: '1', kundenId: '1', anrede: 'Herr', vorname: 'Max', nachname: 'Mustermann', position: 'Einkauf', telefon: '01234-567892', mobil: '0171-1234567', email: 'max.mustermann@musterfirma.de', bemerkung: 'Hauptansprechpartner' },
     { id: '2', kundenId: '1', anrede: 'Frau', vorname: 'Erika', nachname: 'Musterfrau', position: 'Geschäftsführung', telefon: '01234-567893', mobil: '0172-1234567', email: 'erika.musterfrau@musterfirma.de', bemerkung: '' }
@@ -98,7 +166,6 @@ const MOCK_ADDRESSES: Address[] = [
     { id: '1', kurzname: 'Zentrale BER', name: 'Hauptquartier Berlin', strasse: 'Willy-Brandt-Straße 1', plz: '10557', stadt: 'Berlin', land: 'Deutschland', koordinaten: '52.518, 13.376', tourPOI: true, kundenAdresse: false, mitarbeiterAdresse: false },
     { id: '2', kurzname: 'Lager MUC', name: 'Lager München', strasse: 'Lagerstraße 5', plz: '80995', stadt: 'München', land: 'Deutschland', koordinaten: '48.177, 11.455', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
 ];
-
 
 const KontaktenForm = ({ control, register }: { control: any, register: any }) => {
   const { fields, append, remove } = useFieldArray({ control, name: "kontakte" });
@@ -333,19 +400,75 @@ const LoadAddressDialog = ({ onSelectAddress }: { onSelectAddress: (address: Add
     );
 };
 
-
 export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const id = params.id as string;
 
+  const entityType = useMemo(() => {
+    if (pathname.startsWith('/customers/suppliers')) return 'supplier';
+    if (pathname.startsWith('/customers/subcontractors')) return 'subcontractor';
+    return 'customer';
+  }, [pathname]);
+
   const isNew = id === 'new';
+
+  const { data, allData, numberLabel, pageTitle, backUrl } = useMemo(() => {
+    switch (entityType) {
+      case 'supplier':
+        return {
+          data: isNew ? undefined : MOCK_SUPPLIERS.find(s => s.id === id),
+          allData: MOCK_SUPPLIERS,
+          numberLabel: 'Lieferantennummer',
+          pageTitle: 'Lieferant',
+          backUrl: '/customers/suppliers'
+        };
+      case 'subcontractor':
+        return {
+          data: isNew ? undefined : MOCK_SUBCONTRACTORS.find(s => s.id === id),
+          allData: MOCK_SUBCONTRACTORS,
+          numberLabel: 'Subunternehmernummer',
+          pageTitle: 'Subunternehmer',
+          backUrl: '/customers/subcontractors'
+        };
+      default: // customer
+        return {
+          data: isNew ? undefined : MOCK_CUSTOMERS.find(c => c.id === id),
+          allData: MOCK_CUSTOMERS,
+          numberLabel: 'Kundennummer',
+          pageTitle: 'Kunde',
+          backUrl: '/customers'
+        };
+    }
+  }, [id, isNew, entityType]);
+
+  const generateNextNumber = () => {
+    let prefix = 'KN-';
+    let padLength = 4;
+    if (entityType === 'supplier') {
+        prefix = 'LIEF-';
+        padLength = 3;
+    } else if (entityType === 'subcontractor') {
+        prefix = 'SUB-';
+        padLength = 3;
+    }
+
+    const highestNum = allData.reduce((max, item) => {
+        const numPart = item.kundennummer.replace(prefix, '');
+        const num = parseInt(numPart, 10);
+        return isNaN(num) ? max : Math.max(max, num);
+    }, 0);
+    
+    return `${prefix}${(highestNum + 1).toString().padStart(padLength, '0')}`;
+  };
+
   const customerData = useMemo(() => {
     if (isNew) {
       return {
           id: `new-${Date.now()}`,
-          firmenname: '', kundennummer: '', ustId: '', steuernummer: '', firmenbuchnummer: '',
+          firmenname: '', kundennummer: generateNextNumber(), ustId: '', steuernummer: '', firmenbuchnummer: '',
           strasse: '', hausnummer: '', plz: '', ort: '', land: 'DE',
           telefon: '', fax: '', email: '', website: '',
           zahlungsbedingungen: '30 Tage netto', zahlungsziel: 30, waehrung: 'EUR', kreditlimit: 0, skontoProzent: 0, skontoTage: 0,
@@ -354,8 +477,8 @@ export default function CustomerDetailPage() {
           name: '', contact: '', address: ''
       };
     }
-    return MOCK_CUSTOMERS.find(c => c.id === id);
-  }, [id, isNew]);
+    return data;
+  }, [id, isNew, data, entityType]);
 
   const kundenKontakte = useMemo(() => MOCK_KONTAKTE.filter(k => k.kundenId === id), [id]);
 
@@ -364,18 +487,16 @@ export default function CustomerDetailPage() {
   });
 
   if (!customerData) {
-    return <div>Kunde nicht gefunden.</div>;
+    return <div>{pageTitle} nicht gefunden.</div>;
   }
 
   const onSubmit = (data: any) => {
     console.log("Form data submitted:", data);
-    toast({ title: "Gespeichert", description: "Kundendaten erfolgreich aktualisiert." });
-    router.push('/customers');
+    toast({ title: "Gespeichert", description: `${pageTitle}daten erfolgreich aktualisiert.` });
+    router.push(backUrl);
   };
 
   const handleSelectAddress = (address: Address) => {
-    // This function splits `strasse` into `strasse` and `hausnummer`.
-    // It assumes a simple format like "Street Name 123". This might need to be more robust.
     const streetParts = address.strasse.match(/(.+) (\S+)$/);
     const strasse = streetParts ? streetParts[1] : address.strasse;
     const hausnummer = streetParts ? streetParts[2] : '';
@@ -403,8 +524,6 @@ export default function CustomerDetailPage() {
         kundenAdresse: true,
         mitarbeiterAdresse: false
     };
-    // In a real app, you'd save this to your database.
-    // For now, we'll just log it and show a toast.
     console.log("Saving address to master data:", newAddress);
     MOCK_ADDRESSES.push(newAddress);
     toast({ title: "Adresse gespeichert", description: "Die Adresse wurde zu den Stammdaten hinzugefügt."});
@@ -414,11 +533,11 @@ export default function CustomerDetailPage() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold">{isNew ? 'Neuen Kunden anlegen' : customerData.firmenname}</h1>
-          <p className="text-muted-foreground">{isNew ? 'Bitte füllen Sie die Stammdaten aus.' : `Kundennummer: ${customerData.kundennummer}`}</p>
+          <h1 className="text-2xl font-bold">{isNew ? `Neuen ${pageTitle} anlegen` : customerData.firmenname}</h1>
+          <p className="text-muted-foreground">{isNew ? 'Bitte füllen Sie die Stammdaten aus.' : `${numberLabel}: ${customerData.kundennummer}`}</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button type="button" variant="ghost" onClick={() => router.back()}>Abbrechen</Button>
+            <Button type="button" variant="ghost" onClick={() => router.push(backUrl)}>Abbrechen</Button>
             <Button type="submit" disabled={!isDirty || isSubmitting}>
                 {isSubmitting && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
                 Speichern
@@ -432,7 +551,7 @@ export default function CustomerDetailPage() {
                 <CardHeader><CardTitle>Stammdaten</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                     <div className="space-y-1.5"><Label>Firmenname</Label><Input {...register("firmenname")} className="h-9"/></div>
-                    <div className="space-y-1.5"><Label>Kundennummer</Label><Input {...register("kundennummer")} className="h-9"/></div>
+                    <div className="space-y-1.5"><Label>{numberLabel}</Label><Input {...register("kundennummer")} className="h-9" readOnly={isNew} /></div>
                     <div className="space-y-1.5"><Label>USt-IdNr.</Label><Input {...register("ustId")} className="h-9"/></div>
                     <div className="space-y-1.5"><Label>Steuernummer</Label><Input {...register("steuernummer")} className="h-9"/></div>
                     <div className="space-y-1.5"><Label>Handelsregisternr.</Label><Input {...register("firmenbuchnummer")} className="h-9"/></div>
@@ -453,7 +572,7 @@ export default function CustomerDetailPage() {
                 <CardContent className="space-y-4">
                     <div className="flex items-center space-x-2">
                         <Checkbox id="aktiv" {...register("aktiv")} checked={watch("aktiv")} onCheckedChange={(checked) => setValue('aktiv', !!checked)} />
-                        <Label htmlFor="aktiv" className="font-normal text-sm">Kunde ist aktiv</Label>
+                        <Label htmlFor="aktiv" className="font-normal text-sm">{pageTitle} ist aktiv</Label>
                     </div>
                     <div className="space-y-1.5">
                         <Label>Bemerkung</Label>
@@ -517,4 +636,3 @@ export default function CustomerDetailPage() {
     </form>
   );
 }
-

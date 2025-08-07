@@ -77,7 +77,7 @@ const initialCustomers: Customer[] = [
      {
         id: '2',
         firmenname: 'Bau AG',
-        kundennummer: 'KD-67890',
+        kundennummer: 'KN-0002',
         ustId: 'DE987654321',
         steuernummer: '987/654/3210',
         firmenbuchnummer: 'HRB 54321',
