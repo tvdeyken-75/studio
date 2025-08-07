@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger, SidebarRail } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { UserNav } from '@/components/user-nav';
 import { Icons } from '@/components/icons';
@@ -46,12 +46,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarNav />
+        <SidebarRail />
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-lg font-semibold tracking-tight">{pageTitle}</h1>
           </div>

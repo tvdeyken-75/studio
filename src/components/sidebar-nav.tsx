@@ -25,33 +25,48 @@ const navItems = [
 export function SidebarNav() {
   const pathname = usePathname();
 
-  const isFleetActive = pathname.startsWith('/fleet') || pathname.startsWith('/trailers');
+  const isFleetActive = pathname.startsWith('/fleet');
+  const isMasterDataActive = pathname.startsWith('/master-data');
 
   return (
     <>
       <SidebarHeader className="flex items-center gap-2.5 p-4">
-        <Icons.logo className="h-7 w-7 text-primary" />
-        <span className="text-lg font-semibold text-foreground">AmbientTMS</span>
+        <Icons.logo className="h-7 w-7 text-sidebar-primary" />
+        <span className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">AmbientTMS</span>
       </SidebarHeader>
       <Separator />
-      <SidebarMenu className="flex-1 p-4">
-        {navItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={item.href === '/fleet' ? isFleetActive : pathname.startsWith(item.href) && (item.href === '/' ? pathname === '/' : true)}
-              tooltip={item.label}
-            >
-              <Link href={item.href}>
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+      <SidebarMenu className="flex-1 p-2">
+        {navItems.map((item) => {
+            let isActive = false;
+            if (item.href === '/') {
+                isActive = pathname === '/';
+            } else if (item.href.startsWith('/fleet')) {
+                isActive = isFleetActive;
+            } else if (item.href.startsWith('/master-data')) {
+                isActive = isMasterDataActive;
+            }
+            else {
+                isActive = pathname.startsWith(item.href);
+            }
+           
+           return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  tooltip={item.label}
+                >
+                  <Link href={item.href}>
+                    <item.icon className="h-5 w-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+           )
+        })}
       </SidebarMenu>
       <Separator />
-       <SidebarFooter className="p-4">
+       <SidebarFooter className="p-4 group-data-[collapsible=icon]:hidden">
             <div className="text-xs text-muted-foreground">
                 &copy; {new Date().getFullYear()} AmbientTMS Inc.
             </div>
