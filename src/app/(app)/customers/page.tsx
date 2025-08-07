@@ -257,10 +257,10 @@ export default function CustomersPage() {
         document.body.removeChild(link);
     }
     
-    const handlePrint = (reportType: string, customerName: string) => {
+    const handleActionClick = (actionName: string, customerName: string) => {
         toast({
-            title: `${reportType} für ${customerName}`,
-            description: `Die Funktion zum Drucken von Berichten ist in Entwicklung.`,
+            title: `${actionName} für ${customerName}`,
+            description: `Die Funktion zum Anzeigen von "${actionName}" ist in Entwicklung.`,
         });
     };
 
@@ -359,19 +359,27 @@ export default function CustomersPage() {
                                 <DropdownMenuItem asChild>
                                     <Link href={`/customers/${customer.id}`} className="w-full cursor-pointer">Bearbeiten</Link>
                                 </DropdownMenuItem>
+                                 <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Berichte</DropdownMenuLabel>
+                                <DropdownMenuLabel>Management</DropdownMenuLabel>
                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handlePrint("Bestellungen", customer.firmenname)}}>Bestellungen drucken</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Dienstleistungsübersicht", customer.firmenname)}}>Dienstleistungsübersicht</DropdownMenuItem>
                                  </AlertDialogTrigger>
                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handlePrint("Zahlungen/Mahnungen", customer.firmenname)}}>Zahlungen/Mahnungen</DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handlePrint("Reklamationen", customer.firmenname)}}>Reklamationen</DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Risiko Management", customer.firmenname)}}>Risiko Management</DropdownMenuItem>
+                                 </AlertDialogTrigger>
+                                 <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Kommunikation", customer.firmenname)}}>Kommunikation</DropdownMenuItem>
+                                 </AlertDialogTrigger>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Bedarf Analyse", customer.firmenname)}}>Bedarf Analyse</DropdownMenuItem>
+                                 </AlertDialogTrigger>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Vertragsmanagement", customer.firmenname)}}>Vertragsmanagement</DropdownMenuItem>
+                                 </AlertDialogTrigger>
+                                 <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Reporting", customer.firmenname)}}>Reporting</DropdownMenuItem>
+                                 </AlertDialogTrigger>
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <AlertDialogContent>
@@ -402,5 +410,3 @@ export default function CustomersPage() {
     </Card>
   );
 }
-
-    

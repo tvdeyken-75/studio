@@ -17,7 +17,7 @@ const navItems = [
   { href: '/route-planning', label: 'Routenplanung', icon: Icons.route },
   { href: '/address-insights', label: 'Standort-Analyse', icon: Icons.address },
   { href: '/fleet', label: 'Fuhrpark', icon: Icons.fleet },
-  { href: '/customers', label: 'Kunden & Auftragnehmer', icon: Icons.customers },
+  { href: '/customers', label: 'Beziehungsmanagement', icon: Icons.customers },
   { href: '/reports', label: 'Berichte', icon: Icons.reports },
   { href: '/master-data/addresses', label: 'Stammdaten', icon: Icons.database },
 ];
@@ -27,6 +27,7 @@ export function SidebarNav() {
 
   const isFleetActive = pathname.startsWith('/fleet');
   const isMasterDataActive = pathname.startsWith('/master-data');
+  const isCustomersActive = pathname.startsWith('/customers');
 
   return (
     <>
@@ -44,6 +45,8 @@ export function SidebarNav() {
                 isActive = isFleetActive;
             } else if (item.href.startsWith('/master-data')) {
                 isActive = isMasterDataActive;
+            } else if (item.href.startsWith('/customers')) {
+                isActive = isCustomersActive;
             }
             else {
                 isActive = pathname.startsWith(item.href);
