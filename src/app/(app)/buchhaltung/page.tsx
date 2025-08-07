@@ -95,12 +95,72 @@ const statusColor: Record<Invoice['status'], string> = {
     'Überfällig': 'bg-orange-600'
 }
 
+const AddInfoItemDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const { toast } = useToast();
+    const [beschreibung, setBeschreibung] = useState('');
+    const [nettopreis, setNettopreis] = useState(0);
+
+    const handleSave = () => {
+        if (!beschreibung || nettopreis === 0) {
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte geben Sie eine Beschreibung und einen Preis ein.' });
+            return;
+        }
+        onAddItem({
+            id: `item-info-${Date.now()}`,
+            beschreibung: beschreibung,
+            menge: 1,
+            einheit: 'Info',
+            einzelpreis: nettopreis,
+            gesamtpreis: nettopreis,
+            datum: format(new Date(), 'yyyy-MM-dd')
+        });
+        setIsOpen(false);
+        setBeschreibung('');
+        setNettopreis(0);
+        toast({ title: 'Position hinzugefügt.' });
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                    <Icons.add className="mr-2 h-3 w-3" />
+                    Info-Position hinzufügen
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Optionale Position hinzufügen</DialogTitle>
+                    <DialogDescription>
+                        Fügen Sie eine zusätzliche Position zur Rechnung hinzu.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="beschreibung">Beschreibung</Label>
+                        <Textarea id="beschreibung" value={beschreibung} onChange={(e) => setBeschreibung(e.target.value)} placeholder="z.B. Wartezeit am Entladeort" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="nettopreis">Nettopreis (€)</Label>
+                        <Input id="nettopreis" type="number" step="0.01" value={nettopreis} onChange={(e) => setNettopreis(parseFloat(e.target.value) || 0)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>Abbrechen</Button>
+                    <Button size="sm" onClick={handleSave}>Hinzufügen</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 
 const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice: (invoice: Invoice) => void, lastInvoiceNumber: string }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
 
-    const { register, handleSubmit, control, watch, setValue, getValues, reset } = useForm<Invoice>({
+    const { register, handleSubmit, control, watch, setValue, getValues, reset, append } = useForm<Invoice>({
         defaultValues: {
             id: `inv-${Date.now()}`,
             rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
@@ -115,7 +175,6 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     
     const [availableTours, setAvailableTours] = useState<Transport[]>([]);
     const [selectedTourId, setSelectedTourId] = useState<string>('');
-    const [tourNettoPreis, setTourNettoPreis] = useState(0);
 
     useEffect(() => {
         if (watchedKundenId) {
@@ -175,9 +234,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         setSelectedTourId(tourId);
 
         const newItems: InvoiceItem[] = [];
-        // This is a simplified version. A real app might have more complex logic to get prices.
         const basePrice = 1250.00; 
-        setTourNettoPreis(basePrice);
 
         newItems.push({
             id: `item-${Date.now()}-tour`,
@@ -186,7 +243,6 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
             datum: tour.actualDeliveryDate
         });
         
-        // Add Dieselfloaterzuschlag
         const lastDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
         if (lastDieselpreis) {
             const zuschlag = basePrice * (lastDieselpreis.zuschlag / 100);
@@ -198,7 +254,6 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
             });
         }
         
-        // Add Mautzuschlag
         const kunde = customerData.find(c => c.id === watchedKundenId);
         if (kunde && kunde.mautzuschlag > 0) {
             const zuschlag = basePrice * (kunde.mautzuschlag / 100);
@@ -211,6 +266,10 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         }
         
         setValue('items', newItems);
+    }
+    
+    const addInfoItem = (item: InvoiceItem) => {
+        append(item);
     }
 
     return (
@@ -275,7 +334,10 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                         {/* Items Section */}
                         {watchedItems.length > 0 && (
                         <div className="space-y-2 pt-4">
-                            <Label>Rechnungspositionen</Label>
+                            <div className="flex justify-between items-center mb-2">
+                                <Label>Rechnungspositionen</Label>
+                                <AddInfoItemDialog onAddItem={addInfoItem} />
+                            </div>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -493,5 +555,3 @@ export default function BuchhaltungPage() {
     </Card>
   );
 }
-
-    
