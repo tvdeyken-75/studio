@@ -1,6 +1,5 @@
 
 
-
 export type Vehicle = {
   // General
   id: string;
@@ -36,6 +35,7 @@ export type Vehicle = {
 
   // Status
   status: 'Aktiv' | 'Reparatur' | 'Verkauft' | 'Ausgemustert';
+  tourStatus: 'Verfügbar' | 'Unterwegs' | 'Pause';
   fahrerId?: string; // Link to a driver
   
   // Legacy fields for backwards compatibility with previous mock data
@@ -77,6 +77,7 @@ export type Trailer = {
 
   // Status
   status: 'Aktiv' | 'In Werkstatt' | 'Verkauft' | 'Ausgemustert';
+  tourStatus: 'Verfügbar' | 'Unterwegs' | 'Pause';
 
   // Legacy fields for backwards compatibility with previous mock data
   location: string;
@@ -206,3 +207,21 @@ export type Document = {
   fileUrl: string;
   notes?: string;
 }
+
+export type Report = {
+    id: string;
+    assetId: string; // vehicle or trailer id
+    type: 'Wartung' | 'Schaden' | 'TÜV' | 'Sonstiges';
+    date: string;
+    description: string;
+    documents?: Document[];
+};
+
+export type Dieselpreis = {
+    id: string;
+    woche: string;
+    von: string;
+    bis: string;
+    preis: number;
+    zuschlag: number;
+};

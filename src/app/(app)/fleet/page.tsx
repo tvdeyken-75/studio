@@ -6,12 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { fleetData as initialFleetData } from "@/lib/data";
-import type { Vehicle, Document } from "@/types";
+import type { Vehicle, Document, Report } from "@/types";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,6 +33,7 @@ const AddVehicleDialog = ({ onAdd, vehicleToEdit }: { onAdd: (vehicle: Vehicle) 
     nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 800, adblueVolumenLiter: 60,
     tuevBis: "", spBis: "", versicherungsnummer: "", zulassungsdatum: new Date().toISOString().split('T')[0],
     status: 'Aktiv',
+    tourStatus: 'Verfügbar',
   };
 
   const [formData, setFormData] = useState<Omit<Vehicle, 'location' | 'capacity'>>(initialFormState);
@@ -143,83 +144,185 @@ const AddVehicleDialog = ({ onAdd, vehicleToEdit }: { onAdd: (vehicle: Vehicle) 
   );
 };
 
-const ReportsDialog = ({ asset, assetType }: { asset: Vehicle | any, assetType: 'Fahrzeug' | 'Anhänger' }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const AddReportDialog = ({ onAddReport }: { onAddReport: (report: Report) => void }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  // Mock documents data for the asset
-  const [documents, setDocuments] = useState<Document[]>([
-    { id: 'doc1', name: 'TÜV Bericht 2023', type: 'TÜV', date: '2023-08-15', fileUrl: '#' },
-    { id: 'doc2', name: 'Reifenwechsel Rechnung', type: 'Reparatur', date: '2024-01-20', fileUrl: '#' },
-  ]);
+  const [reportData, setReportData] = useState<Partial<Report>>({
+    id: `rep-${Date.now()}`,
+    type: 'Wartung',
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    documents: [],
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setReportData(prev => ({...prev, [id]: value }));
+  }
+  
+  const handleSelectChange = (value: Report['type']) => {
+     setReportData(prev => ({...prev, type: value }));
+  }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     // Simulate upload
     const newDoc: Document = {
       id: `doc-${Date.now()}`,
       name: file.name,
-      type: 'Sonstiges',
+      type: 'Sonstiges', // Or derive from report type
       date: new Date().toISOString().split('T')[0],
-      fileUrl: URL.createObjectURL(file), // In a real app, this would be an upload URL
+      fileUrl: URL.createObjectURL(file),
     };
-    setDocuments(prev => [newDoc, ...prev]);
-    toast({ title: 'Dokument hochgeladen', description: `${file.name} wurde hinzugefügt.` });
+    
+    setReportData(prev => ({...prev, documents: [...(prev.documents || []), newDoc]}));
+    toast({ title: 'Dokument angehängt', description: file.name });
+  };
+
+  const handleSaveReport = () => {
+    if (reportData.description) {
+        onAddReport(reportData as Report);
+        toast({ title: 'Bericht gespeichert'});
+    } else {
+        toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte geben Sie eine Beschreibung ein.'});
+    }
+  }
+
+  return (
+    <DialogContent className="sm:max-w-xl">
+      <DialogHeader>
+        <DialogTitle>Neuen Bericht erstellen</DialogTitle>
+        <DialogDescription>
+          Erfassen Sie eine neue Wartung, einen Schaden oder ein anderes Ereignis.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+                <Label>Berichtstyp</Label>
+                <Select onValueChange={handleSelectChange} defaultValue={reportData.type}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Wartung">Wartung</SelectItem>
+                        <SelectItem value="Schaden">Schaden</SelectItem>
+                        <SelectItem value="TÜV">TÜV/SP</SelectItem>
+                        <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+             <div className="space-y-1.5">
+                <Label>Datum</Label>
+                <Input id="date" type="date" value={reportData.date} onChange={handleInputChange} className="h-9"/>
+            </div>
+        </div>
+        <div className="space-y-1.5">
+            <Label>Beschreibung</Label>
+            <Textarea id="description" placeholder="Beschreiben Sie das Ereignis..." value={reportData.description} onChange={handleInputChange}/>
+        </div>
+        <div className="space-y-2">
+            <Label>Dokumente & Fotos</Label>
+            <div className="flex items-center gap-2">
+                 <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    <Icons.add className="mr-2 h-4 w-4" /> Datei hochladen
+                </Button>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+            </div>
+             <div className="space-y-1 text-sm text-muted-foreground">
+                {reportData.documents?.map(doc => (
+                    <div key={doc.id} className="flex items-center justify-between">
+                        <span>{doc.name}</span>
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">Vorschau</a>
+                    </div>
+                ))}
+            </div>
+        </div>
+      </div>
+       <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost" size="sm">Abbrechen</Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button onClick={handleSaveReport} size="sm">Speichern</Button>
+          </DialogClose>
+        </DialogFooter>
+    </DialogContent>
+  )
+}
+
+
+const ReportsDialog = ({ asset, assetType }: { asset: Vehicle | any, assetType: 'Fahrzeug' | 'Anhänger' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { toast } = useToast();
+  // Mock reports data
+  const [reports, setReports] = useState<Report[]>([
+    { id: 'rep1', assetId: asset.id, type: 'Wartung', date: '2024-03-10', description: 'Regelmäßiger Ölwechsel und Inspektion.', documents: [] },
+    { id: 'rep2', assetId: asset.id, type: 'Schaden', date: '2024-05-22', description: 'Reifenschaden hinten links. Reifen wurde ersetzt.', documents: [] },
+  ]);
+
+  const addReport = (report: Report) => {
+    setReports(prev => [report, ...prev]);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          Berichte & Dokumente
+          Wartung & Berichte
         </DropdownMenuItem>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Berichte & Dokumente für {asset.kennzeichen}</DialogTitle>
-          <DialogDescription>
-            Verwalten Sie alle Dokumente und Fotos für dieses {assetType}.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4 space-y-4">
-          <div className="flex justify-end">
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-            <Button size="sm" onClick={() => fileInputRef.current?.click()}>
-              <Icons.add className="mr-2 h-4 w-4" /> Neues Dokument/Foto
-            </Button>
+          <div className="flex justify-between items-center">
+             <div>
+                <DialogTitle>Wartung & Berichte für {asset.kennzeichen}</DialogTitle>
+                <DialogDescription>
+                    Verwalten Sie alle Wartungsereignisse, Schäden und Dokumente.
+                </DialogDescription>
+             </div>
+             <Dialog>
+                 <DialogTrigger asChild>
+                    <Button size="sm"><Icons.add className="mr-2 h-4 w-4" />Neuer Bericht</Button>
+                </DialogTrigger>
+                <AddReportDialog onAddReport={addReport} />
+             </Dialog>
           </div>
-          <div className="max-h-[50vh] overflow-y-auto border rounded-md">
-            <Table>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto mt-4">
+             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Vorschau</TableHead>
-                  <TableHead>Name</TableHead>
                   <TableHead>Typ</TableHead>
                   <TableHead>Datum</TableHead>
+                  <TableHead>Beschreibung</TableHead>
+                  <TableHead className="text-center">Dokumente</TableHead>
                   <TableHead className="text-right">Aktion</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents.map(doc => (
-                  <TableRow key={doc.id}>
-                    <TableCell>
-                      <Image src="https://placehold.co/100x100.png" alt={doc.name} data-ai-hint="document preview" width={40} height={40} className="rounded-md object-cover" />
-                    </TableCell>
-                    <TableCell className="font-medium">{doc.name}</TableCell>
-                    <TableCell><Badge variant="outline">{doc.type}</Badge></TableCell>
-                    <TableCell>{format(new Date(doc.date), 'dd.MM.yyyy')}</TableCell>
+                {reports.map(report => (
+                  <TableRow key={report.id}>
+                    <TableCell><Badge variant="outline">{report.type}</Badge></TableCell>
+                    <TableCell>{format(new Date(report.date), 'dd.MM.yyyy')}</TableCell>
+                    <TableCell className="text-sm">{report.description}</TableCell>
+                    <TableCell className="text-center">{report.documents?.length || 0}</TableCell>
                     <TableCell className="text-right">
-                       <Button variant="ghost" size="icon" onClick={() => window.open(doc.fileUrl, '_blank')}>
-                         <Icons.logout className="h-4 w-4" /> {/* Replace with a download/view icon */}
+                       <Button variant="ghost" size="icon">
+                         <Icons.more className="h-4 w-4" />
                        </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                 {reports.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                            Keine Berichte für dieses Fahrzeug vorhanden.
+                        </TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -245,10 +348,9 @@ export default function FleetPage() {
       hersteller: true,
       modell: true,
       status: true,
-      typ: false,
+      tourStatus: true,
       fahrerId: true,
       tuevBis: true,
-      spBis: false,
       fuhrparkNummer: false,
   });
 
@@ -292,10 +394,9 @@ export default function FleetPage() {
     hersteller: "Hersteller",
     modell: "Modell",
     status: "Status",
-    typ: "Typ",
+    tourStatus: "Tour-Status",
     fahrerId: "Fahrer",
     tuevBis: "TÜV bis",
-    spBis: "SP bis",
     fuhrparkNummer: "Fuhrpark-Nr.",
   };
 
@@ -361,10 +462,9 @@ export default function FleetPage() {
               {columnVisibility.kennzeichen && <TableHead>Kennzeichen</TableHead>}
               {columnVisibility.hersteller && <TableHead>Hersteller</TableHead>}
               {columnVisibility.modell && <TableHead>Modell</TableHead>}
-              {columnVisibility.typ && <TableHead>Typ</TableHead>}
+              {columnVisibility.tourStatus && <TableHead>Tour-Status</TableHead>}
               {columnVisibility.fahrerId && <TableHead>Fahrer</TableHead>}
               {columnVisibility.tuevBis && <TableHead>TÜV bis</TableHead>}
-              {columnVisibility.spBis && <TableHead>SP bis</TableHead>}
               {columnVisibility.fuhrparkNummer && <TableHead>Fuhrpark-Nr.</TableHead>}
               {columnVisibility.status && <TableHead>Status</TableHead>}
               <TableHead className="text-right">Aktionen</TableHead>
@@ -376,10 +476,13 @@ export default function FleetPage() {
                 {columnVisibility.kennzeichen && <TableCell className="font-medium">{vehicle.kennzeichen}</TableCell>}
                 {columnVisibility.hersteller && <TableCell>{vehicle.hersteller}</TableCell>}
                 {columnVisibility.modell && <TableCell>{vehicle.modell}</TableCell>}
-                {columnVisibility.typ && <TableCell>{vehicle.typ}</TableCell>}
+                {columnVisibility.tourStatus && <TableCell>
+                    <Badge variant={vehicle.tourStatus === 'Verfügbar' ? 'secondary' : 'default'}>
+                        {vehicle.tourStatus}
+                    </Badge>
+                </TableCell>}
                 {columnVisibility.fahrerId && <TableCell>{vehicle.fahrerId || 'N/A'}</TableCell>}
                 {columnVisibility.tuevBis && <TableCell>{formatDate(vehicle.tuevBis)}</TableCell>}
-                {columnVisibility.spBis && <TableCell>{formatDate(vehicle.spBis)}</TableCell>}
                 {columnVisibility.fuhrparkNummer && <TableCell>{vehicle.fuhrparkNummer}</TableCell>}
                 {columnVisibility.status && <TableCell>
                   <Badge
@@ -399,7 +502,6 @@ export default function FleetPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
                             <ReportsDialog asset={vehicle} assetType="Fahrzeug" />
-                            <DropdownMenuItem>Wartung melden</DropdownMenuItem>
                             <DropdownMenuSeparator/>
                             <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                         </DropdownMenuContent>

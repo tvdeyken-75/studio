@@ -1,5 +1,5 @@
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis } from '@/types';
 
 export const fleetData: Vehicle[] = [
   { 
@@ -8,7 +8,7 @@ export const fleetData: Vehicle[] = [
     motorleistungKw: 330, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
     nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 800, adblueVolumenLiter: 60,
     tuevBis: '2025-08-01', spBis: '2025-02-01', versicherungsnummer: 'V-987654', zulassungsdatum: '2021-08-15',
-    status: 'Aktiv', fahrerId: 'max-mustermann',
+    status: 'Aktiv', fahrerId: 'max-mustermann', tourStatus: 'Unterwegs',
     location: 'Berlin, DE', capacity: '24t' // Legacy
   },
   { 
@@ -17,7 +17,7 @@ export const fleetData: Vehicle[] = [
     motorleistungKw: 340, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
     nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 750, adblueVolumenLiter: 60,
     tuevBis: '2024-10-01', spBis: '2025-04-01', versicherungsnummer: 'V-123456', zulassungsdatum: '2022-10-20',
-    status: 'Reparatur', fahrerId: 'erika-musterfrau',
+    status: 'Reparatur', fahrerId: 'erika-musterfrau', tourStatus: 'Verfügbar',
     location: 'Hamburg, DE', capacity: '24t' // Legacy
   },
 ];
@@ -28,7 +28,7 @@ export const trailerData: Trailer[] = [
     baujahr: 2020, anhaengerTyp: 'Kofferauflieger', fuhrparkNummer: 'A-201',
     achsenanzahl: 3, nutzlastKg: 27000, gesamtgewichtKg: 35000, ladevolumenCbm: 85, bremsenTyp: 'Scheibe',
     tuevBis: '2025-06-01', spBis: '2024-12-01', versicherungsnummer: 'V-AN-111', zulassungsdatum: '2020-06-10',
-    aktuellGekuppeltMitLkwId: 'AT-001', status: 'Aktiv',
+    aktuellGekuppeltMitLkwId: 'AT-001', status: 'Aktiv', tourStatus: 'Unterwegs',
     location: 'Berlin, DE', capacity: '34 Paletten' // Legacy
   },
    { 
@@ -36,7 +36,7 @@ export const trailerData: Trailer[] = [
     baujahr: 2019, anhaengerTyp: 'Schiebeplanenauflieger', fuhrparkNummer: 'A-202',
     achsenanzahl: 3, nutzlastKg: 27500, gesamtgewichtKg: 36000, ladevolumenCbm: 90, bremsenTyp: 'Scheibe',
     tuevBis: '2025-01-01', spBis: '2025-07-01', versicherungsnummer: 'V-AN-222', zulassungsdatum: '2019-01-15',
-    aktuellGekuppeltMitLkwId: undefined, status: 'In Werkstatt',
+    aktuellGekuppeltMitLkwId: undefined, status: 'In Werkstatt', tourStatus: 'Verfügbar',
     location: 'Hamburg, DE', capacity: '34 Paletten' // Legacy
   },
 ];
@@ -102,3 +102,9 @@ export const transportData: Transport[] = [
     actualDeliveryDate: '2024-07-22T11:50:00Z',
   },
 ];
+
+export const dieselpreiseData: Dieselpreis[] = [
+    { id: '1', woche: 'KW 28', von: '2024-07-08', bis: '2024-07-14', preis: 1.65, zuschlag: 15.5 },
+    { id: '2', woche: 'KW 29', von: '2024-07-15', bis: '2024-07-21', preis: 1.68, zuschlag: 16.0 },
+    { id: '3', woche: 'KW 30', von: '2024-07-22', bis: '2024-07-28', preis: 1.71, zuschlag: 16.5 },
+]
