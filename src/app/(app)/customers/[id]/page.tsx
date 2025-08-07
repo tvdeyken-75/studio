@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import type { Customer, Kontakt, Address } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,6 +51,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SlidersHorizontal } from "lucide-react";
+
 
 // MOCK DATA - In a real app, this would be fetched from a database
 const MOCK_CUSTOMERS: Customer[] = [{
@@ -99,6 +102,49 @@ const MOCK_ADDRESSES: Address[] = [
 
 const KontaktenForm = ({ control, register }: { control: any, register: any }) => {
   const { fields, append, remove } = useFieldArray({ control, name: "kontakte" });
+  const [searchTerm, setSearchTerm] = useState("");
+  const watchedKontakte = useWatch({ control, name: 'kontakte' });
+
+  const [columnVisibility, setColumnVisibility] = useState({
+    anrede: true,
+    vorname: true,
+    nachname: true,
+    position: true,
+    email: true,
+    telefon: true,
+    mobil: false,
+    bemerkung: false,
+  });
+
+  const columnLabels: Record<keyof typeof columnVisibility, string> = {
+    anrede: "Anrede",
+    vorname: "Vorname",
+    nachname: "Nachname",
+    position: "Position",
+    email: "E-Mail",
+    telefon: "Telefon",
+    mobil: "Mobil",
+    bemerkung: "Bemerkung",
+  };
+
+  const toggleColumn = (column: keyof typeof columnVisibility) => {
+    setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
+  }
+
+  const filteredFields = useMemo(() => {
+    if (!searchTerm) return fields.map((field, index) => ({ ...field, originalIndex: index }));
+    const lowercasedTerm = searchTerm.toLowerCase();
+
+    return fields
+      .map((field, index) => ({ ...field, originalIndex: index }))
+      .filter((field, index) => {
+        const kontakt = watchedKontakte[index];
+        if (!kontakt) return false;
+        return Object.values(kontakt).some(value =>
+          String(value).toLowerCase().includes(lowercasedTerm)
+        );
+      });
+  }, [searchTerm, fields, watchedKontakte]);
 
   return (
       <Card>
@@ -113,45 +159,88 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
                 </Button>
             </div>
         </CardHeader>
+        <div className="p-4 border-b flex justify-between items-center gap-4">
+             <Input 
+                placeholder="Kontakte durchsuchen..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="max-w-md h-9"
+            />
+            <div className="flex gap-2 items-center">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9">
+                            <SlidersHorizontal className="h-4 w-4"/>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                         <DropdownMenuLabel>Spalten ein-/ausblenden</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                        {Object.keys(columnVisibility).map(key => (
+                            <DropdownMenuCheckboxItem
+                                key={key}
+                                className="capitalize"
+                                checked={columnVisibility[key as keyof typeof columnVisibility]}
+                                onCheckedChange={() => toggleColumn(key as keyof typeof columnVisibility)}
+                            >
+                                {columnLabels[key as keyof typeof columnVisibility]}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
         <CardContent className="p-0">
              <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Anrede</TableHead>
-                        <TableHead>Vorname</TableHead>
-                        <TableHead>Nachname</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>E-Mail</TableHead>
-                        <TableHead>Telefon</TableHead>
+                        {columnVisibility.anrede && <TableHead>Anrede</TableHead>}
+                        {columnVisibility.vorname && <TableHead>Vorname</TableHead>}
+                        {columnVisibility.nachname && <TableHead>Nachname</TableHead>}
+                        {columnVisibility.position && <TableHead>Position</TableHead>}
+                        {columnVisibility.email && <TableHead>E-Mail</TableHead>}
+                        {columnVisibility.telefon && <TableHead>Telefon</TableHead>}
+                        {columnVisibility.mobil && <TableHead>Mobil</TableHead>}
+                        {columnVisibility.bemerkung && <TableHead>Bemerkung</TableHead>}
                         <TableHead className="text-right">Aktion</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {fields.map((field, index) => (
+                    {filteredFields.map((field) => (
                         <TableRow key={field.id}>
-                            <TableCell className="w-24">
+                            {columnVisibility.anrede && <TableCell className="w-24">
                                 <Select defaultValue={field.anrede} onValueChange={(value) => console.log(value)}>
-                                    <SelectTrigger {...register(`kontakte.${index}.anrede`)} className="h-9">
+                                    <SelectTrigger {...register(`kontakte.${field.originalIndex}.anrede`)} className="h-9">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Herr">Herr</SelectItem>
                                         <SelectItem value="Frau">Frau</SelectItem>
+                                        <SelectItem value="Divers">Divers</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </TableCell>
-                            <TableCell><Input {...register(`kontakte.${index}.vorname`)} className="h-9" /></TableCell>
-                            <TableCell><Input {...register(`kontakte.${index}.nachname`)} className="h-9" /></TableCell>
-                            <TableCell><Input {...register(`kontakte.${index}.position`)} className="h-9" /></TableCell>
-                            <TableCell><Input {...register(`kontakte.${index}.email`)} className="h-9" /></TableCell>
-                            <TableCell><Input {...register(`kontakte.${index}.telefon`)} className="h-9" /></TableCell>
+                            </TableCell>}
+                            {columnVisibility.vorname && <TableCell><Input {...register(`kontakte.${field.originalIndex}.vorname`)} className="h-9" /></TableCell>}
+                            {columnVisibility.nachname && <TableCell><Input {...register(`kontakte.${field.originalIndex}.nachname`)} className="h-9" /></TableCell>}
+                            {columnVisibility.position && <TableCell><Input {...register(`kontakte.${field.originalIndex}.position`)} className="h-9" /></TableCell>}
+                            {columnVisibility.email && <TableCell><Input {...register(`kontakte.${field.originalIndex}.email`)} type="email" className="h-9" /></TableCell>}
+                            {columnVisibility.telefon && <TableCell><Input {...register(`kontakte.${field.originalIndex}.telefon`)} className="h-9" /></TableCell>}
+                            {columnVisibility.mobil && <TableCell><Input {...register(`kontakte.${field.originalIndex}.mobil`)} className="h-9" /></TableCell>}
+                            {columnVisibility.bemerkung && <TableCell><Textarea {...register(`kontakte.${field.originalIndex}.bemerkung`)} className="h-9" /></TableCell>}
                             <TableCell className="text-right">
-                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(field.originalIndex)}>
                                     <Icons.logout className="h-4 w-4 text-destructive" />
                                 </Button>
                             </TableCell>
                         </TableRow>
                     ))}
+                      {filteredFields.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length + 1} className="h-24 text-center">
+                                {searchTerm ? "Keine Kontakte gefunden." : "Keine Kontakte für diesen Kunden."}
+                            </TableCell>
+                        </TableRow>
+                    )}
                 </TableBody>
             </Table>
         </CardContent>
@@ -363,7 +452,7 @@ export default function CustomerDetailPage() {
                 <CardHeader><CardTitle>Sonstiges</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center space-x-2">
-                        <Checkbox id="aktiv" {...register("aktiv")} checked={watch("aktiv")} />
+                        <Checkbox id="aktiv" {...register("aktiv")} checked={watch("aktiv")} onCheckedChange={(checked) => setValue('aktiv', !!checked)} />
                         <Label htmlFor="aktiv" className="font-normal text-sm">Kunde ist aktiv</Label>
                     </div>
                     <div className="space-y-1.5">
