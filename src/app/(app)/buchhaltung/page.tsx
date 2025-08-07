@@ -435,14 +435,18 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                     {fields.map((field, index) => (
                                         <TableRow key={field.id}>
                                             <TableCell>
-                                                <Controller
+                                                 <Controller
                                                     control={control}
                                                     name={`items.${index}.datum`}
                                                     render={({ field: { onChange, value } }) => (
                                                         <Input 
                                                             type="date" 
-                                                            value={value ? format(parseISO(value), 'yyyy-MM-dd') : ''} 
-                                                            onChange={onChange}
+                                                            value={value ? format(parseISO(value), 'yyyy-MM-dd') : ''}
+                                                            onChange={(e) => {
+                                                              const dateValue = e.target.value;
+                                                              // We send it to react-hook-form as an ISO string
+                                                              onChange(dateValue ? new Date(dateValue).toISOString() : '');
+                                                            }}
                                                             className="h-9 text-sm"
                                                         />
                                                     )}
