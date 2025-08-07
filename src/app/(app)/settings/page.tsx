@@ -25,6 +25,15 @@ export default function SettingsPage() {
     const [menuItems, setMenuItems] = useState(initialNavItems);
     const [isSaving, setIsSaving] = useState(false);
 
+    const moveItem = (index: number, direction: 'up' | 'down') => {
+        const newItems = [...menuItems];
+        const item = newItems[index];
+        const swapIndex = direction === 'up' ? index - 1 : index + 1;
+        newItems[index] = newItems[swapIndex];
+        newItems[swapIndex] = item;
+        setMenuItems(newItems);
+    };
+
     const handleSave = () => {
         setIsSaving(true);
         console.log("Saving new menu order:", menuItems.map(item => item.id));
@@ -42,7 +51,7 @@ export default function SettingsPage() {
                         <div>
                             <CardTitle>Menü-Einstellungen</CardTitle>
                             <CardDescription>
-                                Passen Sie die Reihenfolge der Menüpunkte in der Seitenleiste an. Drag & Drop zur Neuanordnung.
+                                Passen Sie die Reihenfolge der Menüpunkte in der Seitenleiste an.
                             </CardDescription>
                         </div>
                         <Button onClick={handleSave} disabled={isSaving}>
@@ -57,15 +66,17 @@ export default function SettingsPage() {
                             <div key={item.id} className="flex items-center p-3 bg-background rounded-md shadow-sm border">
                                 <item.icon className="h-5 w-5 mr-4 text-muted-foreground" />
                                 <span className="flex-grow font-medium">{item.label}</span>
-                                <Button variant="ghost" size="icon" className="cursor-grab">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" onClick={() => moveItem(index, 'up')} disabled={index === 0}>
+                                        <Icons.arrowUp className="h-5 w-5" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => moveItem(index, 'down')} disabled={index === menuItems.length - 1}>
+                                       <Icons.arrowDown className="h-5 w-5" />
+                                    </Button>
+                                </div>
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-4">
-                        Die Drag-and-Drop-Funktionalität ist in Entwicklung.
-                    </p>
                 </CardContent>
             </Card>
         </div>
