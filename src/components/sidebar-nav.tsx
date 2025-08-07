@@ -1,0 +1,56 @@
+"use client";
+
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import {
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+} from '@/components/ui/sidebar';
+import { Icons } from '@/components/icons';
+import { Separator } from './ui/separator';
+
+const navItems = [
+  { href: '/', label: 'Dashboard', icon: Icons.dashboard },
+  { href: '/route-planning', label: 'Route Planning', icon: Icons.route },
+  { href: '/address-insights', label: 'Address Insights', icon: Icons.address },
+  { href: '/fleet', label: 'Fleet Management', icon: Icons.fleet },
+  { href: '/customers', label: 'Customers & Contractors', icon: Icons.customers },
+];
+
+export function SidebarNav() {
+  const pathname = usePathname();
+
+  return (
+    <>
+      <SidebarHeader className="flex items-center gap-2.5 p-4">
+        <Icons.logo className="h-7 w-7 text-primary" />
+        <span className="text-lg font-semibold text-foreground">CargoPilot</span>
+      </SidebarHeader>
+      <Separator />
+      <SidebarMenu className="flex-1 p-4">
+        {navItems.map((item) => (
+          <SidebarMenuItem key={item.href}>
+            <Link href={item.href} passHref legacyBehavior>
+              <SidebarMenuButton
+                isActive={pathname === item.href}
+                tooltip={item.label}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+      <Separator />
+       <SidebarFooter className="p-4">
+            <div className="text-xs text-muted-foreground">
+                &copy; {new Date().getFullYear()} CargoPilot Inc.
+            </div>
+       </SidebarFooter>
+    </>
+  );
+}

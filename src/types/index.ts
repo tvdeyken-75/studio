@@ -1,0 +1,30 @@
+export type Vehicle = {
+  id: string;
+  type: 'Truck' | 'Van' | 'Sprinter';
+  location: string;
+  status: 'Available' | 'On-trip' | 'Maintenance';
+  capacity: string;
+};
+
+export type Customer = {
+  id: string;
+  name: string;
+  contact: string;
+  address: string;
+};
+
+export type Contractor = Customer;
+
+export type Kpi = {
+  title: string;
+  value: string;
+  change?: string;
+  changeType?: 'positive' | 'negative';
+  description: string;
+};
+
+export type ChartData = {
+  month: string;
+  onTime: number;
+  delayed: number;
+};
