@@ -95,6 +95,18 @@ const statusColor: Record<Invoice['status'], string> = {
     'Überfällig': 'bg-orange-600'
 }
 
+const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = parseISO(dateString);
+    if (!isValid(date)) return 'Ungültiges Datum';
+    try {
+        return format(date, 'dd.MM.yyyy');
+    } catch {
+        return 'Ungültiges Datum';
+    }
+}
+
+
 const AddLeistungDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
@@ -437,7 +449,13 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Textarea {...register(`items.${index}.beschreibung`)} className="h-9 text-sm" />
+                                                <Controller
+                                                  control={control}
+                                                  name={`items.${index}.beschreibung`}
+                                                  render={({ field }) => (
+                                                    <Textarea {...field} className="h-9 text-sm" />
+                                                  )}
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                <Controller
@@ -551,18 +569,6 @@ export default function BuchhaltungPage() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
   }
-  
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'N/A';
-        const date = parseISO(dateString);
-        if (!isValid(date)) return 'Ungültiges Datum';
-        try {
-            return format(date, 'dd.MM.yyyy');
-        } catch {
-            return 'Ungültiges Datum';
-        }
-    }
-
 
   return (
     <Card>
@@ -670,5 +676,3 @@ export default function BuchhaltungPage() {
     </Card>
   );
 }
-
-    
