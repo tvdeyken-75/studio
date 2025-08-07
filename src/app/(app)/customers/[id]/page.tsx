@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from "react-hook-form";
-import type { Customer, Kontakt } from '@/types';
+import type { Customer, Kontakt, Address } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -38,7 +38,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // MOCK DATA - In a real app, this would be fetched from a database
 const MOCK_CUSTOMERS: Customer[] = [{
@@ -78,6 +90,10 @@ const MOCK_CUSTOMERS: Customer[] = [{
 const MOCK_KONTAKTE: Kontakt[] = [
     { id: '1', kundenId: '1', anrede: 'Herr', vorname: 'Max', nachname: 'Mustermann', position: 'Einkauf', telefon: '01234-567892', mobil: '0171-1234567', email: 'max.mustermann@musterfirma.de', bemerkung: 'Hauptansprechpartner' },
     { id: '2', kundenId: '1', anrede: 'Frau', vorname: 'Erika', nachname: 'Musterfrau', position: 'Geschäftsführung', telefon: '01234-567893', mobil: '0172-1234567', email: 'erika.musterfrau@musterfirma.de', bemerkung: '' }
+];
+const MOCK_ADDRESSES: Address[] = [
+    { id: '1', kurzname: 'Zentrale BER', name: 'Hauptquartier Berlin', strasse: 'Willy-Brandt-Straße 1', plz: '10557', stadt: 'Berlin', land: 'Deutschland', koordinaten: '52.518, 13.376', tourPOI: true, kundenAdresse: false, mitarbeiterAdresse: false },
+    { id: '2', kurzname: 'Lager MUC', name: 'Lager München', strasse: 'Lagerstraße 5', plz: '80995', stadt: 'München', land: 'Deutschland', koordinaten: '48.177, 11.455', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
 ];
 
 
@@ -143,14 +159,98 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
   )
 }
 
+const LoadAddressDialog = ({ onSelectAddress }: { onSelectAddress: (address: Address) => void }) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+
+    const filteredAddresses = useMemo(() => {
+        if (!searchTerm) return MOCK_ADDRESSES;
+        const lowercasedTerm = searchTerm.toLowerCase();
+        return MOCK_ADDRESSES.filter(address => 
+            Object.values(address).some(value => 
+                String(value).toLowerCase().includes(lowercasedTerm)
+            )
+        );
+    }, [searchTerm]);
+
+    const handleSelectAndConfirm = () => {
+        if (selectedAddress) {
+            onSelectAddress(selectedAddress);
+        }
+    }
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="link" size="sm">Adresse laden</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Stammadresse laden</DialogTitle>
+                    <DialogDescription>Suchen und wählen Sie eine Adresse aus den Stammdaten aus.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                    <Input 
+                        placeholder="Adresse suchen..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="h-9"
+                    />
+                    <div className="max-h-64 overflow-y-auto border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Straße</TableHead>
+                                    <TableHead>Ort</TableHead>
+                                    <TableHead></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredAddresses.map(address => (
+                                    <TableRow key={address.id}>
+                                        <TableCell>{address.name}</TableCell>
+                                        <TableCell>{address.strasse}</TableCell>
+                                        <TableCell>{address.plz} {address.stadt}</TableCell>
+                                        <TableCell className="text-right">
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="sm" onClick={() => setSelectedAddress(address)}>Auswählen</Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Adresse übernehmen?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Wollen Sie die Adresse für "{address.name}" wirklich übernehmen? Die aktuellen Adressfelder werden überschrieben.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                                        <DialogClose asChild>
+                                                            <AlertDialogAction onClick={handleSelectAndConfirm}>Übernehmen</AlertDialogAction>
+                                                        </DialogClose>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+
 export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const id = params.id as string;
 
-  // In a real app, you'd fetch this data. Here we'll find it in our mock data.
-  // And we will simulate a "new" customer if id is 'new'.
   const isNew = id === 'new';
   const customerData = useMemo(() => {
     if (isNew) {
@@ -170,7 +270,7 @@ export default function CustomerDetailPage() {
 
   const kundenKontakte = useMemo(() => MOCK_KONTAKTE.filter(k => k.kundenId === id), [id]);
 
-  const { register, handleSubmit, control, watch, formState: { errors, isDirty, isSubmitting } } = useForm<Customer & { kontakte: Kontakt[] }>({
+  const { register, handleSubmit, control, watch, formState: { errors, isDirty, isSubmitting }, setValue, getValues } = useForm<Customer & { kontakte: Kontakt[] }>({
     defaultValues: { ...customerData, kontakte: kundenKontakte },
   });
 
@@ -181,8 +281,44 @@ export default function CustomerDetailPage() {
   const onSubmit = (data: any) => {
     console.log("Form data submitted:", data);
     toast({ title: "Gespeichert", description: "Kundendaten erfolgreich aktualisiert." });
-    // Here you would typically send the data to your backend
-    router.push('/customers'); // Go back to the list after saving
+    router.push('/customers');
+  };
+
+  const handleSelectAddress = (address: Address) => {
+    // This function splits `strasse` into `strasse` and `hausnummer`.
+    // It assumes a simple format like "Street Name 123". This might need to be more robust.
+    const streetParts = address.strasse.match(/(.+) (\S+)$/);
+    const strasse = streetParts ? streetParts[1] : address.strasse;
+    const hausnummer = streetParts ? streetParts[2] : '';
+    
+    setValue('strasse', strasse, { shouldDirty: true });
+    setValue('hausnummer', hausnummer, { shouldDirty: true });
+    setValue('plz', address.plz, { shouldDirty: true });
+    setValue('ort', address.stadt, { shouldDirty: true });
+    setValue('land', address.land, { shouldDirty: true });
+    toast({ title: "Adresse geladen", description: `Die Adresse für "${address.name}" wurde in das Formular geladen.` });
+  };
+  
+  const handleSaveAddress = () => {
+    const values = getValues();
+    const newAddress: Address = {
+        id: `addr-${Date.now()}`,
+        kurzname: values.firmenname.substring(0, 10),
+        name: `${values.firmenname} - Hauptadresse`,
+        strasse: `${values.strasse} ${values.hausnummer}`,
+        plz: values.plz,
+        stadt: values.ort,
+        land: values.land,
+        koordinaten: "",
+        tourPOI: false,
+        kundenAdresse: true,
+        mitarbeiterAdresse: false
+    };
+    // In a real app, you'd save this to your database.
+    // For now, we'll just log it and show a toast.
+    console.log("Saving address to master data:", newAddress);
+    MOCK_ADDRESSES.push(newAddress);
+    toast({ title: "Adresse gespeichert", description: "Die Adresse wurde zu den Stammdaten hinzugefügt."});
   };
   
   return (
@@ -240,7 +376,15 @@ export default function CustomerDetailPage() {
 
         <div className="lg:col-span-2 space-y-6">
             <Card>
-                <CardHeader><CardTitle>Adresse</CardTitle></CardHeader>
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle>Adresse</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <LoadAddressDialog onSelectAddress={handleSelectAddress} />
+                             <Button type="button" variant="link" size="sm" onClick={handleSaveAddress}>Adresse speichern</Button>
+                        </div>
+                    </div>
+                </CardHeader>
                 <CardContent className="space-y-3">
                     <div className="grid grid-cols-4 gap-3">
                         <div className="col-span-3 space-y-1.5"><Label>Straße</Label><Input {...register("strasse")} className="h-9"/></div>
@@ -284,3 +428,4 @@ export default function CustomerDetailPage() {
     </form>
   );
 }
+
