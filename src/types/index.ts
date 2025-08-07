@@ -1,5 +1,6 @@
 
 
+
 export type Vehicle = {
   // General
   id: string;
@@ -225,3 +226,25 @@ export type Dieselpreis = {
     preis: number;
     zuschlag: number;
 };
+
+export type InvoiceItem = {
+    id: string;
+    beschreibung: string;
+    menge: number;
+    einheit: string;
+    einzelpreis: number;
+    gesamtpreis: number;
+}
+
+export type Invoice = {
+    id: string;
+    rechnungsnummer: string;
+    kundenId: string;
+    kundenName: string;
+    rechnungsdatum: string;
+    faelligkeitsdatum: string;
+    status: 'Entwurf' | 'Offen' | 'Bezahlt' | 'Überfällig' | 'Storniert';
+    betrag: number;
+    waehrung: 'EUR';
+    items: InvoiceItem[];
+}
