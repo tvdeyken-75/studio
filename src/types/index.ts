@@ -8,6 +8,15 @@ export type Vehicle = {
   capacity: string;
 };
 
+export type Trailer = {
+  id: string;
+  type: 'Kofferauflieger' | 'Schiebeplanenauflieger' | 'Kippauflieger';
+  location: string;
+  status: 'Available' | 'On-trip' | 'Maintenance';
+  capacity: string;
+};
+
+
 export type Kontakt = {
     id: string;
     kundenId: string;

@@ -3,14 +3,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { fleetData } from "@/lib/data";
+import { trailerData } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 
 
-export default function FleetPage() {
+export default function TrailersPage() {
   const statusMap = {
     'Available': 'Verfügbar',
     'On-trip': 'Unterwegs',
@@ -20,14 +20,14 @@ export default function FleetPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Fahrzeuge</CardTitle>
-        <CardDescription>Eine Übersicht aller Fahrzeuge in Ihrem Fuhrpark.</CardDescription>
+        <CardTitle>Anhänger</CardTitle>
+        <CardDescription>Eine Übersicht aller Anhänger in Ihrem Fuhrpark.</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Fahrzeug-ID</TableHead>
+              <TableHead>Anhänger-ID</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead>Standort</TableHead>
               <TableHead>Kapazität</TableHead>
@@ -36,23 +36,23 @@ export default function FleetPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fleetData.map((vehicle) => (
-              <TableRow key={vehicle.id}>
-                <TableCell className="font-medium">{vehicle.id}</TableCell>
-                <TableCell>{vehicle.type}</TableCell>
-                <TableCell>{vehicle.location}</TableCell>
-                <TableCell>{vehicle.capacity}</TableCell>
+            {trailerData.map((trailer) => (
+              <TableRow key={trailer.id}>
+                <TableCell className="font-medium">{trailer.id}</TableCell>
+                <TableCell>{trailer.type}</TableCell>
+                <TableCell>{trailer.location}</TableCell>
+                <TableCell>{trailer.capacity}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
                     className={cn(
                       "border-2",
-                      vehicle.status === 'Available' && 'border-green-500 text-green-600',
-                      vehicle.status === 'On-trip' && 'border-blue-500 text-blue-600',
-                      vehicle.status === 'Maintenance' && 'border-amber-500 text-amber-600'
+                      trailer.status === 'Available' && 'border-green-500 text-green-600',
+                      trailer.status === 'On-trip' && 'border-blue-500 text-blue-600',
+                      trailer.status === 'Maintenance' && 'border-amber-500 text-amber-600'
                     )}
                   >
-                    {statusMap[vehicle.status]}
+                    {statusMap[trailer.status]}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

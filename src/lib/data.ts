@@ -1,4 +1,4 @@
-import type { Vehicle, Kpi, ChartData, Transport } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer } from '@/types';
 
 export const fleetData: Vehicle[] = [
   { id: 'AT-001', type: 'LKW', location: 'Berlin, DE', status: 'Available', capacity: '24t' },
@@ -8,6 +8,13 @@ export const fleetData: Vehicle[] = [
   { id: 'AT-005', type: 'LKW', location: 'Köln, DE', status: 'Available', capacity: '24t' },
   { id: 'AT-006', type: 'Transporter', location: 'Stuttgart, DE', status: 'Available', capacity: '3.5t' },
 ];
+
+export const trailerData: Trailer[] = [
+  { id: 'AN-001', type: 'Kofferauflieger', location: 'Berlin, DE', status: 'Available', capacity: '34 Paletten' },
+  { id: 'AN-002', type: 'Schiebeplanenauflieger', location: 'Hamburg, DE', status: 'On-trip', capacity: '34 Paletten' },
+  { id: 'AN-003', type: 'Kippauflieger', location: 'München, DE', status: 'Maintenance', capacity: '25 m³' },
+];
+
 
 export const kpiData: Kpi[] = [
     { title: "Pünktliche Lieferungen", value: "98,2%", change: "+1,5%", changeType: "positive", description: "ggü. Vormonat" },

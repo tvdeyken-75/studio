@@ -16,7 +16,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: Icons.dashboard },
   { href: '/route-planning', label: 'Routenplanung', icon: Icons.route },
   { href: '/address-insights', label: 'Standort-Analyse', icon: Icons.address },
-  { href: '/fleet', label: 'Fahrzeugflotte', icon: Icons.fleet },
+  { href: '/fleet', label: 'Fuhrpark', icon: Icons.fleet },
   { href: '/customers', label: 'Kunden & Auftragnehmer', icon: Icons.customers },
   { href: '/reports', label: 'Berichte', icon: Icons.reports },
   { href: '/master-data/addresses', label: 'Stammdaten', icon: Icons.database },
@@ -24,6 +24,8 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+
+  const isFleetActive = pathname.startsWith('/fleet') || pathname.startsWith('/trailers');
 
   return (
     <>
@@ -37,7 +39,7 @@ export function SidebarNav() {
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
-              isActive={pathname.startsWith(item.href) && (item.href === '/' ? pathname === '/' : true)}
+              isActive={item.href === '/fleet' ? isFleetActive : pathname.startsWith(item.href) && (item.href === '/' ? pathname === '/' : true)}
               tooltip={item.label}
             >
               <Link href={item.href}>
