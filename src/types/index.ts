@@ -1,7 +1,12 @@
 
 
-
-
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  role: 'Admin' | 'User';
+  password?: string;
+};
 
 
 export type Vehicle = {
