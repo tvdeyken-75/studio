@@ -27,10 +27,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       '/route-planning': 'Routenplanung',
       '/address-insights': 'Standort-Analyse',
       '/fleet': 'Fuhrpark',
-      '/customers': 'Kunden & Auftragnehmer',
-      '/reports': 'Berichte',
+      '/customers': 'Beziehungsmanagement',
+      '/auftraege': 'Aufträge',
+      '/reports': 'Transportoverview',
+      '/buchhaltung': 'Buchhaltung',
       '/master-data/addresses': 'Stammdaten',
       '/master-data/countries': 'Stammdaten',
+      '/adminpanel': 'Adminpanel',
+      '/settings': 'Einstellungen',
     };
     const title = pathMap[pathname] || pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard';
     return title.charAt(0).toUpperCase() + title.slice(1);

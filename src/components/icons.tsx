@@ -16,6 +16,10 @@ import {
   Pencil,
   FileBarChart,
   CalendarDays,
+  ClipboardList,
+  Shield,
+  BookUser,
+  Settings,
 } from 'lucide-react'
 
 export type Icon = typeof LucideIcon
@@ -37,4 +41,8 @@ export const Icons = {
   edit: Pencil,
   reports: FileBarChart,
   calendar: CalendarDays,
+  orders: ClipboardList,
+  admin: Shield,
+  accounting: BookUser,
+  settings: Settings,
 }

@@ -18,8 +18,12 @@ const navItems = [
   { href: '/address-insights', label: 'Standort-Analyse', icon: Icons.address },
   { href: '/fleet', label: 'Fuhrpark', icon: Icons.fleet },
   { href: '/customers', label: 'Beziehungsmanagement', icon: Icons.customers },
-  { href: '/reports', label: 'Berichte', icon: Icons.reports },
+  { href: '/auftraege', label: 'Aufträge', icon: Icons.orders },
+  { href: '/reports', label: 'Transportoverview', icon: Icons.reports },
+  { href: '/buchhaltung', label: 'Buchhaltung', icon: Icons.accounting },
   { href: '/master-data/addresses', label: 'Stammdaten', icon: Icons.database },
+  { href: '/adminpanel', label: 'Adminpanel', icon: Icons.admin },
+  { href: '/settings', label: 'Einstellungen', icon: Icons.settings },
 ];
 
 export function SidebarNav() {
@@ -28,6 +32,8 @@ export function SidebarNav() {
   const isFleetActive = pathname.startsWith('/fleet');
   const isMasterDataActive = pathname.startsWith('/master-data');
   const isCustomersActive = pathname.startsWith('/customers');
+  const isAuftraegeActive = pathname.startsWith('/auftraege');
+  const isBuchhaltungActive = pathname.startsWith('/buchhaltung');
 
   return (
     <>
@@ -47,6 +53,10 @@ export function SidebarNav() {
                 isActive = isMasterDataActive;
             } else if (item.href.startsWith('/customers')) {
                 isActive = isCustomersActive;
+            } else if (item.href.startsWith('/auftraege')) {
+                isActive = isAuftraegeActive;
+            } else if (item.href.startsWith('/buchhaltung')) {
+                isActive = isBuchhaltungActive;
             }
             else {
                 isActive = pathname.startsWith(item.href);
