@@ -93,7 +93,7 @@ const MOCK_CUSTOMERS: Customer[] = [{
 const MOCK_SUPPLIERS: Customer[] = [{
     id: 'sup-1',
     firmenname: 'Bürobedarf-Express',
-    kundennummer: 'LIEF-001',
+    kundennummer: 'LIEF-00001',
     ustId: 'DE999888777',
     steuernummer: '999/888/7777',
     firmenbuchnummer: 'HRA 11223',
@@ -466,7 +466,7 @@ export default function CustomerDetailPage() {
     let padLength = 4;
     if (entityType === 'supplier') {
         prefix = 'LIEF-';
-        padLength = 3;
+        padLength = 5;
     } else if (entityType === 'subcontractor') {
         prefix = 'SUB-';
         padLength = 3;

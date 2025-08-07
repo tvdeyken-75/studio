@@ -43,7 +43,7 @@ const initialSuppliers: Customer[] = [
     {
         id: 'sup-1',
         firmenname: 'Bürobedarf-Express',
-        kundennummer: 'LIEF-001',
+        kundennummer: 'LIEF-00001',
         ustId: 'DE999888777',
         steuernummer: '999/888/7777',
         firmenbuchnummer: 'HRA 11223',
