@@ -1,18 +1,44 @@
+
 import type { Vehicle, Kpi, ChartData, Transport, Trailer } from '@/types';
 
 export const fleetData: Vehicle[] = [
-  { id: 'AT-001', type: 'LKW', location: 'Berlin, DE', status: 'Available', capacity: '24t' },
-  { id: 'AT-002', type: 'LKW', location: 'Hamburg, DE', status: 'On-trip', capacity: '24t' },
-  { id: 'AT-003', type: 'Transporter', location: 'München, DE', status: 'Available', capacity: '3.5t' },
-  { id: 'AT-004', type: 'Sprinter', location: 'Frankfurt, DE', status: 'Maintenance', capacity: '1.5t' },
-  { id: 'AT-005', type: 'LKW', location: 'Köln, DE', status: 'Available', capacity: '24t' },
-  { id: 'AT-006', type: 'Transporter', location: 'Stuttgart, DE', status: 'Available', capacity: '3.5t' },
+  { 
+    id: 'AT-001', kennzeichen: 'B-LKW-123', hersteller: 'Mercedes-Benz', modell: 'Actros 1845', fahrgestellnummer: 'WDB12345678901234',
+    baujahr: 2021, typ: 'Sattelzugmaschine', fahrzeugart: 'LKW', fuhrparkNummer: 'F-101',
+    motorleistungKw: 330, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
+    nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 800, adblueVolumenLiter: 60,
+    tuevBis: '2025-08-01', spBis: '2025-02-01', versicherungsnummer: 'V-987654', zulassungsdatum: '2021-08-15',
+    status: 'Aktiv', fahrerId: 'max-mustermann',
+    location: 'Berlin, DE', capacity: '24t' // Legacy
+  },
+  { 
+    id: 'AT-002', kennzeichen: 'H-LKW-456', hersteller: 'MAN', modell: 'TGX', fahrgestellnummer: 'WDB98765432109876',
+    baujahr: 2022, typ: 'Sattelzugmaschine', fahrzeugart: 'LKW', fuhrparkNummer: 'F-102',
+    motorleistungKw: 340, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
+    nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 750, adblueVolumenLiter: 60,
+    tuevBis: '2024-10-01', spBis: '2025-04-01', versicherungsnummer: 'V-123456', zulassungsdatum: '2022-10-20',
+    status: 'Reparatur', fahrerId: 'erika-musterfrau',
+    location: 'Hamburg, DE', capacity: '24t' // Legacy
+  },
 ];
 
 export const trailerData: Trailer[] = [
-  { id: 'AN-001', type: 'Kofferauflieger', location: 'Berlin, DE', status: 'Available', capacity: '34 Paletten' },
-  { id: 'AN-002', type: 'Schiebeplanenauflieger', location: 'Hamburg, DE', status: 'On-trip', capacity: '34 Paletten' },
-  { id: 'AN-003', type: 'Kippauflieger', location: 'München, DE', status: 'Maintenance', capacity: '25 m³' },
+  { 
+    id: 'AN-001', kennzeichen: 'B-AN-111', hersteller: 'Schmitz Cargobull', modell: 'S.KO COOL', fahrgestellnummer: 'SCB123123123123123',
+    baujahr: 2020, anhaengerTyp: 'Kofferauflieger', fuhrparkNummer: 'A-201',
+    achsenanzahl: 3, nutzlastKg: 27000, gesamtgewichtKg: 35000, ladevolumenCbm: 85, bremsenTyp: 'Scheibe',
+    tuevBis: '2025-06-01', spBis: '2024-12-01', versicherungsnummer: 'V-AN-111', zulassungsdatum: '2020-06-10',
+    aktuellGekuppeltMitLkwId: 'AT-001', status: 'Aktiv',
+    location: 'Berlin, DE', capacity: '34 Paletten' // Legacy
+  },
+   { 
+    id: 'AN-002', kennzeichen: 'H-AN-222', hersteller: 'Krone', modell: 'Profi Liner', fahrgestellnummer: 'KRO456456456456456',
+    baujahr: 2019, anhaengerTyp: 'Schiebeplanenauflieger', fuhrparkNummer: 'A-202',
+    achsenanzahl: 3, nutzlastKg: 27500, gesamtgewichtKg: 36000, ladevolumenCbm: 90, bremsenTyp: 'Scheibe',
+    tuevBis: '2025-01-01', spBis: '2025-07-01', versicherungsnummer: 'V-AN-222', zulassungsdatum: '2019-01-15',
+    aktuellGekuppeltMitLkwId: undefined, status: 'In Werkstatt',
+    location: 'Hamburg, DE', capacity: '34 Paletten' // Legacy
+  },
 ];
 
 

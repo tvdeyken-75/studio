@@ -1,18 +1,85 @@
 
 
+
 export type Vehicle = {
+  // General
   id: string;
-  type: 'LKW' | 'Transporter' | 'Sprinter';
+  kennzeichen: string;
+  hersteller: string;
+  modell: string;
+  fahrgestellnummer: string;
+  baujahr: number;
+  typ: 'Solo' | 'Sattelzugmaschine' | 'Hängerzug';
+  fahrzeugart: 'LKW' | 'Zugmaschine';
+  fuhrparkNummer: string;
+  
+  // Technical
+  motorleistungKw: number;
+  kraftstoffart: 'Diesel' | 'Elektro' | 'H2';
+  getriebeart: 'Automatik' | 'Manuell';
+  achszahl: number;
+  nutzlastKg: number;
+  gesamtgewichtKg: number;
+  tankvolumenLiter?: number;
+  adblueVolumenLiter?: number;
+
+  // Documents & Deadlines
+  tuevBis: string; // Date
+  spBis: string; // Date
+  versicherungsnummer: string;
+  zulassungsdatum: string; // Date
+  stillgelegtAm?: string; // Date
+  
+  // Positioning
+  gpsTrackerId?: string;
+  simNummer?: string;
+
+  // Status
+  status: 'Aktiv' | 'Reparatur' | 'Verkauft' | 'Ausgemustert';
+  fahrerId?: string; // Link to a driver
+  
+  // Legacy fields for backwards compatibility with previous mock data
   location: string;
-  status: 'Available' | 'On-trip' | 'Maintenance';
   capacity: string;
 };
 
 export type Trailer = {
-  id: string;
-  type: 'Kofferauflieger' | 'Schiebeplanenauflieger' | 'Kippauflieger';
+  // General
+  id:string;
+  kennzeichen: string;
+  hersteller: string;
+  modell: string;
+  fahrgestellnummer: string;
+  baujahr: number;
+  anhaengerTyp: 'Plane' | 'Kühl' | 'Kipper' | 'Container' | 'Kofferauflieger' | 'Schiebeplanenauflieger';
+  fuhrparkNummer: string;
+
+  // Technical
+  achsenanzahl: number;
+  nutzlastKg: number;
+  gesamtgewichtKg: number;
+  ladevolumenCbm?: number;
+  bremsenTyp: 'Scheibe' | 'Trommel';
+
+  // Documents & Deadlines
+  tuevBis: string; // Date
+  spBis: string; // Date
+  versicherungsnummer: string;
+  zulassungsdatum: string; // Date
+  stillgelegtAm?: string; // Date
+  
+  // Coupling
+  aktuellGekuppeltMitLkwId?: string;
+
+  // Positioning
+  gpsTrackerId?: string;
+  simNummer?: string;
+
+  // Status
+  status: 'Aktiv' | 'In Werkstatt' | 'Verkauft' | 'Ausgemustert';
+
+  // Legacy fields for backwards compatibility with previous mock data
   location: string;
-  status: 'Available' | 'On-trip' | 'Maintenance';
   capacity: string;
 };
 
@@ -129,3 +196,13 @@ export type Transport = {
   actualPickupDate: string;
   actualDeliveryDate: string;
 };
+
+
+export type Document = {
+  id: string;
+  name: string;
+  type: 'TÜV' | 'SP' | 'Reparatur' | 'Schaden' | 'Sonstiges';
+  date: string;
+  fileUrl: string;
+  notes?: string;
+}
