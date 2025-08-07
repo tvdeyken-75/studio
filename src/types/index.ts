@@ -1,4 +1,5 @@
 
+
 export type Vehicle = {
   id: string;
   type: 'LKW' | 'Transporter' | 'Sprinter';
@@ -104,3 +105,18 @@ export interface Country {
     kurzname: string;
     official_country_name: string;
 }
+
+export type Transport = {
+  id: string;
+  transportNumber: string;
+  customer: string;
+  pickupLocation: string;
+  deliveryLocation: string;
+  driver: string;
+  vehicleId: string;
+  status: 'Abgeschlossen' | 'Unterwegs' | 'Geplant';
+  plannedPickupDate: string;
+  plannedDeliveryDate: string;
+  actualPickupDate: string;
+  actualDeliveryDate: string;
+};

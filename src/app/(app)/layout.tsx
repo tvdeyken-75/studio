@@ -28,6 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       '/address-insights': 'Standort-Analyse',
       '/fleet': 'Fahrzeugflotte',
       '/customers': 'Kunden & Auftragnehmer',
+      '/reports': 'Berichte',
       '/master-data/addresses': 'Stammdaten',
       '/master-data/countries': 'Stammdaten',
     };

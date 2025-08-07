@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Database,
   Pencil,
+  FileBarChart,
+  CalendarDays,
 } from 'lucide-react'
 
 export type Icon = typeof LucideIcon
@@ -33,4 +35,6 @@ export const Icons = {
   issue: AlertCircle,
   database: Database,
   edit: Pencil,
+  reports: FileBarChart,
+  calendar: CalendarDays,
 }
