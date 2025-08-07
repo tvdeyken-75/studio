@@ -34,6 +34,7 @@ import {
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 // Mocked countries data. In a real application, this would come from an API or the countries state.
 const MOCK_COUNTRIES: Country[] = [
@@ -89,63 +90,88 @@ const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => v
           Neue Adresse
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Neue Adresse hinzufügen</DialogTitle>
           <DialogDescription>
             Füllen Sie die Details für die neue Adresse aus.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="kurzname" className="text-right">Kurzname</Label>
-                <Input id="kurzname" value={formData.kurzname} onChange={handleInputChange} className="col-span-3" />
+        <div className="space-y-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
+            <div className="space-y-4">
+                <h4 className="text-sm font-medium">Allgemein</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="kurzname">Kurzname</Label>
+                        <Input id="kurzname" value={formData.kurzname} onChange={handleInputChange} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input id="name" value={formData.name} onChange={handleInputChange} />
+                    </div>
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" value={formData.name} onChange={handleInputChange} className="col-span-3" />
+
+            <Separator />
+
+            <div className="space-y-4">
+                <h4 className="text-sm font-medium">Standortdetails</h4>
+                 <div className="space-y-2">
+                    <Label htmlFor="strasse">Straße & Hausnummer</Label>
+                    <Input id="strasse" value={formData.strasse} onChange={handleInputChange} />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="plz">PLZ</Label>
+                        <Input id="plz" value={formData.plz} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                        <Label htmlFor="stadt">Stadt</Label>
+                        <Input id="stadt" value={formData.stadt} onChange={handleInputChange} />
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="land">Land</Label>
+                        <Select onValueChange={handleSelectChange} defaultValue={formData.land}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Land auswählen" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {countries.map(c => <SelectItem key={c.id} value={c.official_country_name}>{c.official_country_name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="koordinaten">Koordinaten (Optional)</Label>
+                        <Input id="koordinaten" value={formData.koordinaten} onChange={handleInputChange} placeholder="z.B. 52.5200, 13.4050"/>
+                    </div>
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="strasse" className="text-right">Straße</Label>
-                <Input id="strasse" value={formData.strasse} onChange={handleInputChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="plz" className="text-right">PLZ</Label>
-                <Input id="plz" value={formData.plz} onChange={handleInputChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="stadt" className="text-right">Stadt</Label>
-                <Input id="stadt" value={formData.stadt} onChange={handleInputChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="land" className="text-right">Land</Label>
-                 <Select onValueChange={handleSelectChange} defaultValue={formData.land}>
-                    <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Land auswählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {countries.map(c => <SelectItem key={c.id} value={c.official_country_name}>{c.official_country_name}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="koordinaten" className="text-right">Koordinaten</Label>
-                <Input id="koordinaten" value={formData.koordinaten} onChange={handleInputChange} className="col-span-3" />
-            </div>
-            <div className="flex items-center justify-end col-span-4 space-x-2">
-                <Checkbox id="tourPOI" checked={formData.tourPOI} onCheckedChange={() => handleCheckboxChange('tourPOI')} />
-                <Label htmlFor="tourPOI">Tour-POI</Label>
-            </div>
-            <div className="flex items-center justify-end col-span-4 space-x-2">
-                <Checkbox id="kundenAdresse" checked={formData.kundenAdresse} onCheckedChange={() => handleCheckboxChange('kundenAdresse')} />
-                <Label htmlFor="kundenAdresse">Kundenadresse</Label>
-            </div>
-            <div className="flex items-center justify-end col-span-4 space-x-2">
-                <Checkbox id="mitarbeiterAdresse" checked={formData.mitarbeiterAdresse} onCheckedChange={() => handleCheckboxChange('mitarbeiterAdresse')} />
-                <Label htmlFor="mitarbeiterAdresse">Mitarbeiteradresse</Label>
+
+            <Separator />
+
+            <div className="space-y-4">
+                <h4 className="text-sm font-medium">Kategorisierung</h4>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="tourPOI" checked={formData.tourPOI} onCheckedChange={() => handleCheckboxChange('tourPOI')} />
+                        <Label htmlFor="tourPOI" className="font-normal">Tour-POI</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="kundenAdresse" checked={formData.kundenAdresse} onCheckedChange={() => handleCheckboxChange('kundenAdresse')} />
+                        <Label htmlFor="kundenAdresse" className="font-normal">Kundenadresse</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="mitarbeiterAdresse" checked={formData.mitarbeiterAdresse} onCheckedChange={() => handleCheckboxChange('mitarbeiterAdresse')} />
+                        <Label htmlFor="mitarbeiterAdresse" className="font-normal">Mitarbeiteradresse</Label>
+                    </div>
+                </div>
             </div>
         </div>
+
         <DialogFooter>
+          <Button onClick={() => setIsOpen(false)} variant="outline">Abbrechen</Button>
           <Button onClick={handleAdd}>Speichern</Button>
         </DialogFooter>
       </DialogContent>
@@ -299,3 +325,5 @@ export default function AddressesPage() {
   
   return <AddressTable addresses={addresses} onAdd={addAddress} setAddresses={setAddresses} />;
 }
+
+    
