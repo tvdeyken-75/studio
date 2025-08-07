@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useMenu } from '@/context/menu-context';
 import {
   SidebarHeader,
   SidebarMenu,
@@ -12,28 +13,16 @@ import {
 import { Icons } from '@/components/icons';
 import { Separator } from './ui/separator';
 
-const navItems = [
-  { href: '/', label: 'Dashboard', icon: Icons.dashboard },
-  { href: '/route-planning', label: 'Routenplanung', icon: Icons.route },
-  { href: '/address-insights', label: 'Standort-Analyse', icon: Icons.address },
-  { href: '/fleet', label: 'Fuhrpark', icon: Icons.fleet },
-  { href: '/customers', label: 'Beziehungsmanagement', icon: Icons.customers },
-  { href: '/auftraege', label: 'Aufträge', icon: Icons.orders },
-  { href: '/reports', label: 'Transportoverview', icon: Icons.reports },
-  { href: '/buchhaltung', label: 'Buchhaltung', icon: Icons.accounting },
-  { href: '/master-data/addresses', label: 'Stammdaten', icon: Icons.database },
-  { href: '/adminpanel', label: 'Adminpanel', icon: Icons.admin },
-  { href: '/settings', label: 'Einstellungen', icon: Icons.settings },
-];
-
 export function SidebarNav() {
   const pathname = usePathname();
+  const { menuItems } = useMenu();
 
   const isFleetActive = pathname.startsWith('/fleet');
   const isMasterDataActive = pathname.startsWith('/master-data');
   const isCustomersActive = pathname.startsWith('/customers');
   const isAuftraegeActive = pathname.startsWith('/auftraege');
   const isBuchhaltungActive = pathname.startsWith('/buchhaltung');
+  const isAdminpanelActive = pathname.startsWith('/adminpanel');
 
   return (
     <>
@@ -43,7 +32,7 @@ export function SidebarNav() {
       </SidebarHeader>
       <Separator />
       <SidebarMenu className="flex-1 p-2">
-        {navItems.map((item) => {
+        {menuItems.map((item) => {
             let isActive = false;
             if (item.href === '/') {
                 isActive = pathname === '/';
@@ -57,13 +46,15 @@ export function SidebarNav() {
                 isActive = isAuftraegeActive;
             } else if (item.href.startsWith('/buchhaltung')) {
                 isActive = isBuchhaltungActive;
+            } else if (item.href.startsWith('/adminpanel')) {
+                isActive = isAdminpanelActive;
             }
             else {
                 isActive = pathname.startsWith(item.href);
             }
            
            return (
-              <SidebarMenuItem key={item.href}>
+              <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   asChild
                   isActive={isActive}

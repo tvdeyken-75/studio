@@ -1,28 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useMenu } from "@/context/menu-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 
-// Mock data representing the navigation items
-const initialNavItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Icons.dashboard },
-  { id: 'route-planning', label: 'Routenplanung', icon: Icons.route },
-  { id: 'address-insights', label: 'Standort-Analyse', icon: Icons.address },
-  { id: 'fleet', label: 'Fuhrpark', icon: Icons.fleet },
-  { id: 'customers', label: 'Beziehungsmanagement', icon: Icons.customers },
-  { id: 'auftraege', label: 'Aufträge', icon: Icons.orders },
-  { id: 'reports', label: 'Transportoverview', icon: Icons.reports },
-  { id: 'buchhaltung', label: 'Buchhaltung', icon: Icons.accounting },
-  { id: 'master-data', label: 'Stammdaten', icon: Icons.database },
-  { id: 'adminpanel', label: 'Adminpanel', icon: Icons.admin },
-  { id: 'settings', label: 'Einstellungen', icon: Icons.settings },
-];
-
 
 export default function SettingsPage() {
-    const [menuItems, setMenuItems] = useState(initialNavItems);
+    const { menuItems, setMenuItems } = useMenu();
     const [isSaving, setIsSaving] = useState(false);
 
     const moveItem = (index: number, direction: 'up' | 'down') => {
@@ -36,8 +22,8 @@ export default function SettingsPage() {
 
     const handleSave = () => {
         setIsSaving(true);
+        // In a real application, you would save this order to a user's settings, e.g., in localStorage or a database.
         console.log("Saving new menu order:", menuItems.map(item => item.id));
-        // In a real application, you would save this order to a user's settings.
         setTimeout(() => {
             setIsSaving(false);
         }, 1000);
