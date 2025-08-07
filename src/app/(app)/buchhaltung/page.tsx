@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import type { Customer, Invoice, InvoiceItem } from "@/types";
+import type { Customer, Invoice, InvoiceItem, Transport, Dieselpreis } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,9 +29,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm, useFieldArray } from "react-hook-form";
-import { customerData } from "@/lib/data"; // Using customer data for selection
-import { format, getYear } from "date-fns";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { customerData, transportData, dieselpreiseData } from "@/lib/data";
+import { format, getYear, parseISO } from "date-fns";
 import { de } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ const initialInvoices: Invoice[] = [
         status: 'Offen',
         betrag: 1500.00,
         waehrung: 'EUR',
-        items: [{ id: 'item1', beschreibung: 'Transport Berlin-Hamburg', menge: 1, einheit: 'Stück', einzelpreis: 1200, gesamtpreis: 1200 }, { id: 'item2', beschreibung: 'Mautgebühren', menge: 1, einheit: 'Pauschale', einzelpreis: 300, gesamtpreis: 300 }],
+        items: [{ id: 'item1', beschreibung: 'Transport Berlin-Hamburg', menge: 1, einheit: 'Stück', einzelpreis: 1200, gesamtpreis: 1200, datum: '2024-07-25' }],
     },
     {
         id: '2',
@@ -59,7 +59,7 @@ const initialInvoices: Invoice[] = [
         status: 'Bezahlt',
         betrag: 2500.50,
         waehrung: 'EUR',
-        items: [{ id: 'item1', beschreibung: 'Schwertransport München-Frankfurt', menge: 1, einheit: 'Stück', einzelpreis: 2500.50, gesamtpreis: 2500.50 }],
+        items: [{ id: 'item1', beschreibung: 'Schwertransport München-Frankfurt', menge: 1, einheit: 'Stück', einzelpreis: 2500.50, gesamtpreis: 2500.50, datum: '2024-07-26' }],
     }
 ];
 
@@ -100,29 +100,25 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
 
-    const { register, handleSubmit, control, watch, setValue } = useForm<Invoice>({
+    const { register, handleSubmit, control, watch, setValue, getValues } = useForm<Invoice>({
         defaultValues: {
             id: `inv-${Date.now()}`,
             rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
             status: 'Entwurf',
             waehrung: 'EUR',
-            items: [{ id: 'item-1', beschreibung: '', menge: 1, einheit: 'Stück', einzelpreis: 0, gesamtpreis: 0 }],
+            items: [],
         }
     });
     const { fields, append, remove } = useFieldArray({ control, name: "items" });
     const watchedItems = watch('items');
+    const watchedKundenId = watch('kundenId');
 
     const calculateTotal = () => {
-        return watchedItems.reduce((total, item) => {
-            const menge = item.menge || 0;
-            const einzelpreis = item.einzelpreis || 0;
-            const itemTotal = menge * einzelpreis;
-            return total + itemTotal;
-        }, 0);
+        return watchedItems.reduce((total, item) => total + (item.gesamtpreis || 0), 0);
     }
     
     const generateNewInvoiceNumber = () => {
-        const year = getYear(new Date());
+        const year = getYear(new Date(getValues('rechnungsdatum')));
         const [prefix, numPart, yearPart] = lastInvoiceNumber.split('-');
         let nextNum = 1;
         if (parseInt(yearPart) === year) {
@@ -132,8 +128,8 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     }
 
     const onSubmit = (data: Invoice) => {
-        if (!data.kundenId || data.items.length === 0 || !data.items.every(i => i.beschreibung && i.menge > 0 && i.einzelpreis > 0)) {
-            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte füllen Sie alle erforderlichen Felder aus.' });
+        if (!data.kundenId || data.items.length === 0) {
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte wählen Sie einen Kunden und fügen Sie mindestens eine Position hinzu.' });
             return;
         }
 
@@ -148,20 +144,44 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         setIsOpen(false);
     };
 
-    useEffect(() => {
-        const subscription = watch((value, { name, type }) => {
-            if (name && (name.startsWith('items.') && (name.endsWith('.menge') || name.endsWith('.einzelpreis')))) {
-                const itemIndex = parseInt(name.split('.')[1]);
-                const item = value.items?.[itemIndex];
-                if (item) {
-                   const menge = item.menge || 0;
-                   const einzelpreis = item.einzelpreis || 0;
-                   setValue(`items.${itemIndex}.gesamtpreis`, menge * einzelpreis);
-                }
-            }
+    const handleAddPosition = () => {
+        // This is a simplified version. A real app might have more complex logic to get tours.
+        const tourNettoPreis = 1250.00; // Example price
+        const tourId = transportData[0].id;
+        const tourBeschreibung = `Transport ${transportData[0].pickupLocation} - ${transportData[0].deliveryLocation}`;
+
+        append({
+            id: `item-${Date.now()}`,
+            beschreibung: tourBeschreibung,
+            menge: 1,
+            einheit: 'Tour',
+            einzelpreis: tourNettoPreis,
+            gesamtpreis: tourNettoPreis,
+            datum: transportData[0].actualDeliveryDate,
         });
-        return () => subscription.unsubscribe();
-    }, [watch, setValue]);
+
+        // Add Dieselfloaterzuschlag
+        const lastDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
+        if (lastDieselpreis) {
+            const zuschlag = tourNettoPreis * (lastDieselpreis.zuschlag / 100);
+            append({
+                id: `item-${Date.now()}-diesel`,
+                beschreibung: `Dieselfloaterzuschlag (${lastDieselpreis.woche}: ${lastDieselpreis.zuschlag}%)`,
+                menge: 1, einheit: '%', einzelpreis: zuschlag, gesamtpreis: zuschlag, datum: transportData[0].actualDeliveryDate
+            });
+        }
+
+        // Add Mautzuschlag
+        const kunde = customerData.find(c => c.id === watchedKundenId);
+        if (kunde && kunde.mautzuschlag > 0) {
+            const zuschlag = tourNettoPreis * (kunde.mautzuschlag / 100);
+             append({
+                id: `item-${Date.now()}-maut`,
+                beschreibung: `Mautzuschlag (${kunde.mautzuschlag}%)`,
+                menge: 1, einheit: '%', einzelpreis: zuschlag, gesamtpreis: zuschlag, datum: transportData[0].actualDeliveryDate
+            });
+        }
+    };
 
 
     return (
@@ -211,24 +231,32 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-2/5">Beschreibung</TableHead>
-                                        <TableHead>Menge</TableHead>
-                                        <TableHead>Einheit</TableHead>
-                                        <TableHead>Einzelpreis (€)</TableHead>
-                                        <TableHead>Gesamtpreis (€)</TableHead>
+                                        <TableHead className="w-20">Datum</TableHead>
+                                        <TableHead className="w-3/5">Beschreibung</TableHead>
+                                        <TableHead>Nettopreis (€)</TableHead>
                                         <TableHead className="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {fields.map((field, index) => (
                                         <TableRow key={field.id}>
-                                            <TableCell><Textarea {...register(`items.${index}.beschreibung`)} placeholder="Leistungsbeschreibung" className="min-h-0 h-9"/></TableCell>
-                                            <TableCell><Input type="number" {...register(`items.${index}.menge`, { valueAsNumber: true })} className="h-9" /></TableCell>
-                                            <TableCell><Input {...register(`items.${index}.einheit`)} className="h-9"/></TableCell>
-                                            <TableCell><Input type="number" step="0.01" {...register(`items.${index}.einzelpreis`, { valueAsNumber: true })} className="h-9"/></TableCell>
-                                            <TableCell><Input readOnly value={(watchedItems[index]?.gesamtpreis || 0).toFixed(2)} className="h-9 bg-muted"/></TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">{field.datum ? format(parseISO(field.datum), 'dd.MM.yyyy') : ''}</TableCell>
                                             <TableCell>
-                                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
+                                                 <Controller
+                                                    control={control}
+                                                    name={`items.${index}.beschreibung`}
+                                                    render={({ field }) => <Textarea {...field} placeholder="Leistungsbeschreibung" className="min-h-0 h-9"/>}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Controller
+                                                    control={control}
+                                                    name={`items.${index}.gesamtpreis`}
+                                                    render={({ field }) => <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} className="h-9"/>}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
                                                     <Icons.logout className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </TableCell>
@@ -236,7 +264,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                     ))}
                                 </TableBody>
                             </Table>
-                            <Button type="button" variant="link" size="sm" onClick={() => append({ id: `item-${Date.now()}`, beschreibung: '', menge: 1, einheit: 'Stück', einzelpreis: 0, gesamtpreis: 0 })}>
+                             <Button type="button" variant="link" size="sm" onClick={handleAddPosition} disabled={!watchedKundenId}>
                                 <Icons.add className="mr-2 h-4 w-4" /> Position hinzufügen
                             </Button>
                         </div>

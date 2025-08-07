@@ -1,5 +1,6 @@
 
 
+
 import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer } from '@/types';
 
 export const customerData: Customer[] = [
@@ -25,6 +26,7 @@ export const customerData: Customer[] = [
         kreditlimit: 10000,
         skontoProzent: 2,
         skontoTage: 14,
+        mautzuschlag: 5,
         bankname: 'Musterbank',
         iban: 'DE89370400440532013000',
         bic: 'COBADEFFXXX',
@@ -59,6 +61,7 @@ export const customerData: Customer[] = [
         kreditlimit: 50000,
         skontoProzent: 3,
         skontoTage: 7,
+        mautzuschlag: 7.5,
         bankname: 'Baubank',
         iban: 'DE89370400440532013001',
         bic: 'COBADEFFXXX',

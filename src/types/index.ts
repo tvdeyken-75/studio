@@ -1,6 +1,7 @@
 
 
 
+
 export type Vehicle = {
   // General
   id: string;
@@ -128,6 +129,7 @@ export type Customer = {
     kreditlimit: number;
     skontoProzent: number;
     skontoTage: number;
+    mautzuschlag: number; // Mautzuschlag in %
 
     // Bankverbindung
     bankname: string;
@@ -234,6 +236,7 @@ export type InvoiceItem = {
     einheit: string;
     einzelpreis: number;
     gesamtpreis: number;
+    datum?: string;
 }
 
 export type Invoice = {
