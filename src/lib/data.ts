@@ -1,7 +1,8 @@
 
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer } from '@/types';
+
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -183,3 +184,10 @@ export const dieselpreiseData: Dieselpreis[] = [
     { id: '2', woche: 'KW 29', von: '2024-07-15', bis: '2024-07-21', preis: 1.68, zuschlag: 16.0 },
     { id: '3', woche: 'KW 30', von: '2024-07-22', bis: '2024-07-28', preis: 1.71, zuschlag: 16.5 },
 ]
+
+export const transactionData: Transaction[] = [
+    { id: '1', datum: '2024-07-29', art: 'Einnahme', kategorie: 'Umsatzerlöse', beschreibung: 'Rechnung RN-000002-2024', betrag: 2500.50, waehrung: 'EUR', rechnungsId: '2', status: 'Verbucht' },
+    { id: '2', datum: '2024-07-28', art: 'Ausgabe', kategorie: 'Treibstoff', beschreibung: 'Tanken B-LKW-123', betrag: 450.75, waehrung: 'EUR', belegnummer: 'B-1001', kostenstelleId: 'F-101', status: 'Verbucht' },
+    { id: '3', datum: '2024-07-25', art: 'Ausgabe', kategorie: 'Maut', beschreibung: 'Mautgebühren A9', betrag: 85.40, waehrung: 'EUR', belegnummer: 'B-1002', kostenstelleId: 'F-101', status: 'Verbucht' },
+    { id: '4', datum: '2024-07-30', art: 'Ausgabe', kategorie: 'Versicherung', beschreibung: 'LKW Versicherung Q3', betrag: 1200.00, waehrung: 'EUR', belegnummer: 'V-2024-Q3', status: 'Offen' },
+];

@@ -2,6 +2,7 @@
 
 
 
+
 export type Vehicle = {
   // General
   id: string;
@@ -250,4 +251,18 @@ export type Invoice = {
     betrag: number;
     waehrung: 'EUR';
     items: InvoiceItem[];
+}
+
+export type Transaction = {
+    id: string;
+    datum: string; // ISO Date String
+    art: 'Einnahme' | 'Ausgabe';
+    kategorie: string;
+    beschreibung: string;
+    betrag: number; // always positive, sign is determined by 'art'
+    waehrung: 'EUR';
+    belegnummer?: string;
+    kostenstelleId?: string; // Optional: Link to a cost center
+    rechnungsId?: string; // Optional: Link to an invoice
+    status: 'Offen' | 'Verbucht';
 }

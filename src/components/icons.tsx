@@ -21,6 +21,9 @@ import {
   BookUser,
   Settings,
   Trash2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Wallet,
 } from 'lucide-react'
 
 export type Icon = typeof LucideIcon
@@ -47,6 +50,9 @@ export const Icons = {
   accounting: BookUser,
   settings: Settings,
   delete: Trash2,
+  income: ArrowUpRight,
+  expense: ArrowDownLeft,
+  wallet: Wallet,
 }
 
     
