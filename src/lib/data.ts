@@ -2,7 +2,8 @@
 
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction } from '@/types';
+
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -190,4 +191,11 @@ export const transactionData: Transaction[] = [
     { id: '2', datum: '2024-07-28', art: 'Ausgabe', kategorie: 'Treibstoff', beschreibung: 'Tanken B-LKW-123', betrag: 450.75, waehrung: 'EUR', belegnummer: 'B-1001', kostenstelleId: 'F-101', status: 'Verbucht' },
     { id: '3', datum: '2024-07-25', art: 'Ausgabe', kategorie: 'Maut', beschreibung: 'Mautgebühren A9', betrag: 85.40, waehrung: 'EUR', belegnummer: 'B-1002', kostenstelleId: 'F-101', status: 'Verbucht' },
     { id: '4', datum: '2024-07-30', art: 'Ausgabe', kategorie: 'Versicherung', beschreibung: 'LKW Versicherung Q3', betrag: 1200.00, waehrung: 'EUR', belegnummer: 'V-2024-Q3', status: 'Offen' },
+];
+
+export const kostenstellenData: Kostenstelle[] = [
+    { id: 'ks-1', nummer: 'F-101', name: 'LKW B-LKW-123', beschreibung: 'Kosten für Fahrzeug B-LKW-123', typ: 'Fahrzeug', verantwortlicher: 'Max Mustermann' },
+    { id: 'ks-2', nummer: 'F-102', name: 'LKW H-LKW-456', beschreibung: 'Kosten für Fahrzeug H-LKW-456', typ: 'Fahrzeug', verantwortlicher: 'Erika Musterfrau' },
+    { id: 'ks-3', nummer: 'IT-001', name: 'IT Abteilung', beschreibung: 'Allgemeine IT-Kosten', typ: 'Abteilung', verantwortlicher: 'Admin' },
+    { id: 'ks-4', nummer: 'PROJ-Alpha', name: 'Projekt Alpha', beschreibung: 'Kosten für das Projekt Alpha', typ: 'Projekt' },
 ];

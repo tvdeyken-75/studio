@@ -3,6 +3,7 @@
 
 
 
+
 export type Vehicle = {
   // General
   id: string;
@@ -266,3 +267,12 @@ export type Transaction = {
     rechnungsId?: string; // Optional: Link to an invoice
     status: 'Offen' | 'Verbucht';
 }
+
+export type Kostenstelle = {
+  id: string;
+  nummer: string;
+  name: string;
+  beschreibung: string;
+  typ: 'Fahrzeug' | 'Abteilung' | 'Projekt' | 'Sonstiges';
+  verantwortlicher?: string;
+};
