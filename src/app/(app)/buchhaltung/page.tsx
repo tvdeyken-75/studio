@@ -100,7 +100,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
 
-    const { register, handleSubmit, control, watch, setValue, getValues } = useForm<Invoice>({
+    const { register, handleSubmit, control, watch, setValue, getValues, reset } = useForm<Invoice>({
         defaultValues: {
             id: `inv-${Date.now()}`,
             rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
@@ -109,9 +109,27 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
             items: [],
         }
     });
-    const { fields, append, remove } = useFieldArray({ control, name: "items" });
+
     const watchedItems = watch('items');
     const watchedKundenId = watch('kundenId');
+    
+    const [availableTours, setAvailableTours] = useState<Transport[]>([]);
+    const [selectedTourId, setSelectedTourId] = useState<string>('');
+    const [tourNettoPreis, setTourNettoPreis] = useState(0);
+
+    useEffect(() => {
+        if (watchedKundenId) {
+            const customer = customerData.find(c => c.id === watchedKundenId);
+            const customerTours = transportData.filter(t => t.customer === customer?.firmenname && t.status === 'Abgeschlossen');
+            setAvailableTours(customerTours);
+            setSelectedTourId('');
+            setValue('items', []);
+        } else {
+            setAvailableTours([]);
+            setSelectedTourId('');
+            setValue('items', []);
+        }
+    }, [watchedKundenId, setValue]);
 
     const calculateTotal = () => {
         return watchedItems.reduce((total, item) => total + (item.gesamtpreis || 0), 0);
@@ -129,7 +147,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
 
     const onSubmit = (data: Invoice) => {
         if (!data.kundenId || data.items.length === 0) {
-            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte wählen Sie einen Kunden und fügen Sie mindestens eine Position hinzu.' });
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte wählen Sie einen Kunden und einen Transportauftrag aus.' });
             return;
         }
 
@@ -142,47 +160,58 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         onAddInvoice(finalData);
         toast({ title: 'Erfolg', description: `Rechnung ${finalData.rechnungsnummer} wurde erstellt.` });
         setIsOpen(false);
-    };
-
-    const handleAddPosition = () => {
-        // This is a simplified version. A real app might have more complex logic to get tours.
-        const tourNettoPreis = 1250.00; // Example price
-        const tourId = transportData[0].id;
-        const tourBeschreibung = `Transport ${transportData[0].pickupLocation} - ${transportData[0].deliveryLocation}`;
-
-        append({
-            id: `item-${Date.now()}`,
-            beschreibung: tourBeschreibung,
-            menge: 1,
-            einheit: 'Tour',
-            einzelpreis: tourNettoPreis,
-            gesamtpreis: tourNettoPreis,
-            datum: transportData[0].actualDeliveryDate,
+        reset({
+            id: `inv-${Date.now()}`,
+            rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
+            status: 'Entwurf', waehrung: 'EUR', items: []
         });
+        setSelectedTourId('');
+    };
+    
+    const handleTourSelection = (tourId: string) => {
+        const tour = availableTours.find(t => t.id === tourId);
+        if (!tour) return;
+        
+        setSelectedTourId(tourId);
 
+        const newItems: InvoiceItem[] = [];
+        // This is a simplified version. A real app might have more complex logic to get prices.
+        const basePrice = 1250.00; 
+        setTourNettoPreis(basePrice);
+
+        newItems.push({
+            id: `item-${Date.now()}-tour`,
+            beschreibung: `Transport ${tour.pickupLocation} - ${tour.deliveryLocation} (${tour.transportNumber})`,
+            menge: 1, einheit: 'Tour', einzelpreis: basePrice, gesamtpreis: basePrice,
+            datum: tour.actualDeliveryDate
+        });
+        
         // Add Dieselfloaterzuschlag
         const lastDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
         if (lastDieselpreis) {
-            const zuschlag = tourNettoPreis * (lastDieselpreis.zuschlag / 100);
-            append({
+            const zuschlag = basePrice * (lastDieselpreis.zuschlag / 100);
+            newItems.push({
                 id: `item-${Date.now()}-diesel`,
-                beschreibung: `Dieselfloaterzuschlag (${lastDieselpreis.woche}: ${lastDieselpreis.zuschlag}%)`,
-                menge: 1, einheit: '%', einzelpreis: zuschlag, gesamtpreis: zuschlag, datum: transportData[0].actualDeliveryDate
+                beschreibung: `Dieselfloaterzuschlag (${lastDieselpreis.woche}: ${lastDieselpreis.zuschlag.toFixed(2)}%)`,
+                menge: 1, einheit: '%', einzelpreis: zuschlag, gesamtpreis: zuschlag,
+                datum: tour.actualDeliveryDate
             });
         }
-
+        
         // Add Mautzuschlag
         const kunde = customerData.find(c => c.id === watchedKundenId);
         if (kunde && kunde.mautzuschlag > 0) {
-            const zuschlag = tourNettoPreis * (kunde.mautzuschlag / 100);
-             append({
+            const zuschlag = basePrice * (kunde.mautzuschlag / 100);
+            newItems.push({
                 id: `item-${Date.now()}-maut`,
                 beschreibung: `Mautzuschlag (${kunde.mautzuschlag}%)`,
-                menge: 1, einheit: '%', einzelpreis: zuschlag, gesamtpreis: zuschlag, datum: transportData[0].actualDeliveryDate
+                menge: 1, einheit: '%', einzelpreis: zuschlag, gesamtpreis: zuschlag,
+                datum: tour.actualDeliveryDate
             });
         }
-    };
-
+        
+        setValue('items', newItems);
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -225,49 +254,52 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                             </div>
                         </div>
 
+                         {/* Transport Selection */}
+                         <div className="space-y-1.5">
+                            <Label>Abgeschlossenen Transportauftrag auswählen</Label>
+                            <Select onValueChange={handleTourSelection} value={selectedTourId} disabled={!watchedKundenId || availableTours.length === 0}>
+                                <SelectTrigger className="h-9">
+                                    <SelectValue placeholder={availableTours.length > 0 ? "Transportauftrag auswählen" : "Keine abgeschlossenen Aufträge für diesen Kunden"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableTours.map(t => (
+                                        <SelectItem key={t.id} value={t.id}>
+                                            {t.transportNumber}: {t.pickupLocation} nach {t.deliveryLocation} am {format(new Date(t.actualDeliveryDate), 'dd.MM.yyyy')}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                         </div>
+
+
                         {/* Items Section */}
+                        {watchedItems.length > 0 && (
                         <div className="space-y-2 pt-4">
                             <Label>Rechnungspositionen</Label>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-20">Datum</TableHead>
-                                        <TableHead className="w-3/5">Beschreibung</TableHead>
-                                        <TableHead>Nettopreis (€)</TableHead>
-                                        <TableHead className="w-12"></TableHead>
+                                        <TableHead className="w-24">Datum</TableHead>
+                                        <TableHead>Beschreibung</TableHead>
+                                        <TableHead className="text-right">Nettopreis (€)</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {fields.map((field, index) => (
-                                        <TableRow key={field.id}>
-                                            <TableCell className="text-sm text-muted-foreground">{field.datum ? format(parseISO(field.datum), 'dd.MM.yyyy') : ''}</TableCell>
+                                    {watchedItems.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="text-sm text-muted-foreground">{item.datum ? format(parseISO(item.datum), 'dd.MM.yyyy') : ''}</TableCell>
                                             <TableCell>
-                                                 <Controller
-                                                    control={control}
-                                                    name={`items.${index}.beschreibung`}
-                                                    render={({ field }) => <Textarea {...field} placeholder="Leistungsbeschreibung" className="min-h-0 h-9"/>}
-                                                />
+                                                {item.beschreibung}
                                             </TableCell>
-                                            <TableCell>
-                                                <Controller
-                                                    control={control}
-                                                    name={`items.${index}.gesamtpreis`}
-                                                    render={({ field }) => <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} className="h-9"/>}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                                    <Icons.logout className="h-4 w-4 text-destructive" />
-                                                </Button>
+                                            <TableCell className="text-right">
+                                               {item.gesamtpreis.toFixed(2)}
                                             </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                             </Table>
-                             <Button type="button" variant="link" size="sm" onClick={handleAddPosition} disabled={!watchedKundenId}>
-                                <Icons.add className="mr-2 h-4 w-4" /> Position hinzufügen
-                            </Button>
                         </div>
+                        )}
                         
                         {/* Footer Section */}
                         <div className="flex justify-end pt-4">
@@ -344,6 +376,16 @@ export default function BuchhaltungPage() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
   }
+  
+    const formatDate = (dateString: string) => {
+        if (!dateString) return 'N/A';
+        try {
+            return format(new Date(dateString), 'dd.MM.yyyy');
+        } catch {
+            return 'Ungültiges Datum';
+        }
+    }
+
 
   return (
     <Card>
@@ -411,8 +453,8 @@ export default function BuchhaltungPage() {
                 <TableRow key={invoice.id}>
                   {columnVisibility.rechnungsnummer && <TableCell className="font-medium">{invoice.rechnungsnummer}</TableCell>}
                   {columnVisibility.kundenName && <TableCell>{invoice.kundenName}</TableCell>}
-                  {columnVisibility.rechnungsdatum && <TableCell>{format(new Date(invoice.rechnungsdatum), 'dd.MM.yyyy')}</TableCell>}
-                  {columnVisibility.faelligkeitsdatum && <TableCell>{format(new Date(invoice.faelligkeitsdatum), 'dd.MM.yyyy')}</TableCell>}
+                  {columnVisibility.rechnungsdatum && <TableCell>{formatDate(invoice.rechnungsdatum)}</TableCell>}
+                  {columnVisibility.faelligkeitsdatum && <TableCell>{formatDate(invoice.faelligkeitsdatum)}</TableCell>}
                   {columnVisibility.betrag && <TableCell className="text-right">{formatCurrency(invoice.betrag)}</TableCell>}
                   {columnVisibility.status && <TableCell>
                     <Badge variant={statusVariant[invoice.status]} className={cn('text-white', statusColor[invoice.status])}>
@@ -451,3 +493,5 @@ export default function BuchhaltungPage() {
     </Card>
   );
 }
+
+    
