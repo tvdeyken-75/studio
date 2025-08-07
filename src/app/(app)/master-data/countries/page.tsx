@@ -53,7 +53,7 @@ const AddCountryDialog = ({ onAdd }: { onAdd: (country: Country) => void }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="sm">
           <Icons.add className="mr-2 h-4 w-4" />
           Neues Land
         </Button>
@@ -68,19 +68,19 @@ const AddCountryDialog = ({ onAdd }: { onAdd: (country: Country) => void }) => {
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="iso_code" className="text-right">ISO Code</Label>
-            <Input id="iso_code" value={iso_code} onChange={(e) => setIsoCode(e.target.value)} className="col-span-3" />
+            <Input id="iso_code" value={iso_code} onChange={(e) => setIsoCode(e.target.value)} className="col-span-3 h-9" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="kurzname" className="text-right">Kurzname</Label>
-            <Input id="kurzname" value={kurzname} onChange={(e) => setKurzname(e.target.value)} className="col-span-3" />
+            <Input id="kurzname" value={kurzname} onChange={(e) => setKurzname(e.target.value)} className="col-span-3 h-9" />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="official_country_name" className="text-right">Offizieller Name</Label>
-            <Input id="official_country_name" value={official_country_name} onChange={(e) => setOfficialCountryName(e.target.value)} className="col-span-3" />
+            <Input id="official_country_name" value={official_country_name} onChange={(e) => setOfficialCountryName(e.target.value)} className="col-span-3 h-9" />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleAdd}>Speichern</Button>
+          <Button onClick={handleAdd} size="sm">Speichern</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -166,14 +166,14 @@ const CountryTable = ({ countries, onAdd, setCountries }: { countries: Country[]
             </div>
              <div className="flex gap-2">
                 <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                <Button variant="outline" onClick={() => fileInput_current?.click()}>CSV Importieren</Button>
-                <Button variant="outline" onClick={downloadCSVTemplate}>Vorlage herunterladen</Button>
-                <Button variant="outline" onClick={exportCSV}>CSV Exportieren</Button>
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>CSV Importieren</Button>
+                <Button variant="outline" size="sm" onClick={downloadCSVTemplate}>Vorlage</Button>
+                <Button variant="outline" size="sm" onClick={exportCSV}>CSV Exportieren</Button>
                 <AddCountryDialog onAdd={onAdd} />
             </div>
         </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
         <Table>
             <TableHeader>
             <TableRow>
