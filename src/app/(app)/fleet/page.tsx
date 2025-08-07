@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SlidersHorizontal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { format } from "date-fns";
 
 const AddVehicleDialog = ({ onAdd, vehicleToEdit }: { onAdd: (vehicle: Vehicle) => void, vehicleToEdit?: Vehicle | null }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -208,7 +209,7 @@ const ReportsDialog = ({ asset, assetType }: { asset: Vehicle | any, assetType: 
                     </TableCell>
                     <TableCell className="font-medium">{doc.name}</TableCell>
                     <TableCell><Badge variant="outline">{doc.type}</Badge></TableCell>
-                    <TableCell>{doc.date}</TableCell>
+                    <TableCell>{format(new Date(doc.date), 'dd.MM.yyyy')}</TableCell>
                     <TableCell className="text-right">
                        <Button variant="ghost" size="icon" onClick={() => window.open(doc.fileUrl, '_blank')}>
                          <Icons.logout className="h-4 w-4" /> {/* Replace with a download/view icon */}
@@ -298,6 +299,15 @@ export default function FleetPage() {
     fuhrparkNummer: "Fuhrpark-Nr.",
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), 'dd.MM.yyyy');
+    } catch (error) {
+      return dateString; // Return original string if invalid
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -368,8 +378,8 @@ export default function FleetPage() {
                 {columnVisibility.modell && <TableCell>{vehicle.modell}</TableCell>}
                 {columnVisibility.typ && <TableCell>{vehicle.typ}</TableCell>}
                 {columnVisibility.fahrerId && <TableCell>{vehicle.fahrerId || 'N/A'}</TableCell>}
-                {columnVisibility.tuevBis && <TableCell>{vehicle.tuevBis}</TableCell>}
-                {columnVisibility.spBis && <TableCell>{vehicle.spBis}</TableCell>}
+                {columnVisibility.tuevBis && <TableCell>{formatDate(vehicle.tuevBis)}</TableCell>}
+                {columnVisibility.spBis && <TableCell>{formatDate(vehicle.spBis)}</TableCell>}
                 {columnVisibility.fuhrparkNummer && <TableCell>{vehicle.fuhrparkNummer}</TableCell>}
                 {columnVisibility.status && <TableCell>
                   <Badge
@@ -403,3 +413,5 @@ export default function FleetPage() {
     </Card>
   );
 }
+
+    

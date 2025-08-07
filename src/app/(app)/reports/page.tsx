@@ -15,6 +15,7 @@ import { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isWithinInterval } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -102,16 +103,17 @@ export default function TransportReportPage() {
         
         return { totalTransports, onTimeRate, totalDrivers, totalVehicles };
     }, [filteredTransports]);
+    
+    const formatDate = (date: string, formatString: string = 'dd.MM.yyyy HH:mm') => {
+        try {
+            return format(new Date(date), formatString, { locale: de });
+        } catch (e) {
+            return 'Ungültiges Datum';
+        }
+    }
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-2xl font-bold">Transportbericht</h1>
-                    <p className="text-muted-foreground">Übersicht der abgeschlossenen Transporte.</p>
-                </div>
-            </div>
-            
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <KpiCard title="Gesamtzahl Transporte" value={kpis.totalTransports.toString()} icon={<Icons.route className="h-5 w-5" />} description="im ausgewählten Zeitraum" />
                 <KpiCard title="Pünktlichkeitsrate" value={`${kpis.onTimeRate}%`} icon={<Icons.issue className="h-5 w-5" />} description="der Lieferungen waren pünktlich" />
@@ -142,11 +144,11 @@ export default function TransportReportPage() {
                                         {dateRange?.from ? (
                                             dateRange.to ? (
                                                 <>
-                                                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                                                    {format(dateRange.to, "LLL dd, y")}
+                                                    {format(dateRange.from, "dd.MM.yyyy")} -{" "}
+                                                    {format(dateRange.to, "dd.MM.yyyy")}
                                                 </>
                                             ) : (
-                                                format(dateRange.from, "LLL dd, y")
+                                                format(dateRange.from, "dd.MM.yyyy")
                                             )
                                         ) : (
                                             <span>Datumsbereich auswählen</span>
@@ -161,6 +163,7 @@ export default function TransportReportPage() {
                                         selected={dateRange}
                                         onSelect={setDateRange}
                                         numberOfMonths={2}
+                                        locale={de}
                                     />
                                 </PopoverContent>
                             </Popover>
@@ -214,10 +217,10 @@ export default function TransportReportPage() {
                                             {columnVisibility.deliveryLocation && <TableCell>{transport.deliveryLocation}</TableCell>}
                                             {columnVisibility.driver && <TableCell>{transport.driver}</TableCell>}
                                             {columnVisibility.vehicleId && <TableCell>{transport.vehicleId}</TableCell>}
-                                            {columnVisibility.plannedDeliveryDate && <TableCell>{format(new Date(transport.plannedDeliveryDate), 'dd.MM.yyyy HH:mm')}</TableCell>}
-                                            {columnVisibility.actualDeliveryDate && <TableCell>{format(new Date(transport.actualDeliveryDate), 'dd.MM.yyyy HH:mm')}</TableCell>}
+                                            {columnVisibility.plannedDeliveryDate && <TableCell>{formatDate(transport.plannedDeliveryDate)}</TableCell>}
+                                            {columnVisibility.actualDeliveryDate && <TableCell>{formatDate(transport.actualDeliveryDate)}</TableCell>}
                                             {columnVisibility.onTime && <TableCell>
-                                                <Badge variant={isOnTime ? "default" : "destructive"} className="text-white">
+                                                <Badge variant={isOnTime ? "default" : "destructive"} className={cn("text-white", isOnTime && "bg-green-600")}>
                                                     {isOnTime ? 'Pünktlich' : 'Verspätet'}
                                                 </Badge>
                                             </TableCell>}
@@ -252,3 +255,4 @@ export default function TransportReportPage() {
     );
 }
 
+    

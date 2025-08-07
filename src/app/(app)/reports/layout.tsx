@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -15,9 +16,9 @@ export default function ReportsLayout({ children }: { children: React.ReactNode 
   
   return (
     <Tabs defaultValue={getActiveTab()} className="w-full">
-      <TabsList>
+      <TabsList className="grid w-full grid-cols-1">
         <TabsTrigger value="transports" asChild>
-          <Link href="/reports/page">Transporte</Link>
+          <Link href="/reports">Transporte</Link>
         </TabsTrigger>
         {/* Add other report tabs here */}
       </TabsList>
@@ -25,3 +26,5 @@ export default function ReportsLayout({ children }: { children: React.ReactNode 
     </Tabs>
   );
 }
+
+    

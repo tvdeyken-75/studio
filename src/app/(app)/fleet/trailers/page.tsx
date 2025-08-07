@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SlidersHorizontal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { format } from "date-fns";
 
 
 const AddTrailerDialog = ({ onAdd }: { onAdd: (trailer: Trailer) => void }) => {
@@ -200,7 +201,7 @@ const ReportsDialog = ({ asset, assetType }: { asset: Trailer, assetType: 'Fahrz
                     </TableCell>
                     <TableCell className="font-medium">{doc.name}</TableCell>
                     <TableCell><Badge variant="outline">{doc.type}</Badge></TableCell>
-                    <TableCell>{doc.date}</TableCell>
+                    <TableCell>{format(new Date(doc.date), 'dd.MM.yyyy')}</TableCell>
                     <TableCell className="text-right">
                        <Button variant="ghost" size="icon" onClick={() => window.open(doc.fileUrl, '_blank')}>
                          <Icons.logout className="h-4 w-4" /> {/* Replace with a download/view icon */}
@@ -283,6 +284,15 @@ export default function TrailersPage() {
     fuhrparkNummer: "Fuhrpark-Nr.",
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), 'dd.MM.yyyy');
+    } catch (error) {
+      return dateString; // Return original string if invalid
+    }
+  };
+
 
   return (
     <Card>
@@ -352,8 +362,8 @@ export default function TrailersPage() {
                 {columnVisibility.hersteller && <TableCell>{trailer.hersteller}</TableCell>}
                 {columnVisibility.anhaengerTyp && <TableCell>{trailer.anhaengerTyp}</TableCell>}
                 {columnVisibility.aktuellGekuppeltMitLkwId && <TableCell>{trailer.aktuellGekuppeltMitLkwId || 'N/A'}</TableCell>}
-                {columnVisibility.tuevBis && <TableCell>{trailer.tuevBis}</TableCell>}
-                {columnVisibility.spBis && <TableCell>{trailer.spBis}</TableCell>}
+                {columnVisibility.tuevBis && <TableCell>{formatDate(trailer.tuevBis)}</TableCell>}
+                {columnVisibility.spBis && <TableCell>{formatDate(trailer.spBis)}</TableCell>}
                 {columnVisibility.fuhrparkNummer && <TableCell>{trailer.fuhrparkNummer}</TableCell>}
                 {columnVisibility.status && <TableCell>
                   <Badge
@@ -387,3 +397,5 @@ export default function TrailersPage() {
     </Card>
   );
 }
+
+    
