@@ -5,6 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { fleetData } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/icons";
+
 
 export default function FleetPage() {
   const statusMap = {
@@ -19,7 +23,7 @@ export default function FleetPage() {
         <CardTitle>Fahrzeugflotte</CardTitle>
         <CardDescription>Eine Übersicht aller Fahrzeuge in Ihrer Flotte für heute.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -28,6 +32,7 @@ export default function FleetPage() {
               <TableHead>Standort</TableHead>
               <TableHead>Kapazität</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -49,6 +54,20 @@ export default function FleetPage() {
                   >
                     {statusMap[vehicle.status]}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <Icons.more className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
+                            <DropdownMenuItem>Wartung melden</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}

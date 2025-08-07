@@ -35,6 +35,8 @@ import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SlidersHorizontal } from "lucide-react";
 
 // Mocked countries data. In a real application, this would come from an API or the countries state.
 const MOCK_COUNTRIES: Country[] = [
@@ -85,7 +87,7 @@ const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => v
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button variant="link" className="text-primary">
           <Icons.add className="mr-2 h-4 w-4" />
           Neue Adresse
         </Button>
@@ -171,7 +173,7 @@ const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => v
         </div>
 
         <DialogFooter>
-          <Button onClick={() => setIsOpen(false)} variant="outline" size="sm">Abbrechen</Button>
+          <Button onClick={() => setIsOpen(false)} variant="ghost" size="sm">Abbrechen</Button>
           <Button onClick={handleAdd} size="sm">Speichern</Button>
         </DialogFooter>
       </DialogContent>
@@ -179,11 +181,22 @@ const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => v
   );
 };
 
-
 const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[], onAdd: (address: Address) => void, setAddresses: React.Dispatch<React.SetStateAction<Address[]>> }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
+    const [columnVisibility, setColumnVisibility] = useState({
+        kurzname: true,
+        name: true,
+        strasse: true,
+        plz: true,
+        stadt: true,
+        land: true,
+        koordinaten: false,
+        tourPOI: false,
+        kundenAdresse: true,
+        mitarbeiterAdresse: false,
+    });
 
     const filteredAddresses = useMemo(() => {
         if (!searchTerm) return addresses;
@@ -263,6 +276,26 @@ const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[]
         link.click();
         document.body.removeChild(link);
     }
+    
+    type ColumnKeys = keyof typeof columnVisibility;
+
+    const toggleColumn = (column: ColumnKeys) => {
+        setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
+    }
+    
+    const columnLabels: Record<ColumnKeys, string> = {
+        kurzname: "Kurzname",
+        name: "Name",
+        strasse: "Straße",
+        plz: "PLZ",
+        stadt: "Stadt",
+        land: "Land",
+        koordinaten: "Koordinaten",
+        tourPOI: "Tour-POI",
+        kundenAdresse: "Kundenadr.",
+        mitarbeiterAdresse: "Mitarbeiteradr."
+    };
+
 
     return (
     <Card>
@@ -273,57 +306,94 @@ const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[]
                     <CardDescription>Liste der verwalteten Adressen.</CardDescription>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                    <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>CSV Importieren</Button>
-                    <Button variant="outline" size="sm" onClick={downloadCSVTemplate}>Vorlage</Button>
-                    <Button variant="outline" size="sm" onClick={exportCSV}>CSV Exportieren</Button>
                     <AddAddressDialog onAdd={onAdd} countries={MOCK_COUNTRIES} />
                 </div>
             </div>
         </CardHeader>
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex justify-between items-center gap-4">
             <Input 
                 placeholder="Adressen durchsuchen (z.B. Name, Stadt, PLZ)..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="max-w-md h-9"
             />
+             <div className="flex gap-2 items-center">
+                <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+                <Button variant="link" size="sm" onClick={() => fileInputRef.current?.click()}>Importieren</Button>
+                <Button variant="link" size="sm" onClick={downloadCSVTemplate}>Vorlage</Button>
+                <Button variant="link" size="sm" onClick={exportCSV}>Exportieren</Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9">
+                            <SlidersHorizontal className="h-4 w-4"/>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                         <DropdownMenuLabel>Spalten ein-/ausblenden</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                        {Object.keys(columnVisibility).map(key => (
+                            <DropdownMenuCheckboxItem
+                                key={key}
+                                className="capitalize"
+                                checked={columnVisibility[key as ColumnKeys]}
+                                onCheckedChange={() => toggleColumn(key as ColumnKeys)}
+                            >
+                                {columnLabels[key as ColumnKeys]}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
         <CardContent className="p-0">
         <Table>
             <TableHeader>
             <TableRow>
-                <TableHead className="w-[100px]">Kurzname</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Straße</TableHead>
-                <TableHead>PLZ</TableHead>
-                <TableHead>Stadt</TableHead>
-                <TableHead>Land</TableHead>
-                <TableHead>Koordinaten</TableHead>
-                <TableHead className="text-center">Tour-POI</TableHead>
-                <TableHead className="text-center">Kundenadr.</TableHead>
-                <TableHead className="text-center">Mitarbeiteradr.</TableHead>
+                {columnVisibility.kurzname && <TableHead className="w-[100px]">Kurzname</TableHead>}
+                {columnVisibility.name && <TableHead>Name</TableHead>}
+                {columnVisibility.strasse && <TableHead>Straße</TableHead>}
+                {columnVisibility.plz && <TableHead>PLZ</TableHead>}
+                {columnVisibility.stadt && <TableHead>Stadt</TableHead>}
+                {columnVisibility.land && <TableHead>Land</TableHead>}
+                {columnVisibility.koordinaten && <TableHead>Koordinaten</TableHead>}
+                {columnVisibility.tourPOI && <TableHead className="text-center">Tour-POI</TableHead>}
+                {columnVisibility.kundenAdresse && <TableHead className="text-center">Kundenadr.</TableHead>}
+                {columnVisibility.mitarbeiterAdresse && <TableHead className="text-center">Mitarbeiteradr.</TableHead>}
+                <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
             </TableHeader>
             <TableBody>
             {filteredAddresses.length > 0 ? (
                 filteredAddresses.map((address) => (
                 <TableRow key={address.id}>
-                    <TableCell className="font-medium text-xs">{address.kurzname}</TableCell>
-                    <TableCell className="font-medium">{address.name}</TableCell>
-                    <TableCell>{address.strasse}</TableCell>
-                    <TableCell>{address.plz}</TableCell>
-                    <TableCell>{address.stadt}</TableCell>
-                    <TableCell>{address.land}</TableCell>
-                    <TableCell className="text-xs">{address.koordinaten}</TableCell>
-                    <TableCell className="text-center"><Checkbox checked={address.tourPOI} disabled /></TableCell>
-                    <TableCell className="text-center"><Checkbox checked={address.kundenAdresse} disabled /></TableCell>
-                    <TableCell className="text-center"><Checkbox checked={address.mitarbeiterAdresse} disabled /></TableCell>
+                    {columnVisibility.kurzname && <TableCell className="font-medium text-xs">{address.kurzname}</TableCell>}
+                    {columnVisibility.name && <TableCell className="font-medium">{address.name}</TableCell>}
+                    {columnVisibility.strasse && <TableCell>{address.strasse}</TableCell>}
+                    {columnVisibility.plz && <TableCell>{address.plz}</TableCell>}
+                    {columnVisibility.stadt && <TableCell>{address.stadt}</TableCell>}
+                    {columnVisibility.land && <TableCell>{address.land}</TableCell>}
+                    {columnVisibility.koordinaten && <TableCell className="text-xs">{address.koordinaten}</TableCell>}
+                    {columnVisibility.tourPOI && <TableCell className="text-center"><Checkbox checked={address.tourPOI} disabled /></TableCell>}
+                    {columnVisibility.kundenAdresse && <TableCell className="text-center"><Checkbox checked={address.kundenAdresse} disabled /></TableCell>}
+                    {columnVisibility.mitarbeiterAdresse && <TableCell className="text-center"><Checkbox checked={address.mitarbeiterAdresse} disabled /></TableCell>}
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Icons.more className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
                 </TableRow>
                 ))
             ) : (
                 <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center">
+                <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length + 1} className="h-24 text-center">
                     {searchTerm ? "Keine Ergebnisse gefunden." : "Noch keine Adressen hinzugefügt."}
                 </TableCell>
                 </TableRow>

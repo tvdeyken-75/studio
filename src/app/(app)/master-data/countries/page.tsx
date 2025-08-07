@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 const AddCountryDialog = ({ onAdd }: { onAdd: (country: Country) => void }) => {
@@ -53,7 +54,7 @@ const AddCountryDialog = ({ onAdd }: { onAdd: (country: Country) => void }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button variant="link" className="text-primary">
           <Icons.add className="mr-2 h-4 w-4" />
           Neues Land
         </Button>
@@ -80,6 +81,7 @@ const AddCountryDialog = ({ onAdd }: { onAdd: (country: Country) => void }) => {
           </div>
         </div>
         <DialogFooter>
+          <Button onClick={() => setIsOpen(false)} variant="ghost" size="sm">Abbrechen</Button>
           <Button onClick={handleAdd} size="sm">Speichern</Button>
         </DialogFooter>
       </DialogContent>
@@ -166,9 +168,9 @@ const CountryTable = ({ countries, onAdd, setCountries }: { countries: Country[]
             </div>
              <div className="flex gap-2">
                 <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>CSV Importieren</Button>
-                <Button variant="outline" size="sm" onClick={downloadCSVTemplate}>Vorlage</Button>
-                <Button variant="outline" size="sm" onClick={exportCSV}>CSV Exportieren</Button>
+                <Button variant="link" size="sm" onClick={() => fileInputRef.current?.click()}>Importieren</Button>
+                <Button variant="link" size="sm" onClick={downloadCSVTemplate}>Vorlage</Button>
+                <Button variant="link" size="sm" onClick={exportCSV}>Exportieren</Button>
                 <AddCountryDialog onAdd={onAdd} />
             </div>
         </div>
@@ -180,6 +182,7 @@ const CountryTable = ({ countries, onAdd, setCountries }: { countries: Country[]
                 <TableHead>ISO Code</TableHead>
                 <TableHead>Kurzname</TableHead>
                 <TableHead>Offizieller Name</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
             </TableHeader>
             <TableBody>
@@ -189,11 +192,24 @@ const CountryTable = ({ countries, onAdd, setCountries }: { countries: Country[]
                     <TableCell className="font-medium">{country.iso_code}</TableCell>
                     <TableCell>{country.kurzname}</TableCell>
                     <TableCell>{country.official_country_name}</TableCell>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Icons.more className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
                 </TableRow>
                 ))
             ) : (
                 <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
+                <TableCell colSpan={4} className="h-24 text-center">
                     Noch keine Länder hinzugefügt.
                 </TableCell>
                 </TableRow>

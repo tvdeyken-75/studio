@@ -12,7 +12,8 @@ import {
   MoreHorizontal,
   FileText,
   AlertCircle,
-  Database
+  Database,
+  Pencil,
 } from 'lucide-react'
 
 export type Icon = typeof LucideIcon
@@ -31,4 +32,5 @@ export const Icons = {
   invoice: FileText,
   issue: AlertCircle,
   database: Database,
+  edit: Pencil,
 }

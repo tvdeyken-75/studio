@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Icons } from "@/components/icons";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type ProfileType = 'customer' | 'contractor';
 
@@ -55,7 +56,7 @@ const AddProfileDialog = ({ type, onAdd }: { type: ProfileType, onAdd: (profile:
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button variant="link" className="text-primary">
           <Icons.add className="mr-2 h-4 w-4" />
           Neuen {title} hinzufügen
         </Button>
@@ -82,7 +83,8 @@ const AddProfileDialog = ({ type, onAdd }: { type: ProfileType, onAdd: (profile:
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleAdd}>Speichern</Button>
+            <Button onClick={() => setIsOpen(false)} variant="ghost" size="sm">Abbrechen</Button>
+            <Button onClick={handleAdd} size="sm">Speichern</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -107,13 +109,14 @@ const ProfileTable = ({ profiles, type }: { profiles: (Customer | Contractor)[],
         } />
       </div>
     </CardHeader>
-    <CardContent>
+    <CardContent className="p-0">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Kontakt</TableHead>
             <TableHead>Adresse</TableHead>
+            <TableHead className="text-right">Aktionen</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -123,11 +126,24 @@ const ProfileTable = ({ profiles, type }: { profiles: (Customer | Contractor)[],
                 <TableCell className="font-medium">{profile.name}</TableCell>
                 <TableCell>{profile.contact}</TableCell>
                 <TableCell>{profile.address}</TableCell>
+                <TableCell className="text-right">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <Icons.more className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={3} className="h-24 text-center">
+              <TableCell colSpan={4} className="h-24 text-center">
                 Noch keine {type === 'customer' ? 'Kunden' : 'Auftragnehmer'} hinzugefügt.
               </TableCell>
             </TableRow>
