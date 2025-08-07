@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { SlidersHorizontal, FileDown } from "lucide-react";
+import { SlidersHorizontal, FileDown, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { customerData, transportData, dieselpreiseData } from "@/lib/data";
-import { format, getYear, parseISO } from "date-fns";
+import { format, getYear, parseISO, isValid } from "date-fns";
 import { de } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 
@@ -95,11 +95,12 @@ const statusColor: Record<Invoice['status'], string> = {
     'Überfällig': 'bg-orange-600'
 }
 
-const AddInfoItemDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => void }) => {
+const AddLeistungDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
     const [beschreibung, setBeschreibung] = useState('');
     const [nettopreis, setNettopreis] = useState(0);
+    const [datum, setDatum] = useState(format(new Date(), 'yyyy-MM-dd'));
 
     const handleSave = () => {
         if (!beschreibung || nettopreis === 0) {
@@ -107,17 +108,18 @@ const AddInfoItemDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => vo
             return;
         }
         onAddItem({
-            id: `item-info-${Date.now()}`,
-            beschreibung: beschreibung,
+            id: `item-leistung-${Date.now()}`,
+            beschreibung,
             menge: 1,
-            einheit: 'Info',
+            einheit: 'Leistung',
             einzelpreis: nettopreis,
             gesamtpreis: nettopreis,
-            datum: format(new Date(), 'yyyy-MM-dd')
+            datum
         });
         setIsOpen(false);
         setBeschreibung('');
         setNettopreis(0);
+        setDatum(format(new Date(), 'yyyy-MM-dd'));
         toast({ title: 'Position hinzugefügt.' });
     };
 
@@ -126,24 +128,82 @@ const AddInfoItemDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => vo
             <DialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
                     <Icons.add className="mr-2 h-3 w-3" />
-                    Info-Position hinzufügen
+                    Leistungsposition
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Optionale Position hinzufügen</DialogTitle>
+                    <DialogTitle>Leistungsposition hinzufügen</DialogTitle>
                     <DialogDescription>
-                        Fügen Sie eine zusätzliche Position zur Rechnung hinzu.
+                        Fügen Sie eine abrechenbare Leistung zur Rechnung hinzu.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                     <div className="space-y-1.5">
+                        <Label htmlFor="datum">Datum</Label>
+                        <Input id="datum" type="date" value={datum} onChange={(e) => setDatum(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="beschreibung">Beschreibung</Label>
+                        <Textarea id="beschreibung" value={beschreibung} onChange={(e) => setBeschreibung(e.target.value)} placeholder="z.B. Sonderfahrt" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="nettopreis">Nettopreis (€)</Label>
+                        <Input id="nettopreis" type="number" step="0.01" value={nettopreis} onChange={(e) => setNettopreis(parseFloat(e.target.value) || 0)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>Abbrechen</Button>
+                    <Button size="sm" onClick={handleSave}>Hinzufügen</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const AddInfoDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const { toast } = useToast();
+    const [beschreibung, setBeschreibung] = useState('');
+
+    const handleSave = () => {
+        if (!beschreibung) {
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte geben Sie eine Beschreibung ein.' });
+            return;
+        }
+        onAddItem({
+            id: `item-info-${Date.now()}`,
+            beschreibung,
+            menge: 1,
+            einheit: 'Info',
+            einzelpreis: 0,
+            gesamtpreis: 0,
+            datum: format(new Date(), 'yyyy-MM-dd')
+        });
+        setIsOpen(false);
+        setBeschreibung('');
+        toast({ title: 'Position hinzugefügt.' });
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                    <Icons.add className="mr-2 h-3 w-3" />
+                    Info-Position
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Informationsposition hinzufügen</DialogTitle>
+                    <DialogDescription>
+                        Fügen Sie eine nicht-abrechenbare Information zur Rechnung hinzu.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-1.5">
                         <Label htmlFor="beschreibung">Beschreibung</Label>
-                        <Textarea id="beschreibung" value={beschreibung} onChange={(e) => setBeschreibung(e.target.value)} placeholder="z.B. Wartezeit am Entladeort" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="nettopreis">Nettopreis (€)</Label>
-                        <Input id="nettopreis" type="number" step="0.01" value={nettopreis} onChange={(e) => setNettopreis(parseFloat(e.target.value) || 0)} />
+                        <Textarea id="beschreibung" value={beschreibung} onChange={(e) => setBeschreibung(e.target.value)} placeholder="z.B. Wichtiger Hinweis für den Kunden" />
                     </div>
                 </div>
                 <DialogFooter>
@@ -160,7 +220,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
 
-    const { register, handleSubmit, control, watch, setValue, getValues, reset, append } = useForm<Invoice>({
+    const { register, handleSubmit, control, watch, setValue, getValues, reset } = useForm<Invoice>({
         defaultValues: {
             id: `inv-${Date.now()}`,
             rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
@@ -170,6 +230,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         }
     });
 
+    const { fields, append, remove, update } = useFieldArray({ control, name: "items" });
     const watchedItems = watch('items');
     const watchedKundenId = watch('kundenId');
     
@@ -205,8 +266,12 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     }
 
     const onSubmit = (data: Invoice) => {
-        if (!data.kundenId || data.items.length === 0) {
-            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte wählen Sie einen Kunden und einen Transportauftrag aus.' });
+        if (!data.kundenId) {
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte wählen Sie einen Kunden aus.' });
+            return;
+        }
+         if (data.items.length === 0) {
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Die Rechnung muss mindestens eine Position enthalten.' });
             return;
         }
 
@@ -268,8 +333,13 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         setValue('items', newItems);
     }
     
-    const addInfoItem = (item: InvoiceItem) => {
+    const addItem = (item: InvoiceItem) => {
         append(item);
+    }
+
+    const updateItemPrice = (index: number, newPrice: number) => {
+        const item = fields[index];
+        update(index, { ...item, gesamtpreis: newPrice, einzelpreis: newPrice });
     }
 
     return (
@@ -315,10 +385,10 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
 
                          {/* Transport Selection */}
                          <div className="space-y-1.5">
-                            <Label>Abgeschlossenen Transportauftrag auswählen</Label>
+                            <Label>Abgeschlossenen Transportauftrag auswählen (Optional)</Label>
                             <Select onValueChange={handleTourSelection} value={selectedTourId} disabled={!watchedKundenId || availableTours.length === 0}>
                                 <SelectTrigger className="h-9">
-                                    <SelectValue placeholder={availableTours.length > 0 ? "Transportauftrag auswählen" : "Keine abgeschlossenen Aufträge für diesen Kunden"} />
+                                    <SelectValue placeholder={!watchedKundenId ? "Bitte zuerst Kunde auswählen" : (availableTours.length > 0 ? "Transportauftrag auswählen" : "Keine abgeschlossenen Aufträge für diesen Kunden")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {availableTours.map(t => (
@@ -332,36 +402,79 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
 
 
                         {/* Items Section */}
-                        {watchedItems.length > 0 && (
                         <div className="space-y-2 pt-4">
                             <div className="flex justify-between items-center mb-2">
                                 <Label>Rechnungspositionen</Label>
-                                <AddInfoItemDialog onAddItem={addInfoItem} />
+                                <div className="flex items-center gap-2">
+                                    <AddLeistungDialog onAddItem={addItem} />
+                                    <AddInfoDialog onAddItem={addItem} />
+                                </div>
                             </div>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-24">Datum</TableHead>
+                                        <TableHead className="w-40">Datum</TableHead>
                                         <TableHead>Beschreibung</TableHead>
-                                        <TableHead className="text-right">Nettopreis (€)</TableHead>
+                                        <TableHead className="w-48 text-right">Nettopreis (€)</TableHead>
+                                        <TableHead className="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {watchedItems.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="text-sm text-muted-foreground">{item.datum ? format(parseISO(item.datum), 'dd.MM.yyyy') : ''}</TableCell>
+                                    {fields.map((field, index) => (
+                                        <TableRow key={field.id}>
                                             <TableCell>
-                                                {item.beschreibung}
+                                                <Controller
+                                                    control={control}
+                                                    name={`items.${index}.datum`}
+                                                    render={({ field: { onChange, value } }) => (
+                                                        <Input 
+                                                            type="date" 
+                                                            value={value ? format(parseISO(value), 'yyyy-MM-dd') : ''} 
+                                                            onChange={onChange}
+                                                            className="h-9 text-sm"
+                                                        />
+                                                    )}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Textarea {...register(`items.${index}.beschreibung`)} className="h-9 text-sm" />
+                                            </TableCell>
+                                            <TableCell>
+                                               <Controller
+                                                    control={control}
+                                                    name={`items.${index}.gesamtpreis`}
+                                                    render={({ field: { onChange, value } }) => (
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={value}
+                                                            onChange={(e) => {
+                                                                const val = parseFloat(e.target.value);
+                                                                onChange(isNaN(val) ? 0 : val);
+                                                            }}
+                                                            className="h-9 text-right text-sm"
+                                                        />
+                                                    )}
+                                                />
                                             </TableCell>
                                             <TableCell className="text-right">
-                                               {item.gesamtpreis.toFixed(2)}
+                                                 <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))}
+                                     {fields.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                                Bitte wählen Sie einen Transportauftrag aus oder fügen Sie manuell Positionen hinzu.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
                             </Table>
                         </div>
-                        )}
+                        
                         
                         {/* Footer Section */}
                         <div className="flex justify-end pt-4">
@@ -441,8 +554,10 @@ export default function BuchhaltungPage() {
   
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A';
+        const date = parseISO(dateString);
+        if (!isValid(date)) return 'Ungültiges Datum';
         try {
-            return format(new Date(dateString), 'dd.MM.yyyy');
+            return format(date, 'dd.MM.yyyy');
         } catch {
             return 'Ungültiges Datum';
         }
@@ -555,3 +670,5 @@ export default function BuchhaltungPage() {
     </Card>
   );
 }
+
+    

@@ -20,6 +20,7 @@ import {
   Shield,
   BookUser,
   Settings,
+  Trash2,
 } from 'lucide-react'
 
 export type Icon = typeof LucideIcon
@@ -45,4 +46,7 @@ export const Icons = {
   admin: Shield,
   accounting: BookUser,
   settings: Settings,
+  delete: Trash2,
 }
+
+    
