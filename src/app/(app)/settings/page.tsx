@@ -28,7 +28,7 @@ export default function SettingsPage() {
     const handleSave = () => {
         setIsSaving(true);
         console.log("Saving new menu order:", menuItems.map(item => item.id));
-        // In a real application, you would save this order to a database or user settings.
+        // In a real application, you would save this order to a user's settings.
         setTimeout(() => {
             setIsSaving(false);
         }, 1000);
@@ -63,7 +63,7 @@ export default function SettingsPage() {
                             </div>
                         ))}
                     </div>
-                     <p className="text-xs text-muted-foreground mt-4">
+                    <p className="text-xs text-muted-foreground mt-4">
                         Die Drag-and-Drop-Funktionalität ist in Entwicklung.
                     </p>
                 </CardContent>
