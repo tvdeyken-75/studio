@@ -29,27 +29,54 @@ const LOGGED_IN_USER_STORAGE_KEY = 'ambientTmsUser';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(() => {
+    // Initialize with ADMIN_USER to prevent issues on server-side rendering or if localStorage is empty
+    return [ADMIN_USER];
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     try {
-      // Load users list from localStorage or initialize with admin
-      const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+      const storedUsersJSON = localStorage.getItem(USERS_STORAGE_KEY);
+      const storedUsers = storedUsersJSON ? JSON.parse(storedUsersJSON) : null;
+      
+      // Ensure admin user always exists and has admin role
       if (storedUsers) {
-        setUsers(JSON.parse(storedUsers));
+        const adminExists = storedUsers.some((u: User) => u.id === ADMIN_USER.id);
+        if (!adminExists) {
+            const newUsers = [ADMIN_USER, ...storedUsers.filter((u:User) => u.id !== ADMIN_USER.id)];
+            setUsers(newUsers);
+            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(newUsers));
+        } else {
+             const updatedUsers = storedUsers.map((u: User) => u.id === ADMIN_USER.id ? { ...u, role: 'Admin' } : u);
+             setUsers(updatedUsers);
+             localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+        }
       } else {
         setUsers([ADMIN_USER]);
         localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([ADMIN_USER]));
       }
-
-      // Check for a logged-in user
-      const storedUser = localStorage.getItem(LOGGED_IN_USER_STORAGE_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      
+      const storedUserJSON = localStorage.getItem(LOGGED_IN_USER_STORAGE_KEY);
+      if (storedUserJSON) {
+        const loggedInUser = JSON.parse(storedUserJSON);
+        // Sync logged-in user's role
+        const allUsers = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
+        const currentUserData = allUsers.find((u: User) => u.id === loggedInUser.id);
+        if (currentUserData) {
+            const { password, ...userToStore } = currentUserData;
+            setUser(userToStore);
+        } else {
+             // If logged-in user is not in the list anymore, log them out
+             logout();
+        }
       }
+
     } catch (error) {
-      console.error("Failed to parse from localStorage", error);
+      console.error("Failed to access or parse localStorage", error);
+      // Fallback to default if localStorage is corrupt
+      setUsers([ADMIN_USER]);
+      setUser(null);
       localStorage.removeItem(USERS_STORAGE_KEY);
       localStorage.removeItem(LOGGED_IN_USER_STORAGE_KEY);
     } finally {
@@ -98,6 +125,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const deleteUser = (userId: string) => {
+    // Prevent deleting the main admin user
+    if (userId === ADMIN_USER.id) {
+        console.warn("Cannot delete the main admin user.");
+        return;
+    }
     const updatedUsers = users.filter(u => u.id !== userId);
     persistUsers(updatedUsers);
   }
