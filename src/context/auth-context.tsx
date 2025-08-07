@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_EMAIL = 'admin@cargopilot.com';
+const ADMIN_EMAIL = 'admin@ambienttms.com';
 const ADMIN_PASS = 'password';
 const ADMIN_USER: User = { email: ADMIN_EMAIL, name: 'Admin User' };
 
@@ -26,13 +26,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem('cargoPilotUser');
+      const storedUser = localStorage.getItem('ambientTmsUser');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem('cargoPilotUser');
+      localStorage.removeItem('ambientTmsUser');
     } finally {
       setLoading(false);
     }
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
     if (email.toLowerCase() === ADMIN_EMAIL && pass === ADMIN_PASS) {
-      localStorage.setItem('cargoPilotUser', JSON.stringify(ADMIN_USER));
+      localStorage.setItem('ambientTmsUser', JSON.stringify(ADMIN_USER));
       setUser(ADMIN_USER);
       setLoading(false);
       return true;
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('cargoPilotUser');
+    localStorage.removeItem('ambientTmsUser');
     setUser(null);
   };
 

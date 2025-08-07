@@ -13,7 +13,7 @@ const KpiCard = ({ kpi }: { kpi: Kpi }) => (
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
        <div className="text-muted-foreground">
-        {kpi.title === 'Reported Issues' ? <Icons.issue className="h-4 w-4" /> : <Icons.invoice className="h-4 w-4" />}
+        {kpi.title === 'Gemeldete Probleme' ? <Icons.issue className="h-4 w-4" /> : <Icons.invoice className="h-4 w-4" />}
        </div>
     </CardHeader>
     <CardContent>
@@ -29,8 +29,8 @@ const KpiCard = ({ kpi }: { kpi: Kpi }) => (
 
 export default function DashboardPage() {
   const chartConfig = {
-    onTime: { label: "On Time", color: "hsl(var(--primary))" },
-    delayed: { label: "Delayed", color: "hsl(var(--destructive))" },
+    onTime: { label: "Pünktlich", color: "hsl(var(--primary))" },
+    delayed: { label: "Verspätet", color: "hsl(var(--destructive))" },
   };
 
   return (
@@ -42,8 +42,8 @@ export default function DashboardPage() {
       </div>
       <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
-          <CardTitle>Deliveries Overview</CardTitle>
-          <CardDescription>On-time vs. delayed deliveries over the past 6 months.</CardDescription>
+          <CardTitle>Lieferübersicht</CardTitle>
+          <CardDescription>Pünktliche vs. verspätete Lieferungen der letzten 6 Monate.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[300px] w-full">

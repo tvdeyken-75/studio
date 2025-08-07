@@ -17,10 +17,10 @@ import { Icons } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
-  pickupLocation: z.string().min(3, "Pickup location is required."),
-  deliveryLocation: z.string().min(3, "Delivery location is required."),
-  vehicleType: z.string().min(1, "Vehicle type is required."),
-  cargoDescription: z.string().min(3, "Cargo description is required."),
+  pickupLocation: z.string().min(3, "Abholort ist erforderlich."),
+  deliveryLocation: z.string().min(3, "Lieferort ist erforderlich."),
+  vehicleType: z.string().min(1, "Fahrzeugtyp ist erforderlich."),
+  cargoDescription: z.string().min(3, "Frachtbeschreibung ist erforderlich."),
   specialInstructions: z.string().optional(),
 });
 
@@ -49,11 +49,11 @@ export default function RoutePlanningPage() {
       const response = await aiPoweredRoutePlanning(values);
       setResult(response);
     } catch (error) {
-      console.error("Error generating route plan:", error);
+      console.error("Fehler beim Erstellen des Routenplans:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate route plan. Please try again.",
+        title: "Fehler",
+        description: "Routenplan konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
       });
     } finally {
       setIsLoading(false);
@@ -64,8 +64,8 @@ export default function RoutePlanningPage() {
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>New Transport Order</CardTitle>
-          <CardDescription>Fill in the details to generate an optimized route plan.</CardDescription>
+          <CardTitle>Neuer Transportauftrag</CardTitle>
+          <CardDescription>Füllen Sie die Details aus, um einen optimierten Routenplan zu erstellen.</CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -75,8 +75,8 @@ export default function RoutePlanningPage() {
                 name="pickupLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pickup Location</FormLabel>
-                    <FormControl><Input placeholder="e.g., Berlin, Germany" {...field} /></FormControl>
+                    <FormLabel>Abholort</FormLabel>
+                    <FormControl><Input placeholder="z.B., Berlin, Deutschland" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -86,8 +86,8 @@ export default function RoutePlanningPage() {
                 name="deliveryLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Delivery Location</FormLabel>
-                    <FormControl><Input placeholder="e.g., Munich, Germany" {...field} /></FormControl>
+                    <FormLabel>Lieferort</FormLabel>
+                    <FormControl><Input placeholder="z.B., München, Deutschland" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -97,12 +97,12 @@ export default function RoutePlanningPage() {
                 name="vehicleType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vehicle Type</FormLabel>
+                    <FormLabel>Fahrzeugtyp</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select a vehicle" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Wählen Sie ein Fahrzeug" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="Truck">Truck</SelectItem>
-                        <SelectItem value="Van">Van</SelectItem>
+                        <SelectItem value="LKW">LKW</SelectItem>
+                        <SelectItem value="Transporter">Transporter</SelectItem>
                         <SelectItem value="Sprinter">Sprinter</SelectItem>
                       </SelectContent>
                     </Select>
@@ -115,8 +115,8 @@ export default function RoutePlanningPage() {
                 name="cargoDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cargo Description</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., 10 Pallets of electronics" {...field} /></FormControl>
+                    <FormLabel>Frachtbeschreibung</FormLabel>
+                    <FormControl><Textarea placeholder="z.B., 10 Paletten Elektronik" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -126,8 +126,8 @@ export default function RoutePlanningPage() {
                 name="specialInstructions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Special Instructions (Optional)</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., Fragile items, handle with care" {...field} /></FormControl>
+                    <FormLabel>Besondere Anweisungen (Optional)</FormLabel>
+                    <FormControl><Textarea placeholder="z.B., Zerbrechliche Ware, vorsichtig behandeln" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -136,7 +136,7 @@ export default function RoutePlanningPage() {
             <CardFooter>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-                Generate Plan
+                Plan erstellen
               </Button>
             </CardFooter>
           </form>
@@ -145,8 +145,8 @@ export default function RoutePlanningPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle>AI-Generated Plan</CardTitle>
-          <CardDescription>The optimized route and vehicle assignment will appear here.</CardDescription>
+          <CardTitle>KI-generierter Plan</CardTitle>
+          <CardDescription>Die optimierte Route und Fahrzeugzuweisung werden hier angezeigt.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoading ? (
@@ -161,25 +161,25 @@ export default function RoutePlanningPage() {
           ) : result ? (
             <div className="space-y-4 text-sm">
               <div>
-                <h4 className="font-semibold">Suggested Route</h4>
+                <h4 className="font-semibold">Vorgeschlagene Route</h4>
                 <p className="text-muted-foreground">{result.suggestedRoute}</p>
               </div>
               <div>
-                <h4 className="font-semibold">Vehicle Assignment</h4>
+                <h4 className="font-semibold">Fahrzeugzuweisung</h4>
                 <p className="text-muted-foreground">{result.vehicleAssignment}</p>
               </div>
               <div>
-                <h4 className="font-semibold">Estimated Travel Time</h4>
+                <h4 className="font-semibold">Geschätzte Reisezeit</h4>
                 <p className="text-muted-foreground">{result.estimatedTravelTime}</p>
               </div>
                <div>
-                <h4 className="font-semibold">Potential Challenges</h4>
+                <h4 className="font-semibold">Mögliche Herausforderungen</h4>
                 <p className="text-muted-foreground">{result.potentialChallenges}</p>
               </div>
             </div>
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              Your plan is waiting.
+              Ihr Plan wartet.
             </div>
           )}
         </CardContent>

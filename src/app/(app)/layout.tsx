@@ -21,8 +21,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user, loading, router]);
 
   const pageTitle = useMemo(() => {
-    const path = pathname === '/' ? '/dashboard' : pathname;
-    const title = path.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard';
+    const pathMap: { [key: string]: string } = {
+      '/': 'Dashboard',
+      '/dashboard': 'Dashboard',
+      '/route-planning': 'Routenplanung',
+      '/address-insights': 'Standort-Analyse',
+      '/fleet': 'Fahrzeugflotte',
+      '/customers': 'Kunden & Auftragnehmer',
+    };
+    const title = pathMap[pathname] || pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard';
     return title.charAt(0).toUpperCase() + title.slice(1);
   }, [pathname]);
 

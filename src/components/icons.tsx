@@ -1,6 +1,6 @@
 import {
   type Icon as LucideIcon,
-  Navigation,
+  Orbit,
   LayoutDashboard,
   Route,
   MapPin,
@@ -17,7 +17,7 @@ import {
 export type Icon = typeof LucideIcon
 
 export const Icons = {
-  logo: Navigation,
+  logo: Orbit,
   dashboard: LayoutDashboard,
   route: Route,
   address: MapPin,

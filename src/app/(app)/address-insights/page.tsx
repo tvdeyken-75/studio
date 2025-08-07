@@ -15,7 +15,7 @@ import { Icons } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
-  address: z.string().min(10, "Please enter a complete address."),
+  address: z.string().min(10, "Bitte geben Sie eine vollständige Adresse ein."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -37,11 +37,11 @@ export default function AddressInsightsPage() {
       const response = await addressInsights(values);
       setResult(response);
     } catch (error) {
-      console.error("Error getting address insights:", error);
+      console.error("Fehler beim Abrufen der Adressinformationen:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to get insights. Please try again.",
+        title: "Fehler",
+        description: "Einblicke konnten nicht abgerufen werden. Bitte versuchen Sie es erneut.",
       });
     } finally {
       setIsLoading(false);
@@ -52,8 +52,8 @@ export default function AddressInsightsPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Address Insights</CardTitle>
-          <CardDescription>Enter an address to get AI-powered logistical insights and potential challenges.</CardDescription>
+          <CardTitle>Standort-Analyse</CardTitle>
+          <CardDescription>Geben Sie eine Adresse ein, um KI-gestützte logistische Einblicke und potenzielle Herausforderungen zu erhalten.</CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -63,8 +63,8 @@ export default function AddressInsightsPage() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Address</FormLabel>
-                    <FormControl><Input placeholder="e.g., Willy-Brandt-Straße 1, 10557 Berlin, Germany" {...field} /></FormControl>
+                    <FormLabel>Vollständige Adresse</FormLabel>
+                    <FormControl><Input placeholder="z.B., Willy-Brandt-Straße 1, 10557 Berlin, Deutschland" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -73,7 +73,7 @@ export default function AddressInsightsPage() {
             <CardFooter>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-                Analyze Address
+                Adresse analysieren
               </Button>
             </CardFooter>
           </form>
@@ -83,7 +83,7 @@ export default function AddressInsightsPage() {
       {(isLoading || result) && (
         <Card>
           <CardHeader>
-            <CardTitle>Logistical Analysis</CardTitle>
+            <CardTitle>Logistische Analyse</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (

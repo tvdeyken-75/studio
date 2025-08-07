@@ -14,10 +14,10 @@ import { Separator } from './ui/separator';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Icons.dashboard },
-  { href: '/route-planning', label: 'Route Planning', icon: Icons.route },
-  { href: '/address-insights', label: 'Address Insights', icon: Icons.address },
-  { href: '/fleet', label: 'Fleet Management', icon: Icons.fleet },
-  { href: '/customers', label: 'Customers & Contractors', icon: Icons.customers },
+  { href: '/route-planning', label: 'Routenplanung', icon: Icons.route },
+  { href: '/address-insights', label: 'Standort-Analyse', icon: Icons.address },
+  { href: '/fleet', label: 'Fahrzeugflotte', icon: Icons.fleet },
+  { href: '/customers', label: 'Kunden & Auftragnehmer', icon: Icons.customers },
 ];
 
 export function SidebarNav() {
@@ -27,7 +27,7 @@ export function SidebarNav() {
     <>
       <SidebarHeader className="flex items-center gap-2.5 p-4">
         <Icons.logo className="h-7 w-7 text-primary" />
-        <span className="text-lg font-semibold text-foreground">CargoPilot</span>
+        <span className="text-lg font-semibold text-foreground">AmbientTMS</span>
       </SidebarHeader>
       <Separator />
       <SidebarMenu className="flex-1 p-4">
@@ -49,7 +49,7 @@ export function SidebarNav() {
       <Separator />
        <SidebarFooter className="p-4">
             <div className="text-xs text-muted-foreground">
-                &copy; {new Date().getFullYear()} CargoPilot Inc.
+                &copy; {new Date().getFullYear()} AmbientTMS Inc.
             </div>
        </SidebarFooter>
     </>

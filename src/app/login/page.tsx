@@ -34,8 +34,8 @@ export default function LoginPage() {
     } else {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        title: "Anmeldung fehlgeschlagen",
+        description: "Ungültige E-Mail oder Passwort. Bitte versuchen Sie es erneut.",
       });
       setIsLoading(false);
     }
@@ -48,8 +48,8 @@ export default function LoginPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Icons.logo className="h-8 w-8" />
             </div>
-          <CardTitle className="text-2xl">Welcome to CargoPilot</CardTitle>
-          <CardDescription>Enter your admin credentials to sign in.</CardDescription>
+          <CardTitle className="text-2xl">Willkommen bei AmbientTMS</CardTitle>
+          <CardDescription>Geben Sie Ihre Administrator-Anmeldeinformationen ein, um sich anzumelden.</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -58,7 +58,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@cargopilot.com"
+                placeholder="admin@ambienttms.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -66,7 +66,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Passwort</Label>
               <Input
                 id="password"
                 type="password"
@@ -81,7 +81,7 @@ export default function LoginPage() {
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              Anmelden
             </Button>
           </CardFooter>
         </form>

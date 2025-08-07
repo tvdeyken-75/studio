@@ -1,6 +1,6 @@
 export type Vehicle = {
   id: string;
-  type: 'Truck' | 'Van' | 'Sprinter';
+  type: 'LKW' | 'Transporter' | 'Sprinter';
   location: string;
   status: 'Available' | 'On-trip' | 'Maintenance';
   capacity: string;

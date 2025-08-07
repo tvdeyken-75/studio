@@ -7,20 +7,26 @@ import { fleetData } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export default function FleetPage() {
+  const statusMap = {
+    'Available': 'Verfügbar',
+    'On-trip': 'Unterwegs',
+    'Maintenance': 'Wartung'
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Fleet Status</CardTitle>
-        <CardDescription>An overview of all vehicles in your fleet for today.</CardDescription>
+        <CardTitle>Fahrzeugflotte</CardTitle>
+        <CardDescription>Eine Übersicht aller Fahrzeuge in Ihrer Flotte für heute.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Vehicle ID</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Capacity</TableHead>
+              <TableHead>Fahrzeug-ID</TableHead>
+              <TableHead>Typ</TableHead>
+              <TableHead>Standort</TableHead>
+              <TableHead>Kapazität</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -41,7 +47,7 @@ export default function FleetPage() {
                       vehicle.status === 'Maintenance' && 'border-amber-500 text-amber-600'
                     )}
                   >
-                    {vehicle.status}
+                    {statusMap[vehicle.status]}
                   </Badge>
                 </TableCell>
               </TableRow>

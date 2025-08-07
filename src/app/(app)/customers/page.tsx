@@ -40,7 +40,7 @@ const AddProfileDialog = ({ type, onAdd }: { type: ProfileType, onAdd: (profile:
   const [contact, setContact] = useState("");
   const [address, setAddress] = useState("");
 
-  const title = type === 'customer' ? 'Customer' : 'Contractor';
+  const title = type === 'customer' ? 'Kunde' : 'Auftragnehmer';
 
   const handleAdd = () => {
     if (name && contact && address) {
@@ -57,14 +57,14 @@ const AddProfileDialog = ({ type, onAdd }: { type: ProfileType, onAdd: (profile:
       <DialogTrigger asChild>
         <Button>
           <Icons.add className="mr-2 h-4 w-4" />
-          Add New {title}
+          Neuen {title} hinzufügen
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New {title}</DialogTitle>
+          <DialogTitle>Neuen {title} hinzufügen</DialogTitle>
           <DialogDescription>
-            Enter the details for the new {title}. This data is temporary and will be lost on page refresh.
+            Geben Sie die Details für den neuen {title} ein. Diese Daten sind temporär und gehen beim Aktualisieren der Seite verloren.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -73,16 +73,16 @@ const AddProfileDialog = ({ type, onAdd }: { type: ProfileType, onAdd: (profile:
             <Input id="name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="contact" className="text-right">Contact</Label>
+            <Label htmlFor="contact" className="text-right">Kontakt</Label>
             <Input id="contact" value={contact} onChange={e => setContact(e.target.value)} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="address" className="text-right">Address</Label>
+            <Label htmlFor="address" className="text-right">Adresse</Label>
             <Input id="address" value={address} onChange={e => setAddress(e.target.value)} className="col-span-3" />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleAdd}>Save</Button>
+          <Button onClick={handleAdd}>Speichern</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -95,8 +95,8 @@ const ProfileTable = ({ profiles, type }: { profiles: (Customer | Contractor)[],
     <CardHeader>
       <div className="flex justify-between items-center">
         <div>
-            <CardTitle>{type === 'customer' ? 'Customers' : 'Contractors'}</CardTitle>
-            <CardDescription>List of currently managed {type}s.</CardDescription>
+            <CardTitle>{type === 'customer' ? 'Kunden' : 'Auftragnehmer'}</CardTitle>
+            <CardDescription>Liste der aktuell verwalteten {type === 'customer' ? 'Kunden' : 'Auftragnehmer'}.</CardDescription>
         </div>
         <AddProfileDialog type={type} onAdd={
             (profile) => {
@@ -112,8 +112,8 @@ const ProfileTable = ({ profiles, type }: { profiles: (Customer | Contractor)[],
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Address</TableHead>
+            <TableHead>Kontakt</TableHead>
+            <TableHead>Adresse</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -128,7 +128,7 @@ const ProfileTable = ({ profiles, type }: { profiles: (Customer | Contractor)[],
           ) : (
             <TableRow>
               <TableCell colSpan={3} className="h-24 text-center">
-                No {type}s added yet.
+                Noch keine {type === 'customer' ? 'Kunden' : 'Auftragnehmer'} hinzugefügt.
               </TableCell>
             </TableRow>
           )}
@@ -159,15 +159,15 @@ export default function CustomersPage() {
 
     return () => {
         window.removeEventListener('addcustomer', addCustomerHandler);
-        window.removeEventListener('addcontractor', addContractHandler);
+        window.removeEventListener('addcontractor', addContractorHandler);
     };
   });
 
   return (
     <Tabs defaultValue="customers">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="customers">Customers</TabsTrigger>
-        <TabsTrigger value="contractors">Contractors</TabsTrigger>
+        <TabsTrigger value="customers">Kunden</TabsTrigger>
+        <TabsTrigger value="contractors">Auftragnehmer</TabsTrigger>
       </TabsList>
       <TabsContent value="customers">
         <ProfileTable profiles={customers} type="customer" />
