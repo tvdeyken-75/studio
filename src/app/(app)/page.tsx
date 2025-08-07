@@ -17,7 +17,7 @@ const KpiCard = ({ kpi }: { kpi: Kpi }) => (
        </div>
     </CardHeader>
     <CardContent>
-      <div className="text-2xl font-bold">{kpi.value}</div>
+      <div className="text-xl font-bold">{kpi.value}</div>
       {kpi.change && (
         <p className={cn("text-xs", kpi.changeType === 'positive' ? 'text-green-600' : 'text-red-600')}>
           {kpi.change} {kpi.description}
@@ -50,8 +50,8 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyDeliveriesData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{fontSize: 12}} />
+                <YAxis tickLine={false} axisLine={false} tick={{fontSize: 12}} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}

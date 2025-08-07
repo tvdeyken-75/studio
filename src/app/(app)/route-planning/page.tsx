@@ -69,7 +69,7 @@ export default function RoutePlanningPage() {
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <FormField
                 control={form.control}
                 name="pickupLocation"
