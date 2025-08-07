@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useParams, useRouter, usePathname } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import type { Customer, Kontakt, Address } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -403,17 +403,34 @@ const LoadAddressDialog = ({ onSelectAddress }: { onSelectAddress: (address: Add
 export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
-  const id = params.id as string;
+  const slug = params.slug as string[];
 
-  const entityType = useMemo(() => {
-    if (pathname.startsWith('/customers/suppliers')) return 'supplier';
-    if (pathname.startsWith('/customers/subcontractors')) return 'subcontractor';
-    return 'customer';
-  }, [pathname]);
+  const { entityType, id, isNew } = useMemo(() => {
+    if (!slug) return { entityType: 'customer', id: '', isNew: false };
+    
+    if (slug.length === 1) { // /customers/new or /customers/[id]
+        const idOrNew = slug[0];
+        return {
+            entityType: 'customer',
+            id: idOrNew,
+            isNew: idOrNew === 'new',
+        };
+    }
+    
+    if (slug.length === 2) { // /customers/suppliers/new or /customers/suppliers/[id]
+        const [type, idOrNew] = slug;
+        const entity = type === 'suppliers' ? 'supplier' : 'subcontractor';
+        return {
+            entityType: entity,
+            id: idOrNew,
+            isNew: idOrNew === 'new'
+        }
+    }
+    
+    return { entityType: 'customer', id: '', isNew: false };
 
-  const isNew = id === 'new';
+  }, [slug]);
 
   const { data, allData, numberLabel, pageTitle, backUrl } = useMemo(() => {
     switch (entityType) {
@@ -480,7 +497,7 @@ export default function CustomerDetailPage() {
     return data;
   }, [id, isNew, data, entityType]);
 
-  const kundenKontakte = useMemo(() => MOCK_KONTAKTE.filter(k => k.kundenId === id), [id]);
+  const kundenKontakte = useMemo(() => isNew ? [] : MOCK_KONTAKTE.filter(k => k.kundenId === id), [id, isNew]);
 
   const { register, handleSubmit, control, watch, formState: { errors, isDirty, isSubmitting }, setValue, getValues } = useForm<Customer & { kontakte: Kontakt[] }>({
     defaultValues: { ...customerData, kontakte: kundenKontakte },
@@ -551,7 +568,7 @@ export default function CustomerDetailPage() {
                 <CardHeader><CardTitle>Stammdaten</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                     <div className="space-y-1.5"><Label>Firmenname</Label><Input {...register("firmenname")} className="h-9"/></div>
-                    <div className="space-y-1.5"><Label>{numberLabel}</Label><Input {...register("kundennummer")} className="h-9" readOnly={isNew} /></div>
+                    <div className="space-y-1.5"><Label>{numberLabel}</Label><Input {...register("kundennummer")} className="h-9" readOnly /></div>
                     <div className="space-y-1.5"><Label>USt-IdNr.</Label><Input {...register("ustId")} className="h-9"/></div>
                     <div className="space-y-1.5"><Label>Steuernummer</Label><Input {...register("steuernummer")} className="h-9"/></div>
                     <div className="space-y-1.5"><Label>Handelsregisternr.</Label><Input {...register("firmenbuchnummer")} className="h-9"/></div>
@@ -630,7 +647,7 @@ export default function CustomerDetailPage() {
                 </CardContent>
             </Card>
 
-            <KontaktenForm control={control} register={register} />
+            {!isNew && <KontaktenForm control={control} register={register} />}
         </div>
       </div>
     </form>

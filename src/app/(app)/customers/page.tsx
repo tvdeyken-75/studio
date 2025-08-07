@@ -43,7 +43,7 @@ const initialCustomers: Customer[] = [
     {
         id: '1',
         firmenname: 'Musterfirma GmbH',
-        kundennummer: 'KD-12345',
+        kundennummer: 'KN-0001',
         ustId: 'DE123456789',
         steuernummer: '123/456/7890',
         firmenbuchnummer: 'HRB 12345',
