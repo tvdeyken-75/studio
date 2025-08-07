@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import type { Address, Country } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,7 +97,7 @@ const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => v
             Füllen Sie die Details für die neue Adresse aus.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
+        <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
             <div className="space-y-4">
                 <h4 className="text-sm font-medium">Allgemein</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -183,6 +183,17 @@ const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => v
 const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[], onAdd: (address: Address) => void, setAddresses: React.Dispatch<React.SetStateAction<Address[]>> }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredAddresses = useMemo(() => {
+        if (!searchTerm) return addresses;
+        const lowercasedTerm = searchTerm.toLowerCase();
+        return addresses.filter(address => 
+            Object.values(address).some(value => 
+                String(value).toLowerCase().includes(lowercasedTerm)
+            )
+        );
+    }, [addresses, searchTerm]);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -256,12 +267,19 @@ const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[]
     return (
     <Card>
         <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
             <div>
                 <CardTitle>Adressen</CardTitle>
                 <CardDescription>Liste der verwalteten Adressen.</CardDescription>
             </div>
-            <div className="flex gap-2">
+             <div className="flex-grow max-w-sm">
+                <Input 
+                    placeholder="Adressen durchsuchen..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                />
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
                 <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
                 <Button variant="outline" onClick={() => fileInputRef.current?.click()}>CSV Importieren</Button>
                 <Button variant="outline" onClick={downloadCSVTemplate}>Vorlage herunterladen</Button>
@@ -287,8 +305,8 @@ const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[]
             </TableRow>
             </TableHeader>
             <TableBody>
-            {addresses.length > 0 ? (
-                addresses.map((address) => (
+            {filteredAddresses.length > 0 ? (
+                filteredAddresses.map((address) => (
                 <TableRow key={address.id}>
                     <TableCell>{address.kurzname}</TableCell>
                     <TableCell className="font-medium">{address.name}</TableCell>
@@ -305,7 +323,7 @@ const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[]
             ) : (
                 <TableRow>
                 <TableCell colSpan={10} className="h-24 text-center">
-                    Noch keine Adressen hinzugefügt.
+                    {searchTerm ? "Keine Ergebnisse gefunden." : "Noch keine Adressen hinzugefügt."}
                 </TableCell>
                 </TableRow>
             )}
