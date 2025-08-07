@@ -25,7 +25,19 @@ import { Icons } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { SlidersHorizontal } from "lucide-react";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 
 const initialCustomers: Customer[] = [
     {
@@ -180,6 +192,7 @@ export default function CustomersPage() {
                 const headers = lines[0].split(';').map(h => h.trim() as keyof Customer);
                 
                 const newCustomers: Customer[] = lines.slice(1).map((line, index) => {
+                    const values = line.split(';');
                     const customerData: any = { id: `csv-${Date.now()}-${index}` };
                     headers.forEach((header, i) => {
                       const value = values[i]?.trim();
@@ -243,6 +256,13 @@ export default function CustomersPage() {
         link.click();
         document.body.removeChild(link);
     }
+    
+    const handlePrint = (reportType: string, customerName: string) => {
+        toast({
+            title: `${reportType} für ${customerName}`,
+            description: `Die Funktion zum Drucken von Berichten ist in Entwicklung.`,
+        });
+    };
 
 
   return (
@@ -328,17 +348,44 @@ export default function CustomersPage() {
                     </Badge>
                   </TableCell>}
                   <TableCell className="text-right">
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Icons.more className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild><Link href={`/customers/${customer.id}`} className="w-full">Bearbeiten</Link></DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                     <AlertDialog>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Icons.more className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/customers/${customer.id}`} className="w-full cursor-pointer">Bearbeiten</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>Berichte</DropdownMenuLabel>
+                                 <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handlePrint("Bestellungen", customer.firmenname)}}>Bestellungen drucken</DropdownMenuItem>
+                                 </AlertDialogTrigger>
+                                 <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handlePrint("Zahlungen/Mahnungen", customer.firmenname)}}>Zahlungen/Mahnungen</DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handlePrint("Reklamationen", customer.firmenname)}}>Reklamationen</DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Funktion in Entwicklung</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Diese Funktion ist noch nicht verfügbar, wird aber in Kürze implementiert.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogAction>OK</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))
@@ -355,3 +402,5 @@ export default function CustomersPage() {
     </Card>
   );
 }
+
+    
