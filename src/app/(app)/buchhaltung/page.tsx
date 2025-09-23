@@ -557,7 +557,7 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
             const printWindow = window.open('', '', 'height=800,width=800');
             if (printWindow) {
                 printWindow.document.write('<html><head><title>Rechnung</title>');
-                printWindow.document.write('<style>body{font-family:sans-serif; padding: 20px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ddd; padding:8px;} th{background-color:#f2f2f2;} .text-right{text-align:right;} .mt-4{margin-top:1.5rem;} .font-bold{font-weight:bold;}</style>');
+                printWindow.document.write('<style>body{font-family:sans-serif; padding: 2rem;} h1,h2,h3,h4{margin:0; padding:0} table{width:100%; border-collapse:collapse; margin-top: 1.5rem; margin-bottom: 1.5rem;} thead tr{background-color: #f2f2f2;} th,td{border-bottom:1px solid #ddd; padding:0.75rem; text-align: left;} .text-right{text-align:right;} .mt-8{margin-top:2rem;} .mb-8{margin-bottom:2rem;} .grid{display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;} .font-bold{font-weight:bold;} .text-muted{color:#666;}</style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(printContent.innerHTML);
                 printWindow.document.write('</body></html>');
@@ -573,58 +573,61 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
     const gross = total + vat;
 
     return (
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
                 <DialogTitle>Rechnungsdetails: {invoice.rechnungsnummer}</DialogTitle>
                  <DialogDescription>
                     Hier können Sie die Rechnungsdetails einsehen und weitere Aktionen ausführen.
                 </DialogDescription>
             </DialogHeader>
-            <div ref={printRef} className="py-4 max-h-[60vh] overflow-y-auto pr-4 text-sm">
-                 <div className="grid grid-cols-2 gap-4 mb-8">
+            <div ref={printRef} className="py-4 max-h-[60vh] overflow-y-auto pr-4 text-sm bg-white text-black p-8 rounded-md border">
+                 <div className="grid grid-cols-2 gap-8 mb-8">
                     <div>
                         <h3 className="font-bold text-lg">AmbientTMS</h3>
-                        <p>Musterstraße 1, 12345 Musterstadt</p>
+                        <p className="text-muted-foreground text-xs">Musterstraße 1<br/>12345 Musterstadt<br/>Deutschland</p>
                     </div>
                     <div className="text-right">
-                        <h2 className="font-bold text-xl">RECHNUNG</h2>
-                        <p>Nr: {invoice.rechnungsnummer}</p>
-                        <p>Datum: {formatDate(invoice.rechnungsdatum)}</p>
+                        <h2 className="font-bold text-2xl text-primary">RECHNUNG</h2>
+                        <div className="text-xs">
+                            <p><strong>Rechnungs-Nr:</strong> {invoice.rechnungsnummer}</p>
+                            <p><strong>Datum:</strong> {formatDate(invoice.rechnungsdatum)}</p>
+                        </div>
                     </div>
                 </div>
-                 <div className="mb-8">
+                 <div className="mb-8 p-4 bg-muted/20 rounded-md text-xs">
+                    <p className="font-bold text-primary">Rechnung an:</p>
                     <p className="font-bold">{invoice.kundenName}</p>
                     <p>{customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}</p>
                     <p>{customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}</p>
                  </div>
-                 <table>
-                     <thead>
-                        <tr>
-                            <th>Datum</th>
-                            <th>Beschreibung</th>
-                            <th className="text-right">Betrag</th>
-                        </tr>
-                     </thead>
-                     <tbody>
+                 <Table className="text-xs">
+                     <TableHeader>
+                        <TableRow className="bg-muted/30">
+                            <TableHead className="w-[100px]">Datum</TableHead>
+                            <TableHead>Beschreibung</TableHead>
+                            <TableHead className="text-right">Betrag</TableHead>
+                        </TableRow>
+                     </TableHeader>
+                     <TableBody>
                         {invoice.items.map(item => (
-                            <tr key={item.id}>
-                                <td>{item.datum ? formatDate(item.datum) : 'N/A'}</td>
-                                <td>{item.beschreibung}</td>
-                                <td className="text-right">{formatCurrency(item.gesamtpreis)}</td>
-                            </tr>
+                            <TableRow key={item.id} className="border-b">
+                                <TableCell>{item.datum ? formatDate(item.datum) : 'N/A'}</TableCell>
+                                <TableCell>{item.beschreibung}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(item.gesamtpreis)}</TableCell>
+                            </TableRow>
                         ))}
-                     </tbody>
-                 </table>
+                     </TableBody>
+                 </Table>
                  <div className="flex justify-end mt-4">
-                    <div className="w-1/2 space-y-2">
-                        <div className="flex justify-between"><span>Zwischensumme</span><span>{formatCurrency(total)}</span></div>
-                        <div className="flex justify-between"><span>MwSt. (19%)</span><span>{formatCurrency(vat)}</span></div>
-                        <div className="flex justify-between font-bold text-lg"><span>Gesamtbetrag</span><span>{formatCurrency(gross)}</span></div>
+                    <div className="w-1/2 md:w-1/3 space-y-2 text-xs">
+                        <div className="flex justify-between"><span>Zwischensumme</span><span className="font-mono">{formatCurrency(total)}</span></div>
+                        <div className="flex justify-between"><span>MwSt. (19%)</span><span className="font-mono">{formatCurrency(vat)}</span></div>
+                        <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>Gesamtbetrag</span><span className="font-mono">{formatCurrency(gross)}</span></div>
                     </div>
                  </div>
-                 <p className="mt-8">Fällig am: {formatDate(invoice.faelligkeitsdatum)}</p>
+                 <p className="mt-8 text-xs text-muted-foreground">Fällig am: {formatDate(invoice.faelligkeitsdatum)}. Wir danken für Ihren Auftrag.</p>
             </div>
-            <DialogFooter className="justify-start">
+            <DialogFooter className="justify-start pt-4 border-t">
                  <Button onClick={handlePrint}><FileDown className="mr-2 h-4 w-4" /> Als PDF drucken/speichern</Button>
                  <Button onClick={() => onAction('email')} variant="outline"><Send className="mr-2 h-4 w-4" /> Per E-Mail senden</Button>
                  <Button onClick={() => onAction('xml')} variant="outline"><CodeXml className="mr-2 h-4 w-4" /> Als E-Rechnung (XML) exportieren</Button>
@@ -819,7 +822,7 @@ export default function BuchhaltungPage() {
     
     <Dialog open={isDialogOpen && dialogMode === 'edit'} onOpenChange={setIsDialogOpen}>
         <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode='edit'>
-            <span />
+             <span />
         </CreateInvoiceDialog>
     </Dialog>
 
@@ -850,3 +853,5 @@ export default function BuchhaltungPage() {
     </>
   );
 }
+
+    
