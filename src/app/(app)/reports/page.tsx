@@ -569,7 +569,6 @@ export default function TransportReportPage() {
         vehicleId: true,
         stops: true,
         status: true,
-        profitability: true,
     });
     
     type ColumnKeys = keyof typeof columnVisibility;
@@ -582,7 +581,6 @@ export default function TransportReportPage() {
         vehicleId: 'Fahrzeug',
         stops: 'Stopps',
         status: 'Status',
-        profitability: 'Profitabilität',
     };
 
     const toggleColumn = (column: ColumnKeys) => {
@@ -780,9 +778,6 @@ export default function TransportReportPage() {
                                                 {tour.status}
                                             </Badge>
                                         </TableCell>}
-                                        {columnVisibility.profitability && <TableCell className={cn(
-                                            (tour.profitability || 0) < 0 ? 'text-destructive' : 'text-green-600'
-                                        )}>{formatCurrency(tour.profitability)}</TableCell>}
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -820,5 +815,6 @@ export default function TransportReportPage() {
         </div>
     );
 }
+
 
 
