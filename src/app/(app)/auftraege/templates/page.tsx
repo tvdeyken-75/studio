@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -55,7 +56,7 @@ const AddTemplateDialog = ({
       addressName: '',
       location: '',
       plannedDateTime: '',
-      goodsDescription: '',
+      goodsDescription: 'Sonstiges',
       status: 'Planned',
     };
      const deliveryStop: Omit<TourStop, 'kilometers' | 'actualDateTime'> = {
@@ -66,7 +67,7 @@ const AddTemplateDialog = ({
       addressName: '',
       location: '',
       plannedDateTime: '',
-      goodsDescription: '',
+      goodsDescription: 'Sonstiges',
       status: 'Planned',
     };
     return {
@@ -172,8 +173,26 @@ const AddTemplateDialog = ({
                     </div>
                 </div>
                  <div className="space-y-1.5">
-                    <Label>Frachtbeschreibung (Standard)</Label>
-                    <Textarea {...register(`stops.0.goodsDescription`)} placeholder="z.B. 24t, 33 Paletten" rows={2}/>
+                    <Label>Fracht</Label>
+                    <Controller
+                        name="stops.0.goodsDescription"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Fleisch">Fleisch</SelectItem>
+                                    <SelectItem value="Gemüse">Gemüse</SelectItem>
+                                    <SelectItem value="Früchte">Früchte</SelectItem>
+                                    <SelectItem value="Blumen">Blumen</SelectItem>
+                                    <SelectItem value="Dosen">Dosen</SelectItem>
+                                    <SelectItem value="Leergut">Leergut</SelectItem>
+                                    <SelectItem value="Leere Fracht">Leere Fracht</SelectItem>
+                                    <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                 </div>
             </div>
           </div>
@@ -278,3 +297,4 @@ export default function TripTemplatesPage() {
     </div>
   );
 }
+
