@@ -40,6 +40,11 @@ const KpiCard = ({ title, value, icon, description }: { title: string; value: st
     </Card>
 );
 
+const formatCurrency = (value?: number) => {
+    if (value === undefined || isNaN(value)) return 'N/A';
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+}
+
 const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) => void; existingTours: Tour[] }) => {
     const [isOpen, setIsOpen] = useState(false);
     
@@ -72,13 +77,16 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
         return `${tourNumberPrefix}${(nextNum).toString().padStart(padLength, '0')}`;
     };
 
-    const { register, handleSubmit, control, watch, setValue, reset } = useForm<Tour>({
+    const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<Tour>({
         defaultValues: {
             id: `tour-${Date.now()}`,
             tourNumber: generateNewTourNumber(),
             tourDate: format(new Date(), 'yyyy-MM-dd'),
             status: 'Entwurf',
-            stops: []
+            stops: [],
+            rohertrag: 0,
+            dieselfloaterPercentage: 0,
+            mautzuschlagPercentage: 0,
         }
     });
 
@@ -89,8 +97,40 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
     
     const tourPOIs = useMemo(() => addressData.filter(a => a.tourPOI), []);
 
+    const watchedFields = watch();
+
+    useEffect(() => {
+        const customer = customerData.find(c => c.id === watchedFields.customerId);
+        if (customer) {
+            setValue('mautzuschlagPercentage', customer.mautzuschlag || 0);
+            if(customer.dieselfloater) {
+                 const latestDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
+                 setValue('dieselfloaterPercentage', latestDieselpreis?.zuschlag || 0);
+            } else {
+                setValue('dieselfloaterPercentage', 0);
+            }
+        }
+    }, [watchedFields.customerId, setValue]);
+
+    const totalKilometers = useMemo(() => {
+        return watchedFields.stops.reduce((sum, stop) => sum + (stop.kilometers || 0), 0);
+    }, [watchedFields.stops]);
+
+    const dieselfloaterAmount = useMemo(() => (watchedFields.rohertrag || 0) * ((watchedFields.dieselfloaterPercentage || 0) / 100), [watchedFields.rohertrag, watchedFields.dieselfloaterPercentage]);
+    const mautzuschlagAmount = useMemo(() => (watchedFields.rohertrag || 0) * ((watchedFields.mautzuschlagPercentage || 0) / 100), [watchedFields.rohertrag, watchedFields.mautzuschlagPercentage]);
+    const zwischensumme = useMemo(() => (watchedFields.rohertrag || 0) + dieselfloaterAmount + mautzuschlagAmount, [watchedFields.rohertrag, dieselfloaterAmount, mautzuschlagAmount]);
+    const mwstAmount = useMemo(() => zwischensumme * 0.19, [zwischensumme]);
+    const bruttoAmount = useMemo(() => zwischensumme + mwstAmount, [zwischensumme, mwstAmount]);
+
+
     const onSubmit = (data: Tour) => {
-        onAddTour(data);
+        const finalData = {
+            ...data,
+            totalKilometers,
+            calculatedRevenue: zwischensumme,
+            profitability: zwischensumme - (data.totalCosts || 0),
+        };
+        onAddTour(finalData);
         setIsOpen(false);
     };
 
@@ -101,7 +141,10 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                 tourNumber: generateNewTourNumber(),
                 tourDate: format(new Date(), 'yyyy-MM-dd'),
                 status: 'Entwurf',
-                stops: []
+                stops: [],
+                rohertrag: 0,
+                dieselfloaterPercentage: 0,
+                mautzuschlagPercentage: 0,
             });
         }
         setIsOpen(open);
@@ -130,7 +173,7 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                     Neue Tour
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-4xl">
+            <DialogContent className="sm:max-w-6xl">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader>
                         <DialogTitle>Neue Tour erstellen</DialogTitle>
@@ -138,75 +181,120 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                             Definieren Sie eine neue Tour mit allen zugehörigen Ressourcen und Stopps.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-6 max-h-[70vh] overflow-y-auto pr-4">
-                        {/* Section 1: Core Tour Data */}
-                        <div className="space-y-4 p-4 border rounded-lg">
-                            <h3 className="font-semibold text-base">Tour-Stammdaten</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-1.5">
-                                    <Label>Tour-Nummer</Label>
-                                    <Input {...register('tourNumber')} readOnly className="h-9 font-mono"/>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
+                        <div className="space-y-4">
+                             {/* Section 1: Core Tour Data */}
+                            <div className="space-y-4 p-4 border rounded-lg">
+                                <h3 className="font-semibold text-base">Tour-Stammdaten</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label>Tour-Nummer</Label>
+                                        <Input {...register('tourNumber')} readOnly className="h-9 font-mono"/>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Tour-Datum</Label>
+                                        <Input type="date" {...register('tourDate')} className="h-9"/>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Kunde</Label>
+                                        <Controller
+                                            name="customerId"
+                                            control={control}
+                                            rules={{ required: 'Kunde ist erforderlich' }}
+                                            render={({ field }) => (
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <SelectTrigger className="h-9"><SelectValue placeholder="Kunde auswählen" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
+                                        {errors.customerId && <p className="text-xs text-destructive">{errors.customerId.message}</p>}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Kundenreferenz</Label>
+                                        <Input {...register('customerReference')} className="h-9"/>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Fahrer</Label>
+                                        <Select onValueChange={(val) => setValue('driverId', val)}>
+                                            <SelectTrigger className="h-9"><SelectValue placeholder="Fahrer auswählen" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="max-mustermann">Max Mustermann</SelectItem>
+                                                <SelectItem value="erika-musterfrau">Erika Musterfrau</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Fahrzeug</Label>
+                                        <Select onValueChange={(val) => setValue('vehicleId', val)}>
+                                            <SelectTrigger className="h-9"><SelectValue placeholder="Fahrzeug auswählen" /></SelectTrigger>
+                                            <SelectContent>
+                                                {fleetData.map(v => <SelectItem key={v.id} value={v.id}>{v.kennzeichen}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Anhänger</Label>
+                                        <Select onValueChange={(val) => setValue('trailerId', val)}>
+                                            <SelectTrigger className="h-9"><SelectValue placeholder="Anhänger auswählen" /></SelectTrigger>
+                                            <SelectContent>
+                                                {trailerData.map(t => <SelectItem key={t.id} value={t.id}>{t.kennzeichen}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Status</Label>
+                                        <Controller
+                                            name="status"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Entwurf">Entwurf</SelectItem>
+                                                        <SelectItem value="Geplant">Geplant</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
-                                 <div className="space-y-1.5">
-                                    <Label>Kunde</Label>
-                                     <Select onValueChange={(val) => setValue('customerId', val)}>
-                                        <SelectTrigger className="h-9"><SelectValue placeholder="Kunde auswählen" /></SelectTrigger>
-                                        <SelectContent>
-                                            {customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label>Kundenreferenz</Label>
-                                    <Input {...register('customerReference')} className="h-9"/>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label>Tour-Datum</Label>
-                                    <Input type="date" {...register('tourDate')} className="h-9"/>
-                                </div>
-                                 <div className="space-y-1.5">
-                                    <Label>Fahrer</Label>
-                                     <Select onValueChange={(val) => setValue('driverId', val)}>
-                                        <SelectTrigger className="h-9"><SelectValue placeholder="Fahrer auswählen" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="max-mustermann">Max Mustermann</SelectItem>
-                                            <SelectItem value="erika-musterfrau">Erika Musterfrau</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label>Fahrzeug</Label>
-                                     <Select onValueChange={(val) => setValue('vehicleId', val)}>
-                                        <SelectTrigger className="h-9"><SelectValue placeholder="Fahrzeug auswählen" /></SelectTrigger>
-                                        <SelectContent>
-                                            {fleetData.map(v => <SelectItem key={v.id} value={v.id}>{v.kennzeichen}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label>Anhänger</Label>
-                                    <Select onValueChange={(val) => setValue('trailerId', val)}>
-                                        <SelectTrigger className="h-9"><SelectValue placeholder="Anhänger auswählen" /></SelectTrigger>
-                                        <SelectContent>
-                                            {trailerData.map(t => <SelectItem key={t.id} value={t.id}>{t.kennzeichen}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                 <div className="space-y-1.5">
-                                    <Label>Status</Label>
-                                     <Controller
-                                        name="status"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Entwurf">Entwurf</SelectItem>
-                                                    <SelectItem value="Geplant">Geplant</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
+                            </div>
+                            
+                            {/* Section 3: Calculation */}
+                            <div className="space-y-4 p-4 border rounded-lg">
+                                <h3 className="font-semibold text-base">Kalkulation</h3>
+                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                     <div className="space-y-1.5">
+                                        <Label>Rohertrag (€)</Label>
+                                        <Controller name="rohertrag" control={control} render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-9"/>} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Dieselfloater (%)</Label>
+                                        <Controller name="dieselfloaterPercentage" control={control} render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-9"/>} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label>Mautzuschlag (%)</Label>
+                                        <Controller name="mautzuschlagPercentage" control={control} render={({ field }) => <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} className="h-9"/>} />
+                                    </div>
+                                 </div>
+                                 <div className="space-y-4 p-4 border rounded-md bg-muted/50 mt-4">
+                                    <h4 className="font-medium text-center text-sm">Berechnungs-Vorschau</h4>
+                                    <Separator />
+                                    <table className="w-full text-sm">
+                                        <tbody>
+                                            <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(watchedFields.rohertrag)}</td></tr>
+                                            <tr><td>+ Dieselfloater ({watchedFields.dieselfloaterPercentage?.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
+                                            <tr><td>+ Mautzuschlag ({watchedFields.mautzuschlagPercentage?.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
+                                            <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                            <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
+                                                <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
+                                            <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                            <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -262,7 +350,13 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                                             </div>
                                             <div className="space-y-1.5">
                                                 <Label>Kilometer</Label>
-                                                <Input type="number" {...register(`stops.${index}.kilometers`, { valueAsNumber: true })} className="h-9" />
+                                                <Controller
+                                                    name={`stops.${index}.kilometers`}
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} className="h-9" />
+                                                    )}
+                                                />
                                             </div>
                                         </div>
                                          <div className="space-y-1.5">
@@ -356,11 +450,6 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
            }
        }
     };
-    
-    const formatCurrency = (value?: number) => {
-        if (value === undefined || isNaN(value)) return 'N/A';
-        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
-    }
     
     const formatDate = (date: string, formatString: string = 'dd.MM.yyyy HH:mm') => {
         try {
@@ -587,11 +676,6 @@ export default function TransportReportPage() {
         }
     }
     
-     const formatCurrency = (value?: number) => {
-        if (value === undefined) return 'N/A';
-        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
-    }
-    
     const statusVariant: Record<Tour['status'], "default" | "destructive" | "secondary" | "outline"> = {
         'Entwurf': 'secondary',
         'Geplant': 'default',
@@ -753,3 +837,4 @@ export default function TransportReportPage() {
         </div>
     );
 }
+
