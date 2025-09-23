@@ -39,13 +39,24 @@ const KpiCard = ({ title, value, icon, description }: { title: string; value: st
     </Card>
 );
 
-const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
+const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) => void; existingTours: Tour[] }) => {
     const [isOpen, setIsOpen] = useState(false);
     
+    const generateNewTourNumber = () => {
+        const highestNum = existingTours.reduce((max, tour) => {
+            if (tour.tourNumber.startsWith('T-')) {
+                const num = parseInt(tour.tourNumber.replace('T-', ''), 10);
+                return isNaN(num) ? max : Math.max(max, num);
+            }
+            return max;
+        }, 0);
+        return `T-${(highestNum + 1).toString().padStart(5, '0')}`;
+    };
+
     const { register, handleSubmit, control, watch, setValue, reset } = useForm<Tour>({
         defaultValues: {
             id: `tour-${Date.now()}`,
-            tourNumber: `TOUR-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
+            tourNumber: generateNewTourNumber(),
             tourDate: format(new Date(), 'yyyy-MM-dd'),
             status: 'Draft',
             stops: []
@@ -61,8 +72,20 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
 
     const onSubmit = (data: Tour) => {
         onAddTour(data);
-        reset();
         setIsOpen(false);
+    };
+
+    const handleOpenChange = (open: boolean) => {
+        if (open) {
+            reset({
+                id: `tour-${Date.now()}`,
+                tourNumber: generateNewTourNumber(),
+                tourDate: format(new Date(), 'yyyy-MM-dd'),
+                status: 'Draft',
+                stops: []
+            });
+        }
+        setIsOpen(open);
     };
 
     const addStop = (type: 'Pickup' | 'Delivery') => {
@@ -80,7 +103,7 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
                     <Icons.add className="mr-2 h-4 w-4" />
@@ -100,6 +123,10 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
                         <div className="space-y-4 p-4 border rounded-lg">
                             <h3 className="font-semibold text-base">Tour-Stammdaten</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <Label>Tour-Nummer</Label>
+                                    <Input {...register('tourNumber')} readOnly className="h-9 font-mono"/>
+                                </div>
                                  <div className="space-y-1.5">
                                     <Label>Kunde</Label>
                                      <Select onValueChange={(val) => setValue('customerId', val)}>
@@ -350,7 +377,7 @@ export default function TransportReportPage() {
                             </CardDescription>
                         </div>
                          <div className="flex items-center gap-2">
-                             <AddTourDialog onAddTour={addTour} />
+                             <AddTourDialog onAddTour={addTour} existingTours={tours} />
                          </div>
                     </div>
                 </CardHeader>

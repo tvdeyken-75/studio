@@ -1,4 +1,5 @@
 
+
 import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country } from '@/types';
 
 export const customerData: Customer[] = [
@@ -239,7 +240,7 @@ export const countryData: Country[] = [
 export const tourData: Tour[] = [
     {
         id: 'tour-1',
-        tourNumber: 'TOUR-2024-001',
+        tourNumber: 'T-00001',
         tourDate: '2024-08-01',
         vehicleId: 'AT-001',
         trailerId: 'AN-001',
@@ -255,7 +256,7 @@ export const tourData: Tour[] = [
     },
     {
         id: 'tour-2',
-        tourNumber: 'TOUR-2024-002',
+        tourNumber: 'T-00002',
         tourDate: '2024-08-02',
         vehicleId: 'AT-002',
         trailerId: 'AN-002',
