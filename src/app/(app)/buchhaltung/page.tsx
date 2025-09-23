@@ -367,7 +367,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                     <DialogHeader>
                         <DialogTitle>Neue Rechnung erstellen</DialogTitle>
                         <DialogDescription>
-                            Füllen Sie die Details aus und fügen Sie Rechnungspositionen hinzu.
+                            Füllen Sie die Details aus und fügen Sie Rechnungspositionen hinzu. Die Rechnungsnummer wird automatisch generiert.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -680,3 +680,5 @@ export default function BuchhaltungPage() {
     </Card>
   );
 }
+
+    
