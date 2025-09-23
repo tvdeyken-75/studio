@@ -807,7 +807,7 @@ export default function BuchhaltungPage() {
     
     <Dialog open={isDialogOpen && (dialogMode === 'view' || dialogMode === 'edit')} onOpenChange={setIsDialogOpen}>
         <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode={dialogMode === 'view' ? 'view' : 'edit'}>
-            <></> 
+            <span />
         </CreateInvoiceDialog>
     </Dialog>
 
