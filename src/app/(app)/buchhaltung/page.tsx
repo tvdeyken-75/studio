@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -39,7 +40,7 @@ import { cn } from "@/lib/utils";
 const initialInvoices: Invoice[] = [
     {
         id: '1',
-        rechnungsnummer: 'RN-000001-2024',
+        rechnungsnummer: 'RN-000001',
         kundenId: '1',
         kundenName: 'Musterfirma GmbH',
         rechnungsdatum: '2024-07-28',
@@ -51,7 +52,7 @@ const initialInvoices: Invoice[] = [
     },
     {
         id: '2',
-        rechnungsnummer: 'RN-000002-2024',
+        rechnungsnummer: 'RN-000002',
         kundenId: '2',
         kundenName: 'Bau AG',
         rechnungsdatum: '2024-07-29',
@@ -268,14 +269,10 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     }
     
     const generateNewInvoiceNumber = () => {
-        const year = getYear(new Date(getValues('rechnungsdatum')));
-        const [prefix, numPart, yearPart] = lastInvoiceNumber.split('-');
-        let nextNum = 1;
-        if (parseInt(yearPart) === year) {
-            nextNum = parseInt(numPart) + 1;
-        }
-        return `${prefix}-${String(nextNum).padStart(6, '0')}-${year}`;
-    }
+        const [prefix, numPart] = lastInvoiceNumber.split('-');
+        const nextNum = parseInt(numPart, 10) + 1;
+        return `${prefix}-${String(nextNum).padStart(6, '0')}`;
+    };
 
     const onSubmit = (data: Invoice) => {
         if (!data.kundenId) {
@@ -557,17 +554,12 @@ export default function BuchhaltungPage() {
   }, [invoices, searchTerm]);
   
   const lastInvoiceNumber = useMemo(() => {
-    if (invoices.length === 0) return 'RN-000000-2024';
+    if (invoices.length === 0) return 'RN-000000';
     return invoices.reduce((latest, inv) => {
-        const latestYear = parseInt(latest.split('-')[2]);
-        const invYear = parseInt(inv.rechnungsnummer.split('-')[2]);
-        if (invYear > latestYear) return inv.rechnungsnummer;
-        if (invYear < latestYear) return latest;
-        
-        const latestNum = parseInt(latest.split('-')[1]);
-        const invNum = parseInt(inv.rechnungsnummer.split('-')[1]);
-        return invNum > latestNum ? inv.rechnungsnummer : latest;
-    }, 'RN-000000-2024');
+      const latestNum = parseInt(latest.split('-')[1], 10);
+      const invNum = parseInt(inv.rechnungsnummer.split('-')[1], 10);
+      return invNum > latestNum ? inv.rechnungsnummer : latest;
+    }, 'RN-000000');
   }, [invoices]);
   
   const formatCurrency = (value: number) => {
@@ -680,5 +672,3 @@ export default function BuchhaltungPage() {
     </Card>
   );
 }
-
-    

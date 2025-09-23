@@ -215,7 +215,7 @@ export const documentData: Document[] = [
     },
     { 
         id: 'doc-2', name: 'Rechnung_RN-000001-2024.pdf', type: 'Rechnung', date: '2024-07-28', fileUrl: '#',
-        zuordnung: { kategorie: 'Buchhaltung', id: '1', name: 'RN-000001-2024' }
+        zuordnung: { kategorie: 'Buchhaltung', id: '1', name: 'RN-000001' }
     },
     { 
         id: 'doc-3', name: 'TÜV_Bericht_B-LKW-123.pdf', type: 'TÜV', date: '2023-08-15', fileUrl: '#',
