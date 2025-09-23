@@ -1,5 +1,6 @@
 
 
+
 export type User = {
   id: string;
   email: string;
@@ -147,7 +148,7 @@ export type Customer = {
     // Overige
     aktiv: boolean;
     bemerkung: string;
-    erstelltAm: string;
+erstelltAm: string;
     bearbeitetAm: string;
     
     // Legacy fields for contractors, can be removed if not needed.
@@ -219,7 +220,7 @@ export type Document = {
   fileUrl: string;
   notes?: string;
   zuordnung: {
-    kategorie: 'Kunde' | 'Fahrzeug' | 'Anhänger' | 'Transportauftrag' | 'Route' | 'Buchhaltung';
+    kategorie: 'Kunde' | 'Fahrzeug' | 'Anhänger' | 'Transportauftrag' | 'Route' | 'Buchhaltung' | 'Tour';
     id: string; // The ID of the associated entity
     name: string; // A display name for the association
   }
@@ -287,4 +288,33 @@ export type Kostenstelle = {
   beschreibung: string;
   typ: 'Fahrzeug' | 'Abteilung' | 'Projekt' | 'Sonstiges';
   verantwortlicher?: string;
+};
+
+// New Tour Structure
+export type TourStop = {
+    id: string;
+    stopSequence: number;
+    type: 'Pickup' | 'Delivery';
+    customerId: string;
+    customerName: string;
+    location: string; // Free text for now
+    plannedDateTime: string;
+    actualDateTime?: string;
+    goodsDescription: string;
+    status: 'Planned' | 'Confirmed' | 'Completed' | 'Exception';
+};
+
+export type Tour = {
+    id: string;
+    tourNumber: string;
+    tourDate: string;
+    vehicleId?: string;
+    trailerId?: string;
+    driverId?: string;
+    stops: TourStop[];
+    status: 'Draft' | 'Planned' | 'Assigned' | 'Ongoing' | 'Finished' | 'Closed';
+    // Financials - placeholders for now
+    totalCosts?: number;
+    totalRevenue?: number;
+    profitability?: number;
 };

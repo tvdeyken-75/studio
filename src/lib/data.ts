@@ -4,7 +4,8 @@
 
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document } from '@/types';
+
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -219,4 +220,33 @@ export const documentData: Document[] = [
         id: 'doc-4', name: 'Rahmenvertrag_Musterfirma.pdf', type: 'Vertrag', date: '2022-01-01', fileUrl: '#',
         zuordnung: { kategorie: 'Kunde', id: '1', name: 'Musterfirma GmbH' }
     },
+];
+
+export const tourData: Tour[] = [
+    {
+        id: 'tour-1',
+        tourNumber: 'TOUR-2024-001',
+        tourDate: '2024-08-01',
+        vehicleId: 'AT-001',
+        trailerId: 'AN-001',
+        driverId: 'max-mustermann',
+        status: 'Planned',
+        stops: [
+            { id: 'stop-1-1', stopSequence: 1, type: 'Pickup', customerId: '1', customerName: 'Musterfirma GmbH', location: 'Lager Berlin', plannedDateTime: '2024-08-01T09:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' },
+            { id: 'stop-1-2', stopSequence: 2, type: 'Delivery', customerId: '2', customerName: 'Bau AG', location: 'Zentrallager Hamburg', plannedDateTime: '2024-08-01T15:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' }
+        ],
+        totalRevenue: 1200,
+        totalCosts: 750,
+        profitability: 450,
+    },
+    {
+        id: 'tour-2',
+        tourNumber: 'TOUR-2024-002',
+        tourDate: '2024-08-02',
+        vehicleId: 'AT-002',
+        trailerId: 'AN-002',
+        driverId: 'erika-musterfrau',
+        status: 'Draft',
+        stops: [],
+    }
 ];
