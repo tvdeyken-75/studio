@@ -227,7 +227,11 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
                                         <Select onValueChange={(val) => setValue('vehicleId', val)}>
                                             <SelectTrigger className="h-9"><SelectValue placeholder="Fahrzeug auswählen" /></SelectTrigger>
                                             <SelectContent>
-                                                {fleetData.map(v => <SelectItem key={v.id} value={v.id}>{v.kennzeichen}</SelectItem>)}
+                                                {fleetData.map((v) => (
+                                                  <SelectItem key={v.id} value={v.id}>
+                                                    {v.kennzeichen}
+                                                  </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -815,6 +819,3 @@ export default function TransportReportPage() {
         </div>
     );
 }
-
-
-
