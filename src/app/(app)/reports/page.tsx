@@ -1,9 +1,10 @@
 
+
 "use client";
 
 import { useState, useMemo } from 'react';
-import type { Tour, TourStop } from '@/types';
-import { tourData, customerData, fleetData, trailerData } from '@/lib/data';
+import type { Tour, TourStop, Address } from '@/types';
+import { tourData, customerData, fleetData, trailerData, addressData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -55,6 +56,8 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
         control,
         name: "stops"
     });
+    
+    const tourPOIs = useMemo(() => addressData.filter(a => a.tourPOI), []);
 
     const onSubmit = (data: Tour) => {
         onAddTour(data);
@@ -67,8 +70,8 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
             id: `stop-${Date.now()}`,
             stopSequence: fields.length + 1,
             type,
-            customerId: '',
-            customerName: '',
+            addressId: '',
+            addressName: '',
             location: '',
             plannedDateTime: new Date().toISOString(),
             goodsDescription: '',
@@ -97,6 +100,19 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
                         <div className="space-y-4 p-4 border rounded-lg">
                             <h3 className="font-semibold text-base">Tour-Stammdaten</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                 <div className="space-y-1.5">
+                                    <Label>Kunde</Label>
+                                     <Select onValueChange={(val) => setValue('customerId', val)}>
+                                        <SelectTrigger className="h-9"><SelectValue placeholder="Kunde auswählen" /></SelectTrigger>
+                                        <SelectContent>
+                                            {customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>Kundenreferenz</Label>
+                                    <Input {...register('customerReference')} className="h-9"/>
+                                </div>
                                 <div className="space-y-1.5">
                                     <Label>Tour-Datum</Label>
                                     <Input type="date" {...register('tourDate')} className="h-9"/>
@@ -110,22 +126,6 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
                                             <SelectItem value="erika-musterfrau">Erika Musterfrau</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label>Status</Label>
-                                     <Controller
-                                        name="status"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Draft">Draft</SelectItem>
-                                                    <SelectItem value="Planned">Planned</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label>Fahrzeug</Label>
@@ -144,6 +144,22 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
                                             {trailerData.map(t => <SelectItem key={t.id} value={t.id}>{t.kennzeichen}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                 <div className="space-y-1.5">
+                                    <Label>Status</Label>
+                                     <Controller
+                                        name="status"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Draft">Draft</SelectItem>
+                                                    <SelectItem value="Planned">Planned</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -168,20 +184,20 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
                                         </div>
                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             <div className="space-y-1.5">
-                                                <Label>Kunde</Label>
+                                                <Label>Tour Adresse</Label>
                                                 <Controller
-                                                    name={`stops.${index}.customerId`}
+                                                    name={`stops.${index}.addressId`}
                                                     control={control}
                                                     render={({ field }) => (
                                                         <Select onValueChange={(val) => {
                                                             field.onChange(val);
-                                                            const customer = customerData.find(c => c.id === val);
-                                                            setValue(`stops.${index}.customerName`, customer?.firmenname || '');
-                                                            setValue(`stops.${index}.location`, `${customer?.strasse} ${customer?.hausnummer}, ${customer?.plz} ${customer?.ort}`);
+                                                            const address = tourPOIs.find(a => a.id === val);
+                                                            setValue(`stops.${index}.addressName`, address?.name || '');
+                                                            setValue(`stops.${index}.location`, `${address?.strasse}, ${address?.plz} ${address?.stadt}`);
                                                         }}>
-                                                            <SelectTrigger className="h-9"><SelectValue placeholder="Kunde auswählen..." /></SelectTrigger>
+                                                            <SelectTrigger className="h-9"><SelectValue placeholder="Adresse auswählen..." /></SelectTrigger>
                                                             <SelectContent>
-                                                                {customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}
+                                                                {tourPOIs.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.kurzname})</SelectItem>)}
                                                             </SelectContent>
                                                         </Select>
                                                     )}
@@ -193,7 +209,7 @@ const AddTourDialog = ({ onAddTour }: { onAddTour: (tour: Tour) => void }) => {
                                             </div>
                                          </div>
                                          <div className="space-y-1.5">
-                                            <Label>Standort</Label>
+                                            <Label>Standortdetails (z.B. Rampe)</Label>
                                             <Input {...register(`stops.${index}.location`)} placeholder="z.B. Rampe 5, Lagerhalle B" className="h-9" />
                                         </div>
                                          <div className="space-y-1.5">
@@ -271,7 +287,7 @@ export default function TransportReportPage() {
         return filtered.filter(tour =>
             Object.values(tour).some(value =>
                 String(value).toLowerCase().includes(lowercasedTerm)
-            ) || tour.stops.some(stop => stop.customerName.toLowerCase().includes(lowercasedTerm) || stop.location.toLowerCase().includes(lowercasedTerm))
+            ) || tour.stops.some(stop => stop.addressName.toLowerCase().includes(lowercasedTerm) || stop.location.toLowerCase().includes(lowercasedTerm))
         );
     }, [tours, searchTerm, dateRange]);
     

@@ -1,6 +1,7 @@
 
 
 
+
 export type User = {
   id: string;
   email: string;
@@ -295,8 +296,8 @@ export type TourStop = {
     id: string;
     stopSequence: number;
     type: 'Pickup' | 'Delivery';
-    customerId: string;
-    customerName: string;
+    addressId: string;
+    addressName: string;
     location: string; // Free text for now
     plannedDateTime: string;
     actualDateTime?: string;
@@ -308,6 +309,8 @@ export type Tour = {
     id: string;
     tourNumber: string;
     tourDate: string;
+    customerId?: string;
+    customerReference?: string;
     vehicleId?: string;
     trailerId?: string;
     driverId?: string;

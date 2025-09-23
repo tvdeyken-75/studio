@@ -5,7 +5,8 @@
 
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop } from '@/types';
+
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -222,6 +223,12 @@ export const documentData: Document[] = [
     },
 ];
 
+export const addressData: Address[] = [
+    { id: '1', kurzname: 'Zentrale BER', name: 'Hauptquartier Berlin', strasse: 'Willy-Brandt-Straße 1', plz: '10557', stadt: 'Berlin', land: 'Deutschland', koordinaten: '52.518, 13.376', tourPOI: true, kundenAdresse: false, mitarbeiterAdresse: false },
+    { id: '2', kurzname: 'Lager MUC', name: 'Lager München', strasse: 'Lagerstraße 5', plz: '80995', stadt: 'München', land: 'Deutschland', koordinaten: '48.177, 11.455', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
+    { id: '3', kurzname: 'Musterfirma', name: 'Musterfirma GmbH Zentrale', strasse: 'Musterstraße 123', plz: '12345', stadt: 'Musterstadt', land: 'Deutschland', koordinaten: '50.110, 8.682', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
+];
+
 export const tourData: Tour[] = [
     {
         id: 'tour-1',
@@ -232,8 +239,8 @@ export const tourData: Tour[] = [
         driverId: 'max-mustermann',
         status: 'Planned',
         stops: [
-            { id: 'stop-1-1', stopSequence: 1, type: 'Pickup', customerId: '1', customerName: 'Musterfirma GmbH', location: 'Lager Berlin', plannedDateTime: '2024-08-01T09:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' },
-            { id: 'stop-1-2', stopSequence: 2, type: 'Delivery', customerId: '2', customerName: 'Bau AG', location: 'Zentrallager Hamburg', plannedDateTime: '2024-08-01T15:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' }
+            { id: 'stop-1-1', stopSequence: 1, type: 'Pickup', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Lager Berlin', plannedDateTime: '2024-08-01T09:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' },
+            { id: 'stop-1-2', stopSequence: 2, type: 'Delivery', addressId: '2', addressName: 'Lager München', location: 'Zentrallager Hamburg', plannedDateTime: '2024-08-01T15:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' }
         ],
         totalRevenue: 1200,
         totalCosts: 750,
