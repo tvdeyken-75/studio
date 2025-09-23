@@ -294,6 +294,9 @@ export default function CustomersPage() {
                                  <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuLabel>Management</DropdownMenuLabel>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Reklamation", customer.firmenname)}}>Reklamation</DropdownMenuItem>
+                                 </AlertDialogTrigger>
                                  <AlertDialogTrigger asChild>
                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Dienstleistungsübersicht", customer.firmenname)}}>Dienstleistungsübersicht</DropdownMenuItem>
                                  </AlertDialogTrigger>
@@ -342,3 +345,5 @@ export default function CustomersPage() {
     </Card>
   );
 }
+
+    

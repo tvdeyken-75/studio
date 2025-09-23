@@ -264,6 +264,9 @@ export default function SubcontractorsPage() {
                                  <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuLabel>Management</DropdownMenuLabel>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Reklamation", subcontractor.firmenname)}}>Reklamation</DropdownMenuItem>
+                                 </AlertDialogTrigger>
                                  <AlertDialogTrigger asChild>
                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Dienstleistungsübersicht", subcontractor.firmenname)}}>Dienstleistungsübersicht</DropdownMenuItem>
                                  </AlertDialogTrigger>
@@ -312,3 +315,5 @@ export default function SubcontractorsPage() {
     </Card>
   );
 }
+
+    

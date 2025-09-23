@@ -265,6 +265,9 @@ export default function SuppliersPage() {
                                  <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuLabel>Management</DropdownMenuLabel>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Reklamation", supplier.firmenname)}}>Reklamation</DropdownMenuItem>
+                                 </AlertDialogTrigger>
                                  <AlertDialogTrigger asChild>
                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleActionClick("Dienstleistungsübersicht", supplier.firmenname)}}>Dienstleistungsübersicht</DropdownMenuItem>
                                  </AlertDialogTrigger>
@@ -313,3 +316,5 @@ export default function SuppliersPage() {
     </Card>
   );
 }
+
+    
