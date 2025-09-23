@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { Customer, Invoice, InvoiceItem, Transport, Dieselpreis } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,17 @@ import { useToast } from "@/hooks/use-toast";
 import { SlidersHorizontal, FileDown, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +46,8 @@ import { customerData, transportData, dieselpreiseData } from "@/lib/data";
 import { format, getYear, parseISO, isValid } from "date-fns";
 import { de } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+
 
 // MOCK DATA - In a real app, this would be fetched from a database
 const initialInvoices: Invoice[] = [
@@ -105,6 +118,10 @@ const formatDate = (dateString: string) => {
     } catch {
         return 'Ungültiges Datum';
     }
+}
+
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
 
@@ -229,19 +246,13 @@ const AddInfoDialog = ({ onAddItem }: { onAddItem: (item: InvoiceItem) => void }
 };
 
 
-const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice: (invoice: Invoice) => void, lastInvoiceNumber: string }) => {
+const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, children, mode = 'create' }: { onSave: (invoice: Invoice) => void, lastInvoiceNumber: string, invoiceToEdit?: Invoice | null, children: React.ReactNode, mode?: 'create' | 'edit' | 'view' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
+    const isEditOrViewMode = mode === 'edit' || mode === 'view';
+    const isViewMode = mode === 'view';
 
-    const { register, handleSubmit, control, watch, setValue, getValues, reset } = useForm<Invoice>({
-        defaultValues: {
-            id: `inv-${Date.now()}`,
-            rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
-            status: 'Entwurf',
-            waehrung: 'EUR',
-            items: [],
-        }
-    });
+    const { register, handleSubmit, control, watch, setValue, getValues, reset } = useForm<Invoice>();
 
     const { fields, append, remove, update } = useFieldArray({ control, name: "items" });
     const watchedItems = watch('items');
@@ -250,22 +261,42 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     const [availableTours, setAvailableTours] = useState<Transport[]>([]);
     const [selectedTourId, setSelectedTourId] = useState<string>('');
 
+     useEffect(() => {
+        if (isOpen) {
+            const defaultValues = isEditOrViewMode && invoiceToEdit ? 
+                {...invoiceToEdit} : 
+                {
+                    id: `inv-${Date.now()}`,
+                    rechnungsnummer: generateNewInvoiceNumber(),
+                    rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
+                    status: 'Entwurf',
+                    waehrung: 'EUR',
+                    items: [],
+                };
+            reset(defaultValues);
+        }
+    }, [isOpen, invoiceToEdit, reset, isEditOrViewMode]);
+
     useEffect(() => {
         if (watchedKundenId) {
             const customer = customerData.find(c => c.id === watchedKundenId);
             const customerTours = transportData.filter(t => t.customer === customer?.firmenname && t.status === 'Abgeschlossen');
             setAvailableTours(customerTours);
-            setSelectedTourId('');
-            setValue('items', []);
+            if (mode === 'create') {
+                setSelectedTourId('');
+                setValue('items', []);
+            }
         } else {
             setAvailableTours([]);
-            setSelectedTourId('');
-            setValue('items', []);
+            if (mode === 'create') {
+                setSelectedTourId('');
+                setValue('items', []);
+            }
         }
-    }, [watchedKundenId, setValue]);
+    }, [watchedKundenId, setValue, mode]);
 
     const calculateTotal = () => {
-        return watchedItems.reduce((total, item) => total + (item.gesamtpreis || 0), 0);
+        return watchedItems?.reduce((total, item) => total + (item.gesamtpreis || 0), 0) || 0;
     }
     
     const generateNewInvoiceNumber = () => {
@@ -275,6 +306,8 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     };
 
     const onSubmit = (data: Invoice) => {
+        if (isViewMode) return setIsOpen(false);
+
         if (!data.kundenId) {
             toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte wählen Sie einen Kunden aus.' });
             return;
@@ -287,18 +320,12 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         const finalData = { 
             ...data, 
             betrag: calculateTotal(),
-            rechnungsnummer: generateNewInvoiceNumber(),
+            rechnungsnummer: data.rechnungsnummer || generateNewInvoiceNumber(),
             kundenName: customerData.find(c => c.id === data.kundenId)?.firmenname || ''
         };
-        onAddInvoice(finalData);
-        toast({ title: 'Erfolg', description: `Rechnung ${finalData.rechnungsnummer} wurde erstellt.` });
+        onSave(finalData);
+        toast({ title: 'Erfolg', description: `Rechnung ${finalData.rechnungsnummer} wurde ${isEditOrViewMode ? 'aktualisiert' : 'erstellt'}.` });
         setIsOpen(false);
-        reset({
-            id: `inv-${Date.now()}`,
-            rechnungsdatum: format(new Date(), 'yyyy-MM-dd'),
-            status: 'Entwurf', waehrung: 'EUR', items: []
-        });
-        setSelectedTourId('');
     };
     
     const handleTourSelection = (tourId: string) => {
@@ -346,78 +373,80 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
         append(item);
     }
 
-    const updateItemPrice = (index: number, newPrice: number) => {
-        const item = fields[index];
-        update(index, { ...item, gesamtpreis: newPrice, einzelpreis: newPrice });
-    }
+    const titleMap = {
+        create: 'Neue Rechnung erstellen',
+        edit: `Rechnung ${invoiceToEdit?.rechnungsnummer} bearbeiten`,
+        view: `Rechnung ${invoiceToEdit?.rechnungsnummer} anzeigen`
+    };
+
+    const descriptionMap = {
+        create: 'Füllen Sie die Details aus und fügen Sie Rechnungspositionen hinzu.',
+        edit: 'Bearbeiten Sie die Rechnungsdetails.',
+        view: 'Details der Rechnung.'
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button variant="link" className="text-primary">
-                    <Icons.add className="mr-2 h-4 w-4" />
-                    Neue Rechnung
-                </Button>
-            </DialogTrigger>
+            <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-4xl">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader>
-                        <DialogTitle>Neue Rechnung erstellen</DialogTitle>
-                        <DialogDescription>
-                            Füllen Sie die Details aus und fügen Sie Rechnungspositionen hinzu. Die Rechnungsnummer wird automatisch generiert.
-                        </DialogDescription>
+                        <DialogTitle>{titleMap[mode]}</DialogTitle>
+                        <DialogDescription>{descriptionMap[mode]}</DialogDescription>
                     </DialogHeader>
 
                     <div className="py-4 space-y-4 max-h-[65vh] overflow-y-auto pr-4">
-                        {/* Header Section */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-1.5">
                                 <Label>Kunde</Label>
-                                <Select onValueChange={(val) => setValue('kundenId', val, { shouldValidate: true })} >
-                                     <SelectTrigger className="h-9">
-                                        <SelectValue placeholder="Kunde auswählen" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                                <Controller
+                                    name="kundenId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={isViewMode}>
+                                            <SelectTrigger className="h-9"><SelectValue placeholder="Kunde auswählen" /></SelectTrigger>
+                                            <SelectContent>{customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </div>
                             <div className="space-y-1.5">
                                 <Label>Rechnungsdatum</Label>
-                                <Input type="date" {...register('rechnungsdatum')} className="h-9"/>
+                                <Input type="date" {...register('rechnungsdatum')} className="h-9" readOnly={isViewMode}/>
                             </div>
                              <div className="space-y-1.5">
                                 <Label>Fälligkeitsdatum</Label>
-                                <Input type="date" {...register('faelligkeitsdatum')} className="h-9"/>
+                                <Input type="date" {...register('faelligkeitsdatum')} className="h-9" readOnly={isViewMode}/>
                             </div>
                         </div>
 
-                         {/* Transport Selection */}
-                         <div className="space-y-1.5">
-                            <Label>Abgeschlossenen Transportauftrag auswählen (Optional)</Label>
-                            <Select onValueChange={handleTourSelection} value={selectedTourId} disabled={!watchedKundenId || availableTours.length === 0}>
-                                <SelectTrigger className="h-9">
-                                    <SelectValue placeholder={!watchedKundenId ? "Bitte zuerst Kunde auswählen" : (availableTours.length > 0 ? "Transportauftrag auswählen" : "Keine abgeschlossenen Aufträge für diesen Kunden")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableTours.map(t => (
-                                        <SelectItem key={t.id} value={t.id}>
-                                            {t.transportNumber}: {t.pickupLocation} nach {t.deliveryLocation} am {format(new Date(t.actualDeliveryDate), 'dd.MM.yyyy')}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                         </div>
+                         {mode === 'create' && (
+                            <div className="space-y-1.5">
+                                <Label>Abgeschlossenen Transportauftrag auswählen (Optional)</Label>
+                                <Select onValueChange={handleTourSelection} value={selectedTourId} disabled={!watchedKundenId || availableTours.length === 0}>
+                                    <SelectTrigger className="h-9">
+                                        <SelectValue placeholder={!watchedKundenId ? "Bitte zuerst Kunde auswählen" : (availableTours.length > 0 ? "Transportauftrag auswählen" : "Keine abgeschlossenen Aufträge für diesen Kunden")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableTours.map(t => (
+                                            <SelectItem key={t.id} value={t.id}>
+                                                {t.transportNumber}: {t.pickupLocation} nach {t.deliveryLocation} am {format(new Date(t.actualDeliveryDate), 'dd.MM.yyyy')}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                         )}
 
-
-                        {/* Items Section */}
                         <div className="space-y-2 pt-4">
                             <div className="flex justify-between items-center mb-2">
                                 <Label>Rechnungspositionen</Label>
-                                <div className="flex items-center gap-2">
-                                    <AddLeistungDialog onAddItem={addItem} />
-                                    <AddInfoDialog onAddItem={addItem} />
-                                </div>
+                                {!isViewMode && (
+                                    <div className="flex items-center gap-2">
+                                        <AddLeistungDialog onAddItem={addItem} />
+                                        <AddInfoDialog onAddItem={addItem} />
+                                    </div>
+                                )}
                             </div>
                              <Table>
                                 <TableHeader>
@@ -425,7 +454,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                         <TableHead className="w-40">Datum</TableHead>
                                         <TableHead>Beschreibung</TableHead>
                                         <TableHead className="w-48 text-right">Nettopreis (€)</TableHead>
-                                        <TableHead className="w-12"></TableHead>
+                                        {!isViewMode && <TableHead className="w-12"></TableHead>}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -439,12 +468,9 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                                         <Input 
                                                             type="date" 
                                                             value={value ? format(parseISO(value), 'yyyy-MM-dd') : ''}
-                                                            onChange={(e) => {
-                                                              const dateValue = e.target.value;
-                                                              // We send it to react-hook-form as an ISO string
-                                                              onChange(dateValue ? new Date(dateValue).toISOString() : '');
-                                                            }}
+                                                            onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : '')}
                                                             className="h-9 text-sm"
+                                                            readOnly={isViewMode}
                                                         />
                                                     )}
                                                 />
@@ -454,7 +480,7 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                                   control={control}
                                                   name={`items.${index}.beschreibung`}
                                                   render={({ field }) => (
-                                                    <Textarea {...field} className="h-9 text-sm" />
+                                                    <Textarea {...field} className="h-9 text-sm" readOnly={isViewMode}/>
                                                   )}
                                                 />
                                             </TableCell>
@@ -467,23 +493,23 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                                                             type="number"
                                                             step="0.01"
                                                             value={value}
-                                                            onChange={(e) => {
-                                                                const val = parseFloat(e.target.value);
-                                                                onChange(isNaN(val) ? 0 : val);
-                                                            }}
+                                                            onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
                                                             className="h-9 text-right text-sm"
+                                                            readOnly={isViewMode}
                                                         />
                                                     )}
                                                 />
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                 <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </TableCell>
+                                            {!isViewMode && (
+                                                <TableCell className="text-right">
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </TableCell>
+                                            )}
                                         </TableRow>
                                     ))}
-                                     {fields.length === 0 && (
+                                     {(fields.length === 0 || !fields) && (
                                         <TableRow>
                                             <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                                                 Bitte wählen Sie einen Transportauftrag aus oder fügen Sie manuell Positionen hinzu.
@@ -494,8 +520,6 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                             </Table>
                         </div>
                         
-                        
-                        {/* Footer Section */}
                         <div className="flex justify-end pt-4">
                             <div className="w-1/3 space-y-2">
                                 <div className="flex justify-between">
@@ -516,8 +540,8 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
                     </div>
 
                     <DialogFooter className="pt-4">
-                         <DialogClose asChild><Button type="button" variant="ghost">Abbrechen</Button></DialogClose>
-                        <Button type="submit">Rechnung erstellen</Button>
+                         <DialogClose asChild><Button type="button" variant="ghost">Schließen</Button></DialogClose>
+                        {!isViewMode && <Button type="submit">Rechnung speichern</Button>}
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -525,10 +549,95 @@ const CreateInvoiceDialog = ({ onAddInvoice, lastInvoiceNumber }: { onAddInvoice
     )
 }
 
+const InvoicePrintDialog = ({ invoice }: { invoice: Invoice }) => {
+    const printRef = useRef<HTMLDivElement>(null);
+    const handlePrint = () => {
+        const printContent = printRef.current;
+        if (printContent) {
+            const printWindow = window.open('', '', 'height=800,width=800');
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Rechnung</title>');
+                printWindow.document.write('<style>body{font-family:sans-serif; padding: 20px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ddd; padding:8px;} th{background-color:#f2f2f2;} .text-right{text-align:right;} .mt-4{margin-top:1.5rem;} .font-bold{font-weight:bold;}</style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent.innerHTML);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+            }
+        }
+    };
+    
+    const total = invoice.betrag;
+    const vat = total * 0.19;
+    const gross = total + vat;
+
+    return (
+        <DialogContent className="sm:max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Druckvorschau: Rechnung {invoice.rechnungsnummer}</DialogTitle>
+            </DialogHeader>
+            <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm">
+                 <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                        <h3 className="font-bold text-lg">AmbientTMS</h3>
+                        <p>Musterstraße 1, 12345 Musterstadt</p>
+                    </div>
+                    <div className="text-right">
+                        <h2 className="font-bold text-xl">RECHNUNG</h2>
+                        <p>Nr: {invoice.rechnungsnummer}</p>
+                        <p>Datum: {formatDate(invoice.rechnungsdatum)}</p>
+                    </div>
+                </div>
+                 <div className="mb-8">
+                    <p className="font-bold">{invoice.kundenName}</p>
+                    <p>{customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}</p>
+                    <p>{customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}</p>
+                 </div>
+                 <table>
+                     <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Beschreibung</th>
+                            <th className="text-right">Betrag</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {invoice.items.map(item => (
+                            <tr key={item.id}>
+                                <td>{item.datum ? formatDate(item.datum) : 'N/A'}</td>
+                                <td>{item.beschreibung}</td>
+                                <td className="text-right">{formatCurrency(item.gesamtpreis)}</td>
+                            </tr>
+                        ))}
+                     </tbody>
+                 </table>
+                 <div className="flex justify-end mt-4">
+                    <div className="w-1/2 space-y-2">
+                        <div className="flex justify-between"><span>Zwischensumme</span><span>{formatCurrency(total)}</span></div>
+                        <div className="flex justify-between"><span>MwSt. (19%)</span><span>{formatCurrency(vat)}</span></div>
+                        <div className="flex justify-between font-bold text-lg"><span>Gesamtbetrag</span><span>{formatCurrency(gross)}</span></div>
+                    </div>
+                 </div>
+                 <p className="mt-8">Fällig am: {formatDate(invoice.faelligkeitsdatum)}</p>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button variant="ghost">Schließen</Button></DialogClose>
+                <Button onClick={handlePrint}>Drucken</Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+};
+
+
 export default function BuchhaltungPage() {
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'print' | 'cancel'>('view');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [columnVisibility, setColumnVisibility] = useState({
       rechnungsnummer: true,
@@ -539,8 +648,31 @@ export default function BuchhaltungPage() {
       status: true,
   });
 
-  const addInvoice = (invoice: Invoice) => {
-    setInvoices(prev => [invoice, ...prev]);
+  const addOrUpdateInvoice = (invoice: Invoice) => {
+    setInvoices(prev => {
+        const index = prev.findIndex(i => i.id === invoice.id);
+        if (index > -1) {
+            const newInvoices = [...prev];
+            newInvoices[index] = invoice;
+            return newInvoices;
+        }
+        return [invoice, ...prev];
+    })
+  }
+
+  const updateInvoiceStatus = (invoiceId: string, status: Invoice['status']) => {
+    setInvoices(prev => prev.map(inv => inv.id === invoiceId ? {...inv, status} : inv));
+    toast({ title: "Status aktualisiert", description: `Rechnung wurde als "${status}" markiert.` });
+  }
+
+  const handleAction = (invoice: Invoice, action: 'view' | 'edit' | 'print' | 'cancel' | 'markPaid') => {
+      setSelectedInvoice(invoice);
+      if(action === 'markPaid') {
+          updateInvoiceStatus(invoice.id, 'Bezahlt');
+          return;
+      }
+      setDialogMode(action);
+      setIsDialogOpen(true);
   }
 
   const filteredInvoices = useMemo(() => {
@@ -561,12 +693,9 @@ export default function BuchhaltungPage() {
       return invNum > latestNum ? inv.rechnungsnummer : latest;
     }, 'RN-000000');
   }, [invoices]);
-  
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
-  }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
@@ -576,7 +705,12 @@ export default function BuchhaltungPage() {
                     Verwalten Sie Rechnungen, E-Rechnungen, Stornierungen und Mahnungen.
                 </CardDescription>
             </div>
-             <CreateInvoiceDialog onAddInvoice={addInvoice} lastInvoiceNumber={lastInvoiceNumber} />
+             <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} mode="create">
+                <Button variant="link" className="text-primary">
+                    <Icons.add className="mr-2 h-4 w-4" />
+                    Neue Rechnung
+                </Button>
+            </CreateInvoiceDialog>
         </div>
       </CardHeader>
         <div className="p-4 border-b border-t flex justify-between items-center gap-4">
@@ -648,12 +782,12 @@ export default function BuchhaltungPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Anzeigen</DropdownMenuItem>
-                            <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
-                            <DropdownMenuItem>Als PDF exportieren</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction(invoice, 'view')}>Anzeigen</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction(invoice, 'edit')}>Bearbeiten</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction(invoice, 'print')}>Als PDF exportieren</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>Als bezahlt markieren</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Stornieren</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction(invoice, 'markPaid')} disabled={invoice.status === 'Bezahlt'}>Als bezahlt markieren</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onSelect={() => handleAction(invoice, 'cancel')}>Stornieren</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -670,5 +804,37 @@ export default function BuchhaltungPage() {
         </Table>
       </CardContent>
     </Card>
+    
+    <Dialog open={isDialogOpen && (dialogMode === 'view' || dialogMode === 'edit')} onOpenChange={setIsDialogOpen}>
+        <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode={dialogMode === 'view' ? 'view' : 'edit'}>
+            <></> 
+        </CreateInvoiceDialog>
+    </Dialog>
+
+    <Dialog open={isDialogOpen && dialogMode === 'print'} onOpenChange={setIsDialogOpen}>
+        {selectedInvoice && <InvoicePrintDialog invoice={selectedInvoice} />}
+    </Dialog>
+    
+    <AlertDialog open={isDialogOpen && dialogMode === 'cancel'} onOpenChange={setIsDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Möchten Sie diese Rechnung wirklich stornieren?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Diese Aktion kann nicht rückgängig gemacht werden. Die Rechnung
+                    wird als "Storniert" markiert.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                    if(selectedInvoice) updateInvoiceStatus(selectedInvoice.id, 'Storniert');
+                    setIsDialogOpen(false);
+                }}>
+                    Stornieren
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
