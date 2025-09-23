@@ -583,7 +583,7 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
             const printWindow = window.open('', '', 'height=800,width=800');
             if (printWindow) {
                 printWindow.document.write('<html><head><title>Rechnung</title>');
-                printWindow.document.write('<style>body{font-family: Arial, sans-serif; font-size: 12px; color: #333;} .invoice-box{max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.15);} .header{display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;} .sender-info{font-size: 9px; color: #555; text-align: left;}.logo-placeholder{width: 150px; height: 70px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size:10px; color: #ccc; margin-left: auto;} .invoice-details-right{text-align: right;} .customer-address{margin-bottom: 40px;} .invoice-title{font-size: 24px; font-weight: bold; margin-bottom: 20px;} .salutation{margin-bottom: 20px;} .items-table{width: 100%; border-collapse: collapse; margin-bottom: 40px;} .items-table thead tr{background-color: #eee; border-bottom: 1px solid #ddd;} .items-table th{padding: 8px; text-align: left;} .items-table td{padding: 8px; border-bottom: 1px dotted #ccc;} .totals-table{width: 40%; margin-left: auto; text-align: right;} .totals-table td {padding: 5px 0;} .total-row{font-weight: bold; border-top: 2px solid #333; padding-top: 5px;} .footer{margin-top: 40px; font-size: 10px; color: #555; text-align: left; border-top: 2px solid #333; padding-top: 10px; display:flex; justify-content: space-between;} </style>');
+                printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 12px; color: #333; } .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); font-size: 12px; line-height: 20px; font-family: \'Helvetica Neue\', \'Helvetica\', Arial, sans-serif; color: #555; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; } .sender-info { font-size: 9px; color: #555; line-height: 1.4; } .logo-placeholder { width: 150px; height: 70px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #ccc; font-weight: bold; } .invoice-details-right { text-align: right; } .customer-address { margin-top: 50px; margin-bottom: 40px; } .invoice-title { font-size: 28px; font-weight: bold; margin-bottom: 0px; } .salutation { margin-top: 20px; margin-bottom: 20px; } .items-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; } .items-table thead tr { background-color: #f9f9f9; border-bottom: 2px solid #ddd; font-weight: bold; } .items-table th { padding: 8px; text-align: left; } .items-table td { padding: 8px; border-bottom: 1px solid #eee; } .items-table .empty-row td { border-bottom: 1px dotted #ccc; } .totals-table { width: 40%; margin-left: auto; text-align: right; } .totals-table td { padding: 5px 0; } .totals-table .total-row td { font-weight: bold; border-top: 2px solid #333; padding-top: 5px; } .footer { margin-top: 50px; font-size: 10px; color: #777; text-align: left; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; } .footer > div { line-height: 1.4; } </style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(`<div class="invoice-box">${printContent.innerHTML}</div>`);
                 printWindow.document.write('</body></html>');
@@ -609,10 +609,13 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
             <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm bg-white text-black p-8 rounded-md border font-sans">
                  <div className="header">
                      <div className="sender-info">
-                         Elias Otto Spedition | Olvengraben 25 | 47608 Geldern
+                         <b>Elias Otto Spedition</b><br/>
+                         Olvengraben 25<br/>
+                         47608 Geldern
                      </div>
                      <div className="text-right">
-                         <div className="logo-placeholder">OTTO SPEDITION LOGO</div>
+                         {/* This is a placeholder for your logo. You can replace this div with an <Image /> component from Next.js */}
+                         <div className="logo-placeholder">OTTO SPEDITION</div>
                      </div>
                  </div>
 
@@ -624,11 +627,13 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                  </div>
 
                  <div className="header" style={{marginBottom: "40px"}}>
-                     <div className="invoice-title">Rechnung:</div>
+                     <div>
+                        <h1 className="invoice-title">Rechnung</h1>
+                     </div>
                      <div className="invoice-details-right">
-                        <table>
+                        <table className="text-right">
                             <tbody>
-                                <tr><td className="pr-4"><b>Rechnung #:</b></td><td>{invoice.rechnungsnummer}</td></tr>
+                                <tr><td className="pr-4"><b>Rechnungs-Nr.:</b></td><td>{invoice.rechnungsnummer}</td></tr>
                                 <tr><td className="pr-4"><b>Datum:</b></td><td>{formatDate(invoice.rechnungsdatum)}</td></tr>
                                 <tr><td className="pr-4"><b>Zustellung:</b></td><td>per E-Mail</td></tr>
                             </tbody>
@@ -660,16 +665,16 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                             </tr>
                         ))}
                          {Array.from({ length: 10 - invoice.items.length }).map((_, i) => (
-                          <tr key={`empty-${i}`}><td colSpan={4} style={{borderBottom: '1px dotted #ccc'}}>&nbsp;</td></tr>
+                          <tr key={`empty-${i}`} className="empty-row"><td colSpan={4}>&nbsp;</td></tr>
                         ))}
                      </tbody>
                  </table>
 
                 <table className="totals-table">
                     <tbody>
-                        <tr><td>Zwischensumme</td><td>{formatCurrency(total)}</td></tr>
-                        <tr><td>zzgl. MwSt.</td><td>USt. 19% &nbsp;&nbsp; {formatCurrency(vat)}</td></tr>
-                        <tr className="total-row"><td>Gesamtsumme</td><td>{formatCurrency(gross)}</td></tr>
+                        <tr><td>Zwischensumme</td><td className="font-mono">{formatCurrency(total)}</td></tr>
+                        <tr><td>zzgl. 19% MwSt.</td><td className="font-mono">{formatCurrency(vat)}</td></tr>
+                        <tr className="total-row"><td>Gesamtsumme</td><td className="font-mono">{formatCurrency(gross)}</td></tr>
                     </tbody>
                 </table>
                 
@@ -684,16 +689,19 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
 
                  <div className="footer">
                     <div>
-                        Elias Otto Spedition<br/>
-                        Olvengraben 25<br/>
-                        47608 Geldern<br/>
+                        <b>Elias Otto Spedition</b><br/>
+                        Olvengraben 25, 47608 Geldern<br/>
                         Telefon: +49(0)2831 9779947<br/>
                         E-Mail: info@ottospedition.de
                     </div>
                      <div>
+                        <b>Bankverbindung</b><br/>
                         Volksbank an der Niers<br/>
                         IBAN: DE 41 320 613 840 111 010 021<br/>
-                        BIC: GENODED1GDL<br/>
+                        BIC: GENODED1GDL
+                    </div>
+                     <div>
+                        <b>Rechtliches</b><br/>
                         USt-ID Nr.: DE318824058<br/>
                         Steuer-Nr.: 113/5126/2318
                     </div>
@@ -927,4 +935,3 @@ export default function BuchhaltungPage() {
 }
 
     
-
