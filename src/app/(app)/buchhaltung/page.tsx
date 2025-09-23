@@ -47,6 +47,7 @@ import { format, getYear, parseISO, isValid } from "date-fns";
 import { de } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Logo } from "@/components/logo";
 
 
 // MOCK DATA - In a real app, this would be fetched from a database
@@ -583,7 +584,7 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
             const printWindow = window.open('', '', 'height=800,width=800');
             if (printWindow) {
                 printWindow.document.write('<html><head><title>Rechnung</title>');
-                printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 12px; color: #333; } .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); font-size: 12px; line-height: 20px; font-family: \'Helvetica Neue\', \'Helvetica\', Arial, sans-serif; color: #555; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; } .sender-info { font-size: 9px; color: #555; line-height: 1.4; } .logo-placeholder { width: 150px; height: 70px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #ccc; font-weight: bold; } .invoice-details-right { text-align: right; } .customer-address { margin-top: 50px; margin-bottom: 40px; } .invoice-title { font-size: 28px; font-weight: bold; margin-bottom: 0px; } .salutation { margin-top: 20px; margin-bottom: 20px; } .items-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; } .items-table thead tr { background-color: #f9f9f9; border-bottom: 2px solid #ddd; font-weight: bold; } .items-table th { padding: 8px; text-align: left; } .items-table td { padding: 8px; border-bottom: 1px solid #eee; } .items-table .empty-row td { border-bottom: 1px dotted #ccc; } .totals-table { width: 40%; margin-left: auto; text-align: right; } .totals-table td { padding: 5px 0; } .totals-table .total-row td { font-weight: bold; border-top: 2px solid #333; padding-top: 5px; } .footer { margin-top: 50px; font-size: 10px; color: #777; text-align: left; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; } .footer > div { line-height: 1.4; } </style>');
+                printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 10px; color: #333; } .invoice-box { max-width: 800px; margin: auto; padding: 30px; font-size: 10px; line-height: 1.6; font-family: \'Helvetica Neue\', \'Helvetica\', Arial, sans-serif; color: #555; } .sender-info-top { text-align: center; margin-bottom: 20px; font-size: 8px; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; } .customer-address { font-size: 11px; } .invoice-details-right { text-align: right; } .invoice-details-right table { width: 100%; } .invoice-details-right td { padding: 1px 0; } .invoice-title-block { text-align: center; margin-top: 30px; margin-bottom: 20px; } .invoice-title { font-size: 20px; font-weight: bold; margin-bottom: 0px; } .salutation { margin-top: 20px; margin-bottom: 20px; font-size: 11px; } .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; } .items-table thead tr { background-color: #f2f2f2; font-weight: bold; } .items-table th { padding: 6px; text-align: left; } .items-table td { padding: 6px; border-bottom: 1px dotted #ccc; } .items-table .price { text-align: right; } .items-table .empty-row td { border-bottom: 1px dotted #ccc; height: 1.2em; } .totals-section { display: flex; justify-content: flex-end; margin-top: 20px; } .totals-table { width: 40%; font-size: 11px; } .totals-table td { padding: 4px; } .totals-table .totals-label { text-align: left; } .totals-table .totals-value { text-align: right; } .totals-table .grand-total { font-weight: bold; background-color: #f2f2f2; } .footer-text { margin-top: 30px; font-size: 11px; } .footer-signature { margin-top: 40px; font-size: 11px; } .footer { margin-top: 50px; font-size: 9px; color: #777; text-align: left; border-top: 1px solid #000; padding-top: 10px; display: flex; justify-content: space-between; } .footer > div { flex: 1; line-height: 1.4; } .footer > div:not(:last-child) { margin-right: 20px; } </style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(`<div class="invoice-box">${printContent.innerHTML}</div>`);
                 printWindow.document.write('</body></html>');
@@ -607,39 +608,31 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                 </DialogDescription>
             </DialogHeader>
             <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm bg-white text-black p-8 rounded-md border font-sans">
-                 <div className="header">
-                     <div className="sender-info">
-                         <b>Elias Otto Spedition</b><br/>
-                         Olvengraben 25<br/>
-                         47608 Geldern
-                     </div>
-                     <div className="text-right">
-                         {/* This is a placeholder for your logo. You can replace this div with an <Image /> component from Next.js */}
-                         <div className="logo-placeholder">OTTO SPEDITION</div>
-                     </div>
-                 </div>
-
-                 <div className="customer-address">
-                    <b>{invoice.kundenName}</b><br/>
-                    {customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}<br/>
-                    {customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}<br/>
-                    Deutschland
-                 </div>
-
-                 <div className="header" style={{marginBottom: "40px"}}>
-                     <div>
-                        <h1 className="invoice-title">Rechnung</h1>
+                <div className="sender-info-top">Elias Otto Spedition | Olvengraben 25 | 47608 Geldern</div>
+                <div className="header">
+                     <div className="customer-address">
+                        <b>{invoice.kundenName}</b><br/>
+                        {customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}<br/>
+                        {customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}<br/>
+                        Deutschland
                      </div>
                      <div className="invoice-details-right">
-                        <table className="text-right">
+                         <div className="w-48 ml-auto mb-4">
+                           <Logo />
+                         </div>
+                        <table>
                             <tbody>
-                                <tr><td className="pr-4"><b>Rechnungs-Nr.:</b></td><td>{invoice.rechnungsnummer}</td></tr>
+                                <tr><td className="pr-4"><b>Rechnung #:</b></td><td>{invoice.rechnungsnummer}</td></tr>
                                 <tr><td className="pr-4"><b>Datum:</b></td><td>{formatDate(invoice.rechnungsdatum)}</td></tr>
                                 <tr><td className="pr-4"><b>Zustellung:</b></td><td>per E-Mail</td></tr>
                             </tbody>
                         </table>
                      </div>
-                 </div>
+                </div>
+
+                <div className="invoice-title-block">
+                    <h1 className="invoice-title">Rechnung: {invoice.rechnungsnummer}</h1>
+                </div>
 
                  <div className="salutation">
                      <b>Sehr geehrte Damen und Herren,</b><br/>
@@ -651,8 +644,8 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                         <tr>
                             <th>Tour</th>
                             <th>Datum</th>
-                            <th>Referenz / Beschreibung</th>
-                            <th className="text-right">Preis</th>
+                            <th>Referenz / Bechreibung</th>
+                            <th className="price">Preis</th>
                         </tr>
                      </thead>
                      <tbody>
@@ -661,47 +654,54 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                                 <td>{item.tourNummer || 'N/A'}</td>
                                 <td>{item.datum ? formatDate(item.datum) : 'N/A'}</td>
                                 <td>{item.beschreibung}</td>
-                                <td className="text-right font-mono">{formatCurrency(item.gesamtpreis)}</td>
+                                <td className="price font-mono">{formatCurrency(item.gesamtpreis)}</td>
                             </tr>
                         ))}
-                         {Array.from({ length: 10 - invoice.items.length }).map((_, i) => (
+                         {Array.from({ length: Math.max(0, 10 - invoice.items.length) }).map((_, i) => (
                           <tr key={`empty-${i}`} className="empty-row"><td colSpan={4}>&nbsp;</td></tr>
                         ))}
                      </tbody>
                  </table>
 
-                <table className="totals-table">
-                    <tbody>
-                        <tr><td>Zwischensumme</td><td className="font-mono">{formatCurrency(total)}</td></tr>
-                        <tr><td>zzgl. 19% MwSt.</td><td className="font-mono">{formatCurrency(vat)}</td></tr>
-                        <tr className="total-row"><td>Gesamtsumme</td><td className="font-mono">{formatCurrency(gross)}</td></tr>
-                    </tbody>
-                </table>
+                <div className="totals-section">
+                    <table className="totals-table">
+                        <tbody>
+                            <tr><td className="totals-label">Zwischensumme</td><td className="totals-value font-mono">{formatCurrency(total)}</td></tr>
+                            <tr>
+                                <td className="totals-label">zzgl. MwSt.</td>
+                                <td className="totals-value font-mono">USt. 19% &nbsp;&nbsp;&nbsp; {formatCurrency(vat)}</td>
+                            </tr>
+                            <tr className="grand-total">
+                                <td className="totals-label">Gesamtsumme</td>
+                                <td className="totals-value font-mono">{formatCurrency(gross)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 
-                 <div style={{marginTop: "40px", fontSize: "11px"}}>
+                 <div className="footer-text">
                     <p>Zahlungsbedingungen: Zahlen ohne Abzüge nach Rechnungseingang</p>
                     <p>Lieferung nach allgemeinen deutschen Spediteurbedingungen(ADSp).</p>
-                    <br/>
+                 </div>
+                
+                <div className="footer-signature">
                     <p>Mit freundlichen Grüßen</p>
                     <br/>
                     <p>Elias Otto Spedition</p>
-                 </div>
+                </div>
 
                  <div className="footer">
                     <div>
                         <b>Elias Otto Spedition</b><br/>
-                        Olvengraben 25, 47608 Geldern<br/>
+                        Olvengraben 25<br/>
+                        47608 Geldern<br/>
                         Telefon: +49(0)2831 9779947<br/>
                         E-Mail: info@ottospedition.de
                     </div>
                      <div>
-                        <b>Bankverbindung</b><br/>
-                        Volksbank an der Niers<br/>
+                        <b>Volksbank an der Niers</b><br/>
                         IBAN: DE 41 320 613 840 111 010 021<br/>
-                        BIC: GENODED1GDL
-                    </div>
-                     <div>
-                        <b>Rechtliches</b><br/>
+                        BIC: GENODED1GDL<br/>
                         USt-ID Nr.: DE318824058<br/>
                         Steuer-Nr.: 113/5126/2318
                     </div>
@@ -935,3 +935,4 @@ export default function BuchhaltungPage() {
 }
 
     
+
