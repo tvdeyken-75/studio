@@ -48,7 +48,7 @@ const AddTemplateDialog = ({
     if (isEditMode && templateToEdit) {
       return templateToEdit;
     }
-    const pickupStop: Omit<TourStop, 'kilometers' | 'actualDateTime'> = {
+    const pickupStop: Omit<TourStop, 'actualDateTime'> = {
       id: `stop-pickup-${Date.now()}`,
       stopSequence: 1,
       type: 'Pickup',
@@ -58,8 +58,9 @@ const AddTemplateDialog = ({
       plannedDateTime: '',
       goodsDescription: 'Sonstiges',
       status: 'Planned',
+      kilometers: 0,
     };
-     const deliveryStop: Omit<TourStop, 'kilometers' | 'actualDateTime'> = {
+     const deliveryStop: Omit<TourStop, 'actualDateTime'> = {
       id: `stop-delivery-${Date.now()}`,
       stopSequence: 2,
       type: 'Delivery',
@@ -69,6 +70,7 @@ const AddTemplateDialog = ({
       plannedDateTime: '',
       goodsDescription: 'Sonstiges',
       status: 'Planned',
+      kilometers: 0,
     };
     return {
       id: `template-${Date.now()}`,
@@ -171,6 +173,16 @@ const AddTemplateDialog = ({
                         />
                         {errors.stops?.[1]?.addressId && <p className="text-xs text-destructive">{errors.stops[1].addressId.message}</p>}
                     </div>
+                    <div className="space-y-1.5">
+                        <Label>Kilometer</Label>
+                        <Controller
+                            name="stops.1.kilometers"
+                            control={control}
+                            render={({ field }) => (
+                                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} className="h-9 bg-background" placeholder="Distanz von Abholung bis Lieferung" />
+                            )}
+                        />
+                    </div>
                 </div>
                  <div className="space-y-1.5">
                     <Label>Fracht</Label>
@@ -266,6 +278,10 @@ export default function TripTemplatesPage() {
                                 <span className="text-muted-foreground font-semibold w-20">Nach:</span>
                                 <span className="font-medium">{template.stops[1]?.addressName || 'N/A'}</span>
                             </div>
+                            <div className="flex items-start gap-2">
+                                <span className="text-muted-foreground font-semibold w-20">Distanz:</span>
+                                <span className="font-medium">{template.stops[1]?.kilometers || '0'} km</span>
+                            </div>
                             <div className="flex items-start gap-2 pt-2">
                                 <span className="text-muted-foreground font-semibold w-20">Fracht:</span>
                                 <span className="text-muted-foreground text-xs">{template.stops[0]?.goodsDescription || 'N/A'}</span>
@@ -297,4 +313,3 @@ export default function TripTemplatesPage() {
     </div>
   );
 }
-

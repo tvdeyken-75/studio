@@ -334,5 +334,5 @@ export type TripTemplate = {
     id: string;
     name: string;
     description: string;
-    stops: Omit<TourStop, 'actualDateTime' | 'status' | 'kilometers'>[];
+    stops: Omit<TourStop, 'actualDateTime' | 'status'>[];
 };
