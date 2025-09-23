@@ -19,7 +19,7 @@ import { SlidersHorizontal, FileDown, Trash2 } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval } from 'date-fns';
+import { format, isWithinInterval, getISOWeek, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -266,7 +266,8 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
 export default function TransportReportPage() {
     const [tours, setTours] = useState<Tour[]>(tourData);
     const [searchTerm, setSearchTerm] = useState("");
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [selectedWeek, setSelectedWeek] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
     const addTour = (tour: Tour) => {
         setTours(prev => [tour, ...prev]);
@@ -274,6 +275,7 @@ export default function TransportReportPage() {
 
     const [columnVisibility, setColumnVisibility] = useState({
         tourNumber: true,
+        kw: true,
         tourDate: true,
         driverId: true,
         vehicleId: true,
@@ -286,6 +288,7 @@ export default function TransportReportPage() {
     
     const columnLabels: Record<ColumnKeys, string> = {
         tourNumber: 'Tour-Nr.',
+        kw: 'KW',
         tourDate: 'Datum',
         driverId: 'Fahrer',
         vehicleId: 'Fahrzeug',
@@ -298,14 +301,32 @@ export default function TransportReportPage() {
         setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
     }
     
+    const weekOptions = useMemo(() => {
+        const weeks = new Set<number>();
+        tours.forEach(tour => {
+            weeks.add(getISOWeek(parseISO(tour.tourDate)));
+        });
+        return Array.from(weeks).sort((a, b) => a - b);
+    }, [tours]);
+    
+    const statusOptions = useMemo(() => {
+        const statuses = new Set<Tour['status']>();
+        tours.forEach(tour => {
+            statuses.add(tour.status);
+        });
+        return Array.from(statuses);
+    }, [tours]);
+
+
     const filteredTours = useMemo(() => {
         let filtered = tours;
 
-        if (dateRange?.from && dateRange?.to) {
-            filtered = filtered.filter(t => {
-                const tourDate = new Date(t.tourDate);
-                return isWithinInterval(tourDate, { start: dateRange.from!, end: dateRange.to! });
-            });
+        if (selectedWeek !== 'all') {
+            filtered = filtered.filter(t => getISOWeek(parseISO(t.tourDate)) === parseInt(selectedWeek));
+        }
+        
+        if (selectedStatus !== 'all') {
+            filtered = filtered.filter(t => t.status === selectedStatus);
         }
         
         if (!searchTerm) return filtered;
@@ -316,7 +337,7 @@ export default function TransportReportPage() {
                 String(value).toLowerCase().includes(lowercasedTerm)
             ) || tour.stops.some(stop => stop.addressName.toLowerCase().includes(lowercasedTerm) || stop.location.toLowerCase().includes(lowercasedTerm))
         );
-    }, [tours, searchTerm, dateRange]);
+    }, [tours, searchTerm, selectedWeek, selectedStatus]);
     
     const kpis = useMemo(() => {
         const totalTours = filteredTours.length;
@@ -389,42 +410,30 @@ export default function TransportReportPage() {
                         className="max-w-sm h-9"
                     />
                     <div className="flex items-center gap-2">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-[280px] justify-start text-left font-normal h-9",
-                                        !dateRange && "text-muted-foreground"
-                                    )}
-                                >
-                                    <Icons.calendar className="mr-2 h-4 w-4" />
-                                    {dateRange?.from ? (
-                                        dateRange.to ? (
-                                            <>
-                                                {format(dateRange.from, "dd.MM.yyyy")} -{" "}
-                                                {format(dateRange.to, "dd.MM.yyyy")}
-                                            </>
-                                        ) : (
-                                            format(dateRange.from, "dd.MM.yyyy")
-                                        )
-                                    ) : (
-                                        <span>Datumsbereich auswählen</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={dateRange?.from}
-                                    selected={dateRange}
-                                    onSelect={setDateRange}
-                                    numberOfMonths={2}
-                                    locale={de}
-                                />
-                            </PopoverContent>
-                        </Popover>
+                         <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                            <SelectTrigger className="h-9 w-40">
+                                <SelectValue placeholder="Woche filtern..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Alle Wochen</SelectItem>
+                                {weekOptions.map(week => (
+                                    <SelectItem key={week} value={String(week)}>KW {week}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                            <SelectTrigger className="h-9 w-40">
+                                <SelectValue placeholder="Status filtern..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Alle Status</SelectItem>
+                                {statusOptions.map(status => (
+                                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
                         <Button variant="link" size="sm" className="h-9">
                             <FileDown className="mr-2 h-4 w-4" />
                             Exportieren
@@ -467,6 +476,7 @@ export default function TransportReportPage() {
                                 filteredTours.map((tour) => (
                                     <TableRow key={tour.id}>
                                         {columnVisibility.tourNumber && <TableCell className="font-medium">{tour.tourNumber}</TableCell>}
+                                        {columnVisibility.kw && <TableCell>{`KW ${getISOWeek(parseISO(tour.tourDate))}`}</TableCell>}
                                         {columnVisibility.tourDate && <TableCell>{formatDate(tour.tourDate)}</TableCell>}
                                         {columnVisibility.driverId && <TableCell>{tour.driverId || 'N/A'}</TableCell>}
                                         {columnVisibility.vehicleId && <TableCell>{fleetData.find(v => v.id === tour.vehicleId)?.kennzeichen || 'N/A'}</TableCell>}
@@ -508,3 +518,5 @@ export default function TransportReportPage() {
         </div>
     );
 }
+
+    
