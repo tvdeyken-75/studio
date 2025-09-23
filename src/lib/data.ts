@@ -87,7 +87,7 @@ export const fleetData: Vehicle[] = [
     status: 'Aktiv', fahrerId: 'max-mustermann', tourStatus: 'Unterwegs',
     location: 'Berlin, DE', capacity: '24t' // Legacy
   },
-  { _id: 'AT-002', kennzeichen: 'H-LKW-456', hersteller: 'MAN', modell: 'TGX', fahrgestellnummer: 'WDB98765432109876',
+  { id: 'AT-002', kennzeichen: 'H-LKW-456', hersteller: 'MAN', modell: 'TGX', fahrgestellnummer: 'WDB98765432109876',
     baujahr: 2022, typ: 'Sattelzugmaschine', fahrzeugart: 'LKW', fuhrparkNummer: 'F-102',
     motorleistungKw: 340, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
     nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 750, adblueVolumenLiter: 60,
