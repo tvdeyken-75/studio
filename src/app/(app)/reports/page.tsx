@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import type { Transport } from '@/types';
 import { transportData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -18,6 +18,7 @@ import { format, isWithinInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { AddTransportDialog } from '../auftraege/vorbereiten/AddTransportDialog';
 
 
 const KpiCard = ({ title, value, icon, change, changeType, description }: { title: string; value: string; icon: React.ReactNode; change?: string; changeType?: 'positive' | 'negative', description: string }) => (
@@ -42,6 +43,10 @@ export default function TransportReportPage() {
     const [transports, setTransports] = useState<Transport[]>(transportData);
     const [searchTerm, setSearchTerm] = useState("");
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
+    const addTransport = (transport: Transport) => {
+        setTransports(prev => [transport, ...prev]);
+    }
 
     const [columnVisibility, setColumnVisibility] = useState({
         transportNumber: true,
@@ -131,6 +136,15 @@ export default function TransportReportPage() {
                             className="max-w-sm h-9"
                         />
                         <div className="flex items-center gap-2">
+                            <AddTransportDialog 
+                                onAdd={addTransport} 
+                                trigger={
+                                    <Button size="sm" variant="outline">
+                                        <Icons.add className="mr-2 h-4 w-4" />
+                                        Neuer Transport
+                                    </Button>
+                                }
+                            />
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -254,5 +268,3 @@ export default function TransportReportPage() {
         </div>
     );
 }
-
-    

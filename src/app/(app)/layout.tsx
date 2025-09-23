@@ -24,11 +24,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathMap: { [key: string]: string } = {
       '/': 'Dashboard',
       '/dashboard': 'Dashboard',
-      '/ai-tools/route-planning': 'KI-Routenplanung',
-      '/fleet': 'Fuhrpark',
-      '/customers': 'Beziehungsmanagement',
       '/auftraege': 'Aufträge',
       '/reports': 'Transportoverview',
+      '/fleet': 'Fuhrpark',
+      '/customers': 'Beziehungsmanagement',
       '/buchhaltung': 'Buchhaltung',
       '/master-data/addresses': 'Stammdaten',
       '/master-data/countries': 'Stammdaten',

@@ -196,12 +196,14 @@ export interface Country {
 export type Transport = {
   id: string;
   transportNumber: string;
+  auftragsId?: string; // order number from customer
   customer: string;
+  frachtbeschreibung?: string;
   pickupLocation: string;
   deliveryLocation: string;
-  driver: string;
-  vehicleId: string;
-  status: 'Abgeschlossen' | 'Unterwegs' | 'Geplant';
+  driver?: string;
+  vehicleId?: string;
+  status: 'Geplant' | 'In Vorbereitung' | 'Bereit zur Abholung' | 'Unterwegs' | 'Abgeschlossen' | 'Storniert';
   plannedPickupDate: string;
   plannedDeliveryDate: string;
   actualPickupDate: string;
