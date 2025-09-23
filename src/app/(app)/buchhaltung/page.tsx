@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -583,7 +584,7 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
             const printWindow = window.open('', '', 'height=800,width=800');
             if (printWindow) {
                 printWindow.document.write('<html><head><title>Rechnung</title>');
-                printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 10px; color: #333; } .invoice-box { max-width: 800px; margin: auto; padding: 30px; font-size: 10px; line-height: 1.6; font-family: \'Helvetica Neue\', \'Helvetica\', Arial, sans-serif; color: #555; } .sender-info-top { text-align: center; margin-bottom: 20px; font-size: 8px; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; } .customer-address { font-size: 11px; } .invoice-details-right { text-align: right; } .invoice-details-right table { width: 100%; } .invoice-details-right td { padding: 1px 0; } .invoice-title-block { text-align: center; margin-top: 30px; margin-bottom: 20px; } .invoice-title { font-size: 20px; font-weight: bold; margin-bottom: 0px; } .salutation { margin-top: 20px; margin-bottom: 20px; font-size: 11px; } .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; } .items-table thead tr { background-color: #f2f2f2; font-weight: bold; } .items-table th { padding: 6px; text-align: left; } .items-table td { padding: 6px; border-bottom: 1px dotted #ccc; } .items-table .price { text-align: right; } .items-table .empty-row td { border-bottom: 1px dotted #ccc; height: 1.2em; } .totals-section { display: flex; justify-content: flex-end; margin-top: 20px; } .totals-table { width: 40%; font-size: 11px; } .totals-table td { padding: 4px; } .totals-table .totals-label { text-align: left; } .totals-table .totals-value { text-align: right; } .totals-table .grand-total { font-weight: bold; background-color: #f2f2f2; } .footer-text { margin-top: 30px; font-size: 11px; } .footer-signature { margin-top: 40px; font-size: 11px; } .footer { margin-top: 50px; font-size: 9px; color: #777; text-align: left; border-top: 1px solid #000; padding-top: 10px; display: flex; justify-content: space-between; } .footer > div { flex: 1; line-height: 1.4; } .footer > div:not(:last-child) { margin-right: 20px; } </style>');
+                printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 10px; color: #333; } .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); font-size: 11px; line-height: 1.6; font-family: \'Helvetica Neue\', \'Helvetica\', Arial, sans-serif; color: #555; } .sender-info-top { text-align: right; font-size: 9px; color: #777; margin-bottom: 20px; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; } .customer-address { font-size: 11px; } .invoice-details-right { text-align: right; } .invoice-details-right table { width: 100%; } .invoice-details-right td { padding: 1px 0; } .invoice-title-block { text-align: left; margin-top: 40px; margin-bottom: 20px; } .invoice-title { font-size: 24px; font-weight: bold; margin-bottom: 0px; } .salutation { margin-top: 20px; margin-bottom: 20px; font-size: 11px; } .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; } .items-table thead tr { background-color: #f2f2f2; font-weight: bold; } .items-table th { padding: 8px; text-align: left; } .items-table td { padding: 8px; border-bottom: 1px dotted #ccc; } .items-table .price { text-align: right; } .items-table .empty-row td { border-bottom: 1px dotted #ccc; height: 1.2em; } .totals-section { display: flex; justify-content: flex-end; margin-top: 20px; } .totals-table { width: 40%; font-size: 11px; } .totals-table td { padding: 4px; } .totals-table .totals-label { text-align: left; } .totals-table .totals-value { text-align: right; } .totals-table .grand-total { font-weight: bold; font-size: 12px; background-color: #f2f2f2; } .footer-text { margin-top: 30px; font-size: 11px; } .footer-signature { margin-top: 40px; font-size: 11px; } .footer { margin-top: 50px; font-size: 9px; color: #777; text-align: left; border-top: 1px solid #000; padding-top: 10px; display: flex; justify-content: space-between; } .footer > div { flex: 1; line-height: 1.4; } .footer > div:not(:last-child) { margin-right: 20px; } .logo-container { width: 150px; } </style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(`<div class="invoice-box">${printContent.innerHTML}</div>`);
                 printWindow.document.write('</body></html>');
@@ -610,18 +611,19 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                 <div className="sender-info-top">Elias Otto Spedition | Olvengraben 25 | 47608 Geldern</div>
                 <div className="header">
                      <div className="customer-address">
-                        <b>{invoice.kundenName}</b><br/>
+                        <b>An:</b><br/>
+                        {invoice.kundenName}<br/>
                         {customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}<br/>
                         {customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}<br/>
                         Deutschland
                      </div>
                      <div className="invoice-details-right">
-                         <div className="w-48 ml-auto mb-4">
+                         <div className="logo-container ml-auto mb-4">
                            <Logo />
                          </div>
                         <table>
                             <tbody>
-                                <tr><td className="pr-4"><b>Rechnung #:</b></td><td>{invoice.rechnungsnummer}</td></tr>
+                                <tr><td className="pr-4"><b>Rechnungs-Nr.:</b></td><td>{invoice.rechnungsnummer}</td></tr>
                                 <tr><td className="pr-4"><b>Datum:</b></td><td>{formatDate(invoice.rechnungsdatum)}</td></tr>
                                 <tr><td className="pr-4"><b>Zustellung:</b></td><td>per E-Mail</td></tr>
                             </tbody>
@@ -630,7 +632,7 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                 </div>
 
                 <div className="invoice-title-block">
-                    <h1 className="invoice-title">Rechnung: {invoice.rechnungsnummer}</h1>
+                    <h1 className="invoice-title">Rechnung</h1>
                 </div>
 
                  <div className="salutation">
@@ -701,6 +703,9 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                         <b>Volksbank an der Niers</b><br/>
                         IBAN: DE 41 320 613 840 111 010 021<br/>
                         BIC: GENODED1GDL<br/>
+                    </div>
+                     <div>
+                        <b>Finanzamt Geldern</b><br/>
                         USt-ID Nr.: DE318824058<br/>
                         Steuer-Nr.: 113/5126/2318
                     </div>
@@ -724,7 +729,7 @@ export default function BuchhaltungPage() {
   const { toast } = useToast();
   
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'cancel'>('view');
+  const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'cancel' | 'create'>('create');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [columnVisibility, setColumnVisibility] = useState({
@@ -899,16 +904,16 @@ export default function BuchhaltungPage() {
       </CardContent>
     </Card>
     
-    <Dialog open={isDialogOpen && dialogMode === 'edit'} onOpenChange={setIsDialogOpen}>
-        <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode='edit'>
-             <span />
+    <Dialog open={isDialogOpen && (dialogMode === 'view' || dialogMode === 'edit')} onOpenChange={setIsDialogOpen}>
+      {dialogMode === 'view' && selectedInvoice ? (
+        <InvoiceDetailDialog invoice={selectedInvoice} onAction={handleDetailAction} />
+      ) : dialogMode === 'edit' && selectedInvoice ? (
+        <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode="edit">
+          <span />
         </CreateInvoiceDialog>
+      ) : null}
     </Dialog>
 
-    <Dialog open={isDialogOpen && dialogMode === 'view'} onOpenChange={setIsDialogOpen}>
-        {selectedInvoice && <InvoiceDetailDialog invoice={selectedInvoice} onAction={handleDetailAction} />}
-    </Dialog>
-    
     <AlertDialog open={isDialogOpen && dialogMode === 'cancel'} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -936,5 +941,7 @@ export default function BuchhaltungPage() {
     
 
 
+
+    
 
     
