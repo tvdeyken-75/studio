@@ -17,13 +17,13 @@ interface MenuContextType {
 
 const initialNavItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Icons.dashboard, href: '/' },
-  { id: 'route-planning', label: 'Routenplanung', icon: Icons.route, href: '/route-planning' },
-  { id: 'fleet', label: 'Fuhrpark', icon: Icons.fleet, href: '/fleet' },
-  { id: 'customers', label: 'Beziehungsmanagement', icon: Icons.customers, href: '/customers' },
   { id: 'auftraege', label: 'Aufträge', icon: Icons.orders, href: '/auftraege' },
   { id: 'reports', label: 'Transportoverview', icon: Icons.reports, href: '/reports' },
+  { id: 'fleet', label: 'Fuhrpark', icon: Icons.fleet, href: '/fleet' },
+  { id: 'customers', label: 'Beziehungsmanagement', icon: Icons.customers, href: '/customers' },
   { id: 'buchhaltung', label: 'Buchhaltung', icon: Icons.accounting, href: '/buchhaltung' },
   { id: 'master-data', label: 'Stammdaten', icon: Icons.database, href: '/master-data/addresses' },
+  { id: 'ai-tools', label: 'KI-Tools', icon: Icons.route, href: '/ai-tools/route-planning' },
   { id: 'adminpanel', label: 'Adminpanel', icon: Icons.admin, href: '/adminpanel' },
   { id: 'settings', label: 'Einstellungen', icon: Icons.settings, href: '/settings' },
 ];

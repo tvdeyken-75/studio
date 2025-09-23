@@ -24,7 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathMap: { [key: string]: string } = {
       '/': 'Dashboard',
       '/dashboard': 'Dashboard',
-      '/route-planning': 'Routenplanung',
+      '/ai-tools/route-planning': 'KI-Routenplanung',
       '/fleet': 'Fuhrpark',
       '/customers': 'Beziehungsmanagement',
       '/auftraege': 'Aufträge',
