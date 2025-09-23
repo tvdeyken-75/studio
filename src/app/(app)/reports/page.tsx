@@ -45,7 +45,7 @@ const formatCurrency = (value?: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
-const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) => void; existingTours: Tour[] }) => {
+const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave: (tour: Tour) => void; existingTours: Tour[], tourToEdit?: Tour | null, children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(false);
     
     const generateNewTourNumber = () => {
@@ -78,7 +78,7 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
     };
 
     const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<Tour>({
-        defaultValues: {
+        defaultValues: tourToEdit || {
             id: `tour-${Date.now()}`,
             tourNumber: generateNewTourNumber(),
             tourDate: format(new Date(), 'yyyy-MM-dd'),
@@ -130,13 +130,13 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
             calculatedRevenue: zwischensumme,
             profitability: zwischensumme - (data.totalCosts || 0),
         };
-        onAddTour(finalData);
+        onSave(finalData);
         setIsOpen(false);
     };
 
     const handleOpenChange = (open: boolean) => {
         if (open) {
-            reset({
+            const defaultValues = tourToEdit || {
                 id: `tour-${Date.now()}`,
                 tourNumber: generateNewTourNumber(),
                 tourDate: format(new Date(), 'yyyy-MM-dd'),
@@ -145,7 +145,8 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                 rohertrag: 0,
                 dieselfloaterPercentage: 0,
                 mautzuschlagPercentage: 0,
-            });
+            };
+            reset(defaultValues);
         }
         setIsOpen(open);
     };
@@ -167,16 +168,11 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                    <Icons.add className="mr-2 h-4 w-4" />
-                    Neue Tour
-                </Button>
-            </DialogTrigger>
+            <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-6xl">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader>
-                        <DialogTitle>Neue Tour erstellen</DialogTitle>
+                        <DialogTitle>{tourToEdit ? `Tour ${tourToEdit.tourNumber} bearbeiten` : 'Neue Tour erstellen'}</DialogTitle>
                         <DialogDescription>
                             Definieren Sie eine neue Tour mit allen zugehörigen Ressourcen und Stopps.
                         </DialogDescription>
@@ -382,13 +378,15 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
     );
 };
 
-const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour: Tour) => void; }) => {
+const TourDetailDialog = ({ tour, onSave, children, mode = 'view' }: { tour: Tour; onSave: (updatedTour: Tour) => void; children: React.ReactNode, mode?: 'view' | 'edit' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [rohertrag, setRohertrag] = useState(tour.rohertrag || 0);
     const [dieselfloater, setDieselfloater] = useState(tour.dieselfloaterPercentage || 0);
     const [mautzuschlag, setMautzuschlag] = useState(tour.mautzuschlagPercentage || 0);
 
     const printRef = useRef<HTMLDivElement>(null);
+
+    const isEditMode = mode === 'edit';
 
     const tourDetails = useMemo(() => {
         const customer = customerData.find(c => c.id === tour.customerId);
@@ -402,13 +400,15 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
 
 
     useEffect(() => {
-        setMautzuschlag(tourDetails.customer?.mautzuschlag || 0);
-        
-        const latestDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
-        setDieselfloater(latestDieselpreis?.zuschlag || 0);
+        if(isOpen) {
+            setMautzuschlag(tour.mautzuschlagPercentage || tourDetails.customer?.mautzuschlag || 0);
+            
+            const latestDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
+            setDieselfloater(tour.dieselfloaterPercentage || latestDieselpreis?.zuschlag || 0);
 
-        setRohertrag(tour.rohertrag || 0);
-    }, [tour, tourDetails]);
+            setRohertrag(tour.rohertrag || 0);
+        }
+    }, [isOpen, tour, tourDetails]);
     
     const totalKilometers = useMemo(() => {
         return tour.stops.reduce((sum, stop) => sum + (stop.kilometers || 0), 0);
@@ -461,104 +461,72 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Kalkulation &amp; Report</DropdownMenuItem>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-3xl">
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent className="sm:max-w-4xl">
                 <DialogHeader>
-                    <DialogTitle>Kalkulation für Tour {tour.tourNumber}</DialogTitle>
-                    <DialogDescription>Berechnen Sie den Ertrag für diese Tour und erstellen Sie einen Report.</DialogDescription>
+                    <DialogTitle>{isEditMode ? 'Kalkulation für Tour' : 'Details für Tour'} {tour.tourNumber}</DialogTitle>
+                    <DialogDescription>{isEditMode ? 'Berechnen Sie den Ertrag und erstellen Sie einen Report.' : 'Übersicht der Tourdetails und des Reports.'}</DialogDescription>
                 </DialogHeader>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[70vh] overflow-y-auto pr-2">
-                    <div className="space-y-4">
-                        <h4 className="font-medium">Eingabewerte</h4>
-                            <div className="space-y-1.5">
-                            <Label>Rohertrag (Vereinbarter Betrag)</Label>
-                            <Input type="number" value={rohertrag} onChange={(e) => setRohertrag(Number(e.target.value))} className="h-9"/>
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label>Dieselfloater (%)</Label>
-                            <Input type="number" value={dieselfloater} onChange={(e) => setDieselfloater(Number(e.target.value))} className="h-9"/>
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label>Mautzuschlag (%)</Label>
-                            <Input type="number" value={mautzuschlag} onChange={(e) => setMautzuschlag(Number(e.target.value))} className="h-9"/>
-                        </div>
-                            <div className="space-y-1.5">
-                            <Label>Gesamtkilometer</Label>
-                            <Input type="number" value={totalKilometers} readOnly disabled className="h-9"/>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 p-4 border rounded-md bg-muted/50">
-                        <h4 className="font-medium text-center">Berechnungs-Vorschau</h4>
-                        <Separator />
-                        <table className="w-full text-sm">
-                            <tbody>
-                                <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(rohertrag)}</td></tr>
-                                <tr><td>+ Dieselfloater ({dieselfloater.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
-                                <tr><td>+ Mautzuschlag ({mautzuschlag.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
-                                <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
-                                <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
-                                    <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
-                                <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
-                                <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Hidden printable report */}
-                <div className="hidden">
-                    <div ref={printRef} className="p-4">
-                        <h1>Tour Report: {tour.tourNumber}</h1>
-                        <div className="grid mb-4">
+                <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Left Column: Details */}
+                        <div className="space-y-4">
                             <div>
-                                <h3>Tour-Informationen</h3>
-                                <table>
+                                <h3 className="font-semibold text-base mb-2">Tour-Informationen</h3>
+                                <table className="w-full text-sm">
                                     <tbody>
-                                        <tr><td><b>Tour-Datum:</b></td><td>{formatDate(tour.tourDate, 'dd.MM.yyyy')}</td></tr>
-                                        <tr><td><b>Kunde:</b></td><td>{tourDetails.customer?.firmenname || 'N/A'}</td></tr>
-                                        <tr><td><b>Referenz:</b></td><td>{tour.customerReference || 'N/A'}</td></tr>
-                                        <tr><td><b>Fahrer:</b></td><td>{tourDetails.driverName || 'N/A'}</td></tr>
-                                        <tr><td><b>Fahrzeug:</b></td><td>{tourDetails.vehicle?.kennzeichen || 'N/A'}</td></tr>
-                                        <tr><td><b>Anhänger:</b></td><td>{tourDetails.trailer?.kennzeichen || 'N/A'}</td></tr>
-                                        <tr><td><b>Gesamtkilometer:</b></td><td>{totalKilometers} km</td></tr>
+                                        <tr className="border-b"><td className="py-1 pr-2 text-muted-foreground">Datum:</td><td className="font-medium">{formatDate(tour.tourDate, 'dd.MM.yyyy')}</td></tr>
+                                        <tr className="border-b"><td className="py-1 pr-2 text-muted-foreground">Kunde:</td><td className="font-medium">{tourDetails.customer?.firmenname || 'N/A'}</td></tr>
+                                        <tr className="border-b"><td className="py-1 pr-2 text-muted-foreground">Referenz:</td><td className="font-medium">{tour.customerReference || 'N/A'}</td></tr>
+                                        <tr className="border-b"><td className="py-1 pr-2 text-muted-foreground">Fahrer:</td><td className="font-medium">{tourDetails.driverName || 'N/A'}</td></tr>
+                                        <tr className="border-b"><td className="py-1 pr-2 text-muted-foreground">Fahrzeug:</td><td className="font-medium">{tourDetails.vehicle?.kennzeichen || 'N/A'}</td></tr>
+                                        <tr className="border-b"><td className="py-1 pr-2 text-muted-foreground">Anhänger:</td><td className="font-medium">{tourDetails.trailer?.kennzeichen || 'N/A'}</td></tr>
+                                        <tr><td className="py-1 pr-2 text-muted-foreground">Kilometer:</td><td className="font-medium">{totalKilometers} km</td></tr>
                                     </tbody>
                                 </table>
                             </div>
+                            <div>
+                                <h3 className="font-semibold text-base mb-2">Tour-Stopps</h3>
+                                <div className="space-y-2">
+                                    {tour.stops.map(stop => (
+                                        <div key={stop.id} className="p-2 border rounded-md">
+                                            <p className="font-medium text-sm">{stop.stopSequence}. {stop.type === 'Pickup' ? 'Abholung' : 'Lieferung'}: {stop.addressName}</p>
+                                            <p className="text-xs text-muted-foreground">{stop.location}</p>
+                                            <p className="text-xs text-muted-foreground">Geplant: {formatDate(stop.plannedDateTime)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="mb-4">
-                            <h2>Tour-Stopps</h2>
-                            <table>
-                                <thead><tr><th>Sequenz</th><th>Typ</th><th>Adresse</th><th>Geplante Zeit</th></tr></thead>
-                                <tbody>
-                                    {tour.stops.map(stop => (
-                                        <tr key={stop.id}>
-                                            <td>{stop.stopSequence}</td>
-                                            <td>{stop.type}</td>
-                                            <td>{stop.addressName}</td>
-                                            <td>{formatDate(stop.plannedDateTime)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div className="col-span-2">
-                             <h2>Kalkulation</h2>
-                             <table>
-                                <tbody>
-                                    <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(rohertrag)}</td></tr>
-                                    <tr><td>+ Dieselfloater ({dieselfloater.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
-                                    <tr><td>+ Mautzuschlag ({mautzuschlag.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
-                                    <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
-                                     <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
-                                    <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
-                                </tbody>
-                             </table>
+                        {/* Right Column: Calculation */}
+                         <div className="space-y-4">
+                            <h3 className="font-semibold text-base">Kalkulation</h3>
+                            <div className="space-y-4 p-4 border rounded-md" style={{backgroundColor: isEditMode ? 'transparent' : 'hsl(var(--muted)/0.5)'}}>
+                                {isEditMode ? (
+                                    <div className="space-y-3">
+                                        <div className="space-y-1.5"><Label>Rohertrag (€)</Label><Input type="number" value={rohertrag} onChange={(e) => setRohertrag(Number(e.target.value))} className="h-9"/></div>
+                                        <div className="space-y-1.5"><Label>Dieselfloater (%)</Label><Input type="number" value={dieselfloater} onChange={(e) => setDieselfloater(Number(e.target.value))} className="h-9"/></div>
+                                        <div className="space-y-1.5"><Label>Mautzuschlag (%)</Label><Input type="number" value={mautzuschlag} onChange={(e) => setMautzuschlag(Number(e.target.value))} className="h-9"/></div>
+                                    </div>
+                                ) : null}
+
+                                <h4 className="font-medium text-center text-sm pt-2">Berechnungs-Vorschau</h4>
+                                <Separator />
+                                <table className="w-full text-sm">
+                                    <tbody>
+                                        <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(rohertrag)}</td></tr>
+                                        <tr><td>+ Dieselfloater ({dieselfloater.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
+                                        <tr><td>+ Mautzuschlag ({mautzuschlag.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
+                                        <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                        <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
+                                            <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
+                                        <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                        <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -567,7 +535,7 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
                     <Button type="button" variant="secondary" onClick={handlePrint}>Drucken</Button>
                     <div className="flex-grow"></div>
                     <DialogClose asChild><Button type="button" variant="ghost">Abbrechen</Button></DialogClose>
-                    <Button type="button" onClick={handleSave}>Berechnung speichern</Button>
+                    {isEditMode && <Button type="button" onClick={handleSave}>Berechnung speichern</Button>}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -581,12 +549,16 @@ export default function TransportReportPage() {
     const [selectedWeek, setSelectedWeek] = useState<string>('this-week');
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-    const addTour = (tour: Tour) => {
-        setTours(prev => [tour, ...prev]);
-    }
-
-    const updateTour = (updatedTour: Tour) => {
-        setTours(prev => prev.map(t => t.id === updatedTour.id ? updatedTour : t));
+    const addOrUpdateTour = (tour: Tour) => {
+        setTours(prev => {
+            const index = prev.findIndex(t => t.id === tour.id);
+            if (index > -1) {
+                const newTours = [...prev];
+                newTours[index] = tour;
+                return newTours;
+            }
+            return [tour, ...prev];
+        });
     }
 
     const [columnVisibility, setColumnVisibility] = useState({
@@ -715,7 +687,12 @@ export default function TransportReportPage() {
                             </CardDescription>
                         </div>
                          <div className="flex items-center gap-2">
-                             <AddTourDialog onAddTour={addTour} existingTours={tours} />
+                             <AddTourDialog onSave={addOrUpdateTour} existingTours={tours}>
+                                <Button size="sm" variant="outline">
+                                    <Icons.add className="mr-2 h-4 w-4" />
+                                    Neue Tour
+                                </Button>
+                             </AddTourDialog>
                          </div>
                     </div>
                 </CardHeader>
@@ -814,10 +791,16 @@ export default function TransportReportPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem>Details anzeigen</DropdownMenuItem>
-                                                    <DropdownMenuItem>Tour bearbeiten</DropdownMenuItem>
+                                                    <TourDetailDialog tour={tour} onSave={addOrUpdateTour} mode="view">
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Details anzeigen</DropdownMenuItem>
+                                                    </TourDetailDialog>
+                                                    <AddTourDialog onSave={addOrUpdateTour} existingTours={tours} tourToEdit={tour}>
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Tour bearbeiten</DropdownMenuItem>
+                                                    </AddTourDialog>
                                                     <DropdownMenuSeparator />
-                                                    <CalculationDialog tour={tour} onSave={updateTour} />
+                                                    <TourDetailDialog tour={tour} onSave={addOrUpdateTour} mode="edit">
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Kalkulation &amp; Report</DropdownMenuItem>
+                                                    </TourDetailDialog>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -837,4 +820,5 @@ export default function TransportReportPage() {
         </div>
     );
 }
+
 
