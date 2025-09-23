@@ -80,6 +80,7 @@ const MOCK_CUSTOMERS: Customer[] = [{
     skontoProzent: 2,
     skontoTage: 14,
     mautzuschlag: 0,
+    dieselfloater: true,
     bankname: 'Musterbank',
     iban: 'DE89370400440532013000',
     bic: 'COBADEFFXXX',
@@ -115,6 +116,7 @@ const MOCK_SUPPLIERS: Customer[] = [{
     skontoProzent: 0,
     skontoTage: 0,
     mautzuschlag: 0,
+    dieselfloater: false,
     bankname: 'Hauptstadt Bank',
     iban: 'DE98765432109876543210',
     bic: 'BEVODEBBXXX',
@@ -150,6 +152,7 @@ const MOCK_SUBCONTRACTORS: Customer[] = [{
     skontoProzent: 1.5,
     skontoTage: 10,
     mautzuschlag: 0,
+    dieselfloater: true,
     bankname: 'Hafenbank',
     iban: 'DE12345678901234567891',
     bic: 'HASPDEHHXXX',
@@ -489,7 +492,7 @@ export default function CustomerDetailPage() {
           strasse: '', hausnummer: '', plz: '', ort: '', land: 'DE',
           telefon: '', fax: '', email: '', website: '',
           zahlungsbedingungen: '30 Tage netto', zahlungsziel: 30, waehrung: 'EUR', kreditlimit: 0, skontoProzent: 0, skontoTage: 0,
-          mautzuschlag: 0,
+          mautzuschlag: 0, dieselfloater: true,
           bankname: '', iban: '', bic: '', kontoinhaber: '',
           aktiv: true, bemerkung: '', erstelltAm: new Date().toISOString(), bearbeitetAm: new Date().toISOString(),
           name: '', contact: '', address: ''
@@ -625,7 +628,7 @@ export default function CustomerDetailPage() {
             </Card>
              <Card>
                 <CardHeader><CardTitle>Finanzen</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                          <div className="space-y-1.5"><Label>Zahlungsbedingungen</Label><Input {...register("zahlungsbedingungen")} className="h-9"/></div>
                          <div className="space-y-1.5"><Label>Währung</Label><Input {...register("waehrung")} className="h-9"/></div>
@@ -635,6 +638,19 @@ export default function CustomerDetailPage() {
                         <div className="space-y-1.5"><Label>Skonto (%)</Label><Input {...register("skontoProzent", { valueAsNumber: true })} type="number" step="0.01" className="h-9"/></div>
                         <div className="space-y-1.5"><Label>Skonto (Tage)</Label><Input {...register("skontoTage", { valueAsNumber: true })} type="number" className="h-9"/></div>
                          <div className="space-y-1.5"><Label>Kreditlimit</Label><Input {...register("kreditlimit", { valueAsNumber: true })} type="number" step="0.01" className="h-9"/></div>
+                    </div>
+                    <Separator className="my-4"/>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 items-start">
+                            <div className="space-y-1.5">
+                                <Label>Mautzuschlag (%)</Label>
+                                <Input {...register("mautzuschlag", { valueAsNumber: true })} type="number" step="0.1" className="h-9" />
+                            </div>
+                            <div className="flex items-center space-x-2 pt-8">
+                                <Checkbox id="dieselfloater" {...register("dieselfloater")} checked={watch("dieselfloater")} onCheckedChange={(checked) => setValue('dieselfloater', !!checked)} />
+                                <Label htmlFor="dieselfloater" className="font-normal text-sm">Dieselfloater wird berechnet</Label>
+                            </div>
+                        </div>
                     </div>
                      <Separator className="my-4"/>
                      <div className="grid grid-cols-2 gap-3">
@@ -654,5 +670,3 @@ export default function CustomerDetailPage() {
     </form>
   );
 }
-
-    

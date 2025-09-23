@@ -26,6 +26,7 @@ export const customerData: Customer[] = [
         skontoProzent: 2,
         skontoTage: 14,
         mautzuschlag: 5,
+        dieselfloater: true,
         bankname: 'Musterbank',
         iban: 'DE89370400440532013000',
         bic: 'COBADEFFXXX',
@@ -61,6 +62,7 @@ export const customerData: Customer[] = [
         skontoProzent: 3,
         skontoTage: 7,
         mautzuschlag: 7.5,
+        dieselfloater: true,
         bankname: 'Baubank',
         iban: 'DE89370400440532013001',
         bic: 'COBADEFFXXX',
@@ -353,4 +355,3 @@ export const tourData: Tour[] = [
 ];
 
     
-

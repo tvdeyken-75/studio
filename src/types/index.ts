@@ -137,6 +137,7 @@ export type Customer = {
     skontoProzent: number;
     skontoTage: number;
     mautzuschlag: number; // Mautzuschlag in %
+    dieselfloater: boolean;
 
     // Bankverbindung
     bankname: string;
