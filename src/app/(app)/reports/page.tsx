@@ -43,14 +43,34 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
     const [isOpen, setIsOpen] = useState(false);
     
     const generateNewTourNumber = () => {
-        const highestNum = existingTours.reduce((max, tour) => {
-            if (tour.tourNumber.startsWith('T-')) {
-                const num = parseInt(tour.tourNumber.replace('T-', ''), 10);
-                return isNaN(num) ? max : Math.max(max, num);
-            }
-            return max;
-        }, 0);
-        return `T-${(highestNum + 1).toString().padStart(5, '0')}`;
+        const defaultStartNumber = '00001';
+        const tourNumberPrefix = 'T-';
+        const padLength = 5;
+
+        // Get saved start number from localStorage
+        const savedStartNumber = typeof window !== 'undefined' ? localStorage.getItem('tourStartNumber') : null;
+
+        let highestNum = 0;
+
+        if (existingTours.length > 0) {
+             highestNum = existingTours.reduce((max, tour) => {
+                if (tour.tourNumber.startsWith(tourNumberPrefix)) {
+                    const num = parseInt(tour.tourNumber.replace(tourNumberPrefix, ''), 10);
+                    return isNaN(num) ? max : Math.max(max, num);
+                }
+                return max;
+            }, 0);
+        }
+
+        let nextNum;
+        if (highestNum > 0) {
+            nextNum = highestNum + 1;
+        } else {
+            // No tours exist, use the saved start number or the default
+            nextNum = parseInt(savedStartNumber || defaultStartNumber, 10);
+        }
+        
+        return `${tourNumberPrefix}${(nextNum).toString().padStart(padLength, '0')}`;
     };
 
     const { register, handleSubmit, control, watch, setValue, reset } = useForm<Tour>({

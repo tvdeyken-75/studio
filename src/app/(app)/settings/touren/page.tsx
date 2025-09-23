@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,23 @@ import { Icons } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const TOUR_START_NUMBER_KEY = 'tourStartNumber';
+
 export default function TourSettingsPage() {
     const [startTourNumber, setStartTourNumber] = useState("00001");
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
+    useEffect(() => {
+        const savedNumber = localStorage.getItem(TOUR_START_NUMBER_KEY);
+        if (savedNumber) {
+            setStartTourNumber(savedNumber);
+        }
+    }, []);
+
     const handleSave = () => {
         setIsSaving(true);
-        // In a real app, save this to a global config (e.g., localStorage or database)
+        localStorage.setItem(TOUR_START_NUMBER_KEY, startTourNumber);
         console.log("Saving new start tour number:", startTourNumber);
         setTimeout(() => {
             setIsSaving(false);
