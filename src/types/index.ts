@@ -247,6 +247,7 @@ export type Dieselpreis = {
 export type InvoiceItem = {
     id: string;
     beschreibung: string;
+    tourNummer?: string;
     menge: number;
     einheit: string;
     einzelpreis: number;
@@ -327,4 +328,5 @@ export type Tour = {
     mautzuschlagPercentage?: number;
     calculatedRevenue?: number;
 };
+
 

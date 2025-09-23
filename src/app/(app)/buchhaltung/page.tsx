@@ -61,7 +61,7 @@ const initialInvoices: Invoice[] = [
         status: 'Offen',
         betrag: 1500.00,
         waehrung: 'EUR',
-        items: [{ id: 'item1', beschreibung: 'Transport Berlin-Hamburg', menge: 1, einheit: 'Stück', einzelpreis: 1200, gesamtpreis: 1200, datum: '2024-07-25' }],
+        items: [{ id: 'item1', beschreibung: 'Transport Berlin-Hamburg', tourNummer: 'T-7006', menge: 1, einheit: 'Stück', einzelpreis: 1200, gesamtpreis: 1200, datum: '2024-07-25' }],
     },
     {
         id: '2',
@@ -73,7 +73,7 @@ const initialInvoices: Invoice[] = [
         status: 'Bezahlt',
         betrag: 2500.50,
         waehrung: 'EUR',
-        items: [{ id: 'item1', beschreibung: 'Schwertransport München-Frankfurt', menge: 1, einheit: 'Stück', einzelpreis: 2500.50, gesamtpreis: 2500.50, datum: '2024-07-26' }],
+        items: [{ id: 'item1', beschreibung: 'Schwertransport München-Frankfurt', tourNummer: 'T-7007', menge: 1, einheit: 'Stück', einzelpreis: 2500.50, gesamtpreis: 2500.50, datum: '2024-07-26' }],
     }
 ];
 
@@ -342,6 +342,7 @@ const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, childre
         newItems.push({
             id: `item-${Date.now()}-tour`,
             beschreibung: `Transport ${tour.pickupLocation} - ${tour.deliveryLocation} (${tour.transportNumber})`,
+            tourNummer: tour.transportNumber,
             menge: 1, einheit: 'Tour', einzelpreis: basePrice, gesamtpreis: basePrice,
             datum: tour.actualDeliveryDate
         });
@@ -582,9 +583,9 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
             const printWindow = window.open('', '', 'height=800,width=800');
             if (printWindow) {
                 printWindow.document.write('<html><head><title>Rechnung</title>');
-                printWindow.document.write('<style>body{font-family:sans-serif; padding: 2rem;} h1,h2,h3,h4{margin:0; padding:0} table{width:100%; border-collapse:collapse; margin-top: 1.5rem; margin-bottom: 1.5rem;} thead tr{background-color: #f2f2f2;} th,td{border-bottom:1px solid #ddd; padding:0.75rem; text-align: left;} .text-right{text-align:right;} .mt-8{margin-top:2rem;} .mb-8{margin-bottom:2rem;} .grid{display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;} .font-bold{font-weight:bold;} .text-muted{color:#666;}</style>');
+                printWindow.document.write('<style>body{font-family: Arial, sans-serif; font-size: 12px; color: #333;} .invoice-box{max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.15);} .header{display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;} .sender-info{font-size: 9px; color: #555; text-align: left;}.logo-placeholder{width: 150px; height: 70px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size:10px; color: #ccc; margin-left: auto;} .invoice-details-right{text-align: right;} .customer-address{margin-bottom: 40px;} .invoice-title{font-size: 24px; font-weight: bold; margin-bottom: 20px;} .salutation{margin-bottom: 20px;} .items-table{width: 100%; border-collapse: collapse; margin-bottom: 40px;} .items-table thead tr{background-color: #eee; border-bottom: 1px solid #ddd;} .items-table th{padding: 8px; text-align: left;} .items-table td{padding: 8px; border-bottom: 1px dotted #ccc;} .totals-table{width: 40%; margin-left: auto; text-align: right;} .totals-table td {padding: 5px 0;} .total-row{font-weight: bold; border-top: 2px solid #333; padding-top: 5px;} .footer{margin-top: 40px; font-size: 10px; color: #555; text-align: left; border-top: 2px solid #333; padding-top: 10px; display:flex; justify-content: space-between;} </style>');
                 printWindow.document.write('</head><body>');
-                printWindow.document.write(printContent.innerHTML);
+                printWindow.document.write(`<div class="invoice-box">${printContent.innerHTML}</div>`);
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
                 printWindow.focus();
@@ -605,52 +606,98 @@ const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction
                     Hier können Sie die Rechnungsdetails einsehen und weitere Aktionen ausführen.
                 </DialogDescription>
             </DialogHeader>
-            <div ref={printRef} className="py-4 max-h-[60vh] overflow-y-auto pr-4 text-sm bg-white text-black p-8 rounded-md border">
-                 <div className="grid grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <h3 className="font-bold text-lg">AmbientTMS</h3>
-                        <p className="text-muted-foreground text-xs">Musterstraße 1<br/>12345 Musterstadt<br/>Deutschland</p>
-                    </div>
-                    <div className="text-right">
-                        <h2 className="font-bold text-2xl text-primary">RECHNUNG</h2>
-                        <div className="text-xs">
-                            <p><strong>Rechnungs-Nr:</strong> {invoice.rechnungsnummer}</p>
-                            <p><strong>Datum:</strong> {formatDate(invoice.rechnungsdatum)}</p>
-                        </div>
-                    </div>
-                </div>
-                 <div className="mb-8 p-4 bg-muted/20 rounded-md text-xs">
-                    <p className="font-bold text-primary">Rechnung an:</p>
-                    <p className="font-bold">{invoice.kundenName}</p>
-                    <p>{customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}</p>
-                    <p>{customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}</p>
+            <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm bg-white text-black p-8 rounded-md border font-sans">
+                 <div className="header">
+                     <div className="sender-info">
+                         Elias Otto Spedition | Olvengraben 25 | 47608 Geldern
+                     </div>
+                     <div className="text-right">
+                         <div className="logo-placeholder">OTTO SPEDITION LOGO</div>
+                     </div>
                  </div>
-                 <Table className="text-xs">
-                     <TableHeader>
-                        <TableRow className="bg-muted/30">
-                            <TableHead className="w-[100px]">Datum</TableHead>
-                            <TableHead>Beschreibung</TableHead>
-                            <TableHead className="text-right">Betrag</TableHead>
-                        </TableRow>
-                     </TableHeader>
-                     <TableBody>
+
+                 <div className="customer-address">
+                    <b>{invoice.kundenName}</b><br/>
+                    {customerData.find(c => c.id === invoice.kundenId)?.strasse} {customerData.find(c => c.id === invoice.kundenId)?.hausnummer}<br/>
+                    {customerData.find(c => c.id === invoice.kundenId)?.plz} {customerData.find(c => c.id === invoice.kundenId)?.ort}<br/>
+                    Deutschland
+                 </div>
+
+                 <div className="header" style={{marginBottom: "40px"}}>
+                     <div className="invoice-title">Rechnung:</div>
+                     <div className="invoice-details-right">
+                        <table>
+                            <tbody>
+                                <tr><td className="pr-4"><b>Rechnung #:</b></td><td>{invoice.rechnungsnummer}</td></tr>
+                                <tr><td className="pr-4"><b>Datum:</b></td><td>{formatDate(invoice.rechnungsdatum)}</td></tr>
+                                <tr><td className="pr-4"><b>Zustellung:</b></td><td>per E-Mail</td></tr>
+                            </tbody>
+                        </table>
+                     </div>
+                 </div>
+
+                 <div className="salutation">
+                     <b>Sehr geehrte Damen und Herren,</b><br/>
+                     anbei erhalten Sie unsere Rechnung für die erbrachten Leistungen.
+                 </div>
+
+                 <table className="items-table">
+                     <thead>
+                        <tr>
+                            <th>Tour</th>
+                            <th>Datum</th>
+                            <th>Referenz / Beschreibung</th>
+                            <th className="text-right">Preis</th>
+                        </tr>
+                     </thead>
+                     <tbody>
                         {invoice.items.map(item => (
-                            <TableRow key={item.id} className="border-b">
-                                <TableCell>{item.datum ? formatDate(item.datum) : 'N/A'}</TableCell>
-                                <TableCell>{item.beschreibung}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(item.gesamtpreis)}</TableCell>
-                            </TableRow>
+                            <tr key={item.id}>
+                                <td>{item.tourNummer || 'N/A'}</td>
+                                <td>{item.datum ? formatDate(item.datum) : 'N/A'}</td>
+                                <td>{item.beschreibung}</td>
+                                <td className="text-right font-mono">{formatCurrency(item.gesamtpreis)}</td>
+                            </tr>
                         ))}
-                     </TableBody>
-                 </Table>
-                 <div className="flex justify-end mt-4">
-                    <div className="w-1/2 md:w-1/3 space-y-2 text-xs">
-                        <div className="flex justify-between"><span>Zwischensumme</span><span className="font-mono">{formatCurrency(total)}</span></div>
-                        <div className="flex justify-between"><span>MwSt. (19%)</span><span className="font-mono">{formatCurrency(vat)}</span></div>
-                        <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>Gesamtbetrag</span><span className="font-mono">{formatCurrency(gross)}</span></div>
+                         {Array.from({ length: 10 - invoice.items.length }).map((_, i) => (
+                          <tr key={`empty-${i}`}><td colSpan={4} style={{borderBottom: '1px dotted #ccc'}}>&nbsp;</td></tr>
+                        ))}
+                     </tbody>
+                 </table>
+
+                <table className="totals-table">
+                    <tbody>
+                        <tr><td>Zwischensumme</td><td>{formatCurrency(total)}</td></tr>
+                        <tr><td>zzgl. MwSt.</td><td>USt. 19% &nbsp;&nbsp; {formatCurrency(vat)}</td></tr>
+                        <tr className="total-row"><td>Gesamtsumme</td><td>{formatCurrency(gross)}</td></tr>
+                    </tbody>
+                </table>
+                
+                 <div style={{marginTop: "40px", fontSize: "11px"}}>
+                    <p>Zahlungsbedingungen: Zahlen ohne Abzüge nach Rechnungseingang</p>
+                    <p>Lieferung nach allgemeinen deutschen Spediteurbedingungen(ADSp).</p>
+                    <br/>
+                    <p>Mit freundlichen Grüßen</p>
+                    <br/>
+                    <p>Elias Otto Spedition</p>
+                 </div>
+
+                 <div className="footer">
+                    <div>
+                        Elias Otto Spedition<br/>
+                        Olvengraben 25<br/>
+                        47608 Geldern<br/>
+                        Telefon: +49(0)2831 9779947<br/>
+                        E-Mail: info@ottospedition.de
+                    </div>
+                     <div>
+                        Volksbank an der Niers<br/>
+                        IBAN: DE 41 320 613 840 111 010 021<br/>
+                        BIC: GENODED1GDL<br/>
+                        USt-ID Nr.: DE318824058<br/>
+                        Steuer-Nr.: 113/5126/2318
                     </div>
                  </div>
-                 <p className="mt-8 text-xs text-muted-foreground">Fällig am: {formatDate(invoice.faelligkeitsdatum)}. Wir danken für Ihren Auftrag.</p>
             </div>
             <DialogFooter className="justify-start pt-4 border-t">
                  <Button onClick={handlePrint}><FileDown className="mr-2 h-4 w-4" /> Als PDF drucken/speichern</Button>
@@ -880,3 +927,4 @@ export default function BuchhaltungPage() {
 }
 
     
+
