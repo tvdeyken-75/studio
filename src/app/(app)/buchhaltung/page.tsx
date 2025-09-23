@@ -387,7 +387,7 @@ const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, childre
         view: 'Details der Rechnung.'
     };
     
-    const statusOptions: Invoice['status'][] = ['Entwurf', 'Gesendet', 'Offen', 'Bezahlt', 'Storniert', 'Überfällig'];
+    const statusOptions: Invoice['status'][] = ['Entwurf', 'Gesendet', 'Offen', 'Bezahlt', 'Überfällig', 'Storniert'];
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>

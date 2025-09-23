@@ -327,3 +327,4 @@ export type Tour = {
     mautzuschlagPercentage?: number;
     calculatedRevenue?: number;
 };
+
