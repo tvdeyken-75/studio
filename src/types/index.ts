@@ -301,6 +301,7 @@ export type TourStop = {
     actualDateTime?: string;
     goodsDescription: string;
     status: 'Planned' | 'Confirmed' | 'Completed' | 'Exception';
+    kilometers?: number;
 };
 
 export type Tour = {
@@ -314,8 +315,14 @@ export type Tour = {
     driverId?: string;
     stops: TourStop[];
     status: 'Entwurf' | 'Geplant' | 'Zugewiesen' | 'Unterwegs' | 'Abgeschlossen' | 'Geschlossen' | 'Storniert';
-    // Financials - placeholders for now
+    // Financials
     totalCosts?: number;
     totalRevenue?: number;
     profitability?: number;
+    // Calculation specific
+    totalKilometers?: number;
+    rohertrag?: number;
+    dieselfloaterPercentage?: number;
+    mautzuschlagPercentage?: number;
+    calculatedRevenue?: number;
 };

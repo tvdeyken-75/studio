@@ -2,9 +2,9 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Tour, TourStop, Address } from '@/types';
-import { tourData, customerData, fleetData, trailerData, addressData } from '@/lib/data';
+import { tourData, customerData, fleetData, trailerData, addressData, dieselpreiseData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,6 +24,7 @@ import { de } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { Separator } from '@/components/ui/separator';
 
 
 const KpiCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description: string }) => (
@@ -47,7 +48,6 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
         const tourNumberPrefix = 'T-';
         const padLength = 5;
 
-        // Get saved start number from localStorage
         const savedStartNumber = typeof window !== 'undefined' ? localStorage.getItem('tourStartNumber') : null;
 
         let highestNum = 0;
@@ -66,7 +66,6 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
         if (highestNum > 0) {
             nextNum = highestNum + 1;
         } else {
-            // No tours exist, use the saved start number or the default
             nextNum = parseInt(savedStartNumber || defaultStartNumber, 10);
         }
         
@@ -83,7 +82,7 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
         }
     });
 
-    const { fields, append, remove, update } = useFieldArray({
+    const { fields, append, remove } = useFieldArray({
         control,
         name: "stops"
     });
@@ -118,7 +117,8 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
             location: '',
             plannedDateTime: new Date().toISOString(),
             goodsDescription: '',
-            status: 'Planned'
+            status: 'Planned',
+            kilometers: 0,
         });
     };
 
@@ -255,13 +255,19 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                                                 <Input type="datetime-local" {...register(`stops.${index}.plannedDateTime`)} className="h-9" />
                                             </div>
                                          </div>
-                                         <div className="space-y-1.5">
-                                            <Label>Standortdetails (z.B. Rampe)</Label>
-                                            <Input {...register(`stops.${index}.location`)} placeholder="z.B. Rampe 5, Lagerhalle B" className="h-9" />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1.5">
+                                                <Label>Standortdetails (z.B. Rampe)</Label>
+                                                <Input {...register(`stops.${index}.location`)} placeholder="z.B. Rampe 5" className="h-9" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label>Kilometer</Label>
+                                                <Input type="number" {...register(`stops.${index}.kilometers`, { valueAsNumber: true })} className="h-9" />
+                                            </div>
                                         </div>
                                          <div className="space-y-1.5">
                                             <Label>Frachtbeschreibung</Label>
-                                            <Textarea {...register(`stops.${index}.goodsDescription`)} placeholder="z.B. 24t, 33 Paletten, Lebensmittel" rows={2} />
+                                            <Textarea {...register(`stops.${index}.goodsDescription`)} placeholder="z.B. 24t, 33 Paletten" rows={2} />
                                         </div>
                                     </div>
                                 ))}
@@ -282,6 +288,132 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
     );
 };
 
+const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour: Tour) => void; }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [rohertrag, setRohertrag] = useState(tour.rohertrag || 0);
+    const [dieselfloater, setDieselfloater] = useState(tour.dieselfloaterPercentage || 0);
+    const [mautzuschlag, setMautzuschlag] = useState(tour.mautzuschlagPercentage || 0);
+
+    const printRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const customer = customerData.find(c => c.id === tour.customerId);
+        setMautzuschlag(customer?.mautzuschlag || 0);
+        
+        const latestDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
+        setDieselfloater(latestDieselpreis?.zuschlag || 0);
+
+        setRohertrag(tour.rohertrag || 0);
+    }, [tour]);
+    
+    const totalKilometers = useMemo(() => {
+        return tour.stops.reduce((sum, stop) => sum + (stop.kilometers || 0), 0);
+    }, [tour.stops]);
+
+    const dieselfloaterAmount = useMemo(() => rohertrag * (dieselfloater / 100), [rohertrag, dieselfloater]);
+    const mautzuschlagAmount = useMemo(() => rohertrag * (mautzuschlag / 100), [rohertrag, mautzuschlag]);
+    const zwischensumme = useMemo(() => rohertrag + dieselfloaterAmount + mautzuschlagAmount, [rohertrag, dieselfloaterAmount, mautzuschlagAmount]);
+    const mwstAmount = useMemo(() => zwischensumme * 0.19, [zwischensumme]);
+    const bruttoAmount = useMemo(() => zwischensumme + mwstAmount, [zwischensumme, mwstAmount]);
+
+    const handleSave = () => {
+        const updatedTour: Tour = {
+            ...tour,
+            rohertrag,
+            dieselfloaterPercentage: dieselfloater,
+            mautzuschlagPercentage: mautzuschlag,
+            totalKilometers,
+            calculatedRevenue: zwischensumme,
+            profitability: zwischensumme - (tour.totalCosts || 0) // Placeholder for costs
+        };
+        onSave(updatedTour);
+        setIsOpen(false);
+    };
+
+    const handlePrint = () => {
+       const printContent = printRef.current;
+       if (printContent) {
+           const printWindow = window.open('', '', 'height=600,width=800');
+           if (printWindow) {
+               printWindow.document.write('<html><head><title>Tour Kalkulation</title>');
+               printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } td, th { border: 1px solid #ddd; padding: 8px; } .text-right { text-align: right; } .font-bold { font-weight: bold; }</style>');
+               printWindow.document.write('</head><body>');
+               printWindow.document.write(printContent.innerHTML);
+               printWindow.document.write('</body></html>');
+               printWindow.document.close();
+               printWindow.focus();
+               printWindow.print();
+           }
+       }
+    };
+    
+    const formatCurrency = (value?: number) => {
+        if (value === undefined) return 'N/A';
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Kalkulation &amp; Report</DropdownMenuItem>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Kalkulation für Tour {tour.tourNumber}</DialogTitle>
+                    <DialogDescription>Berechnen Sie den Ertrag für diese Tour.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <h4 className="font-medium">Eingabewerte</h4>
+                             <div className="space-y-1.5">
+                                <Label>Rohertrag (Vereinbarter Betrag)</Label>
+                                <Input type="number" value={rohertrag} onChange={(e) => setRohertrag(Number(e.target.value))} className="h-9"/>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Dieselfloater (%)</Label>
+                                <Input type="number" value={dieselfloater} onChange={(e) => setDieselfloater(Number(e.target.value))} className="h-9"/>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Mautzuschlag (%)</Label>
+                                <Input type="number" value={mautzuschlag} onChange={(e) => setMautzuschlag(Number(e.target.value))} className="h-9"/>
+                            </div>
+                             <div className="space-y-1.5">
+                                <Label>Gesamtkilometer</Label>
+                                <Input type="number" value={totalKilometers} readOnly disabled className="h-9"/>
+                            </div>
+                        </div>
+
+                        <div ref={printRef} className="space-y-4 p-4 border rounded-md bg-muted/50">
+                             <h4 className="font-medium text-center">Berechnung</h4>
+                             <Separator />
+                             <table className="w-full text-sm">
+                                <tbody>
+                                    <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(rohertrag)}</td></tr>
+                                    <tr><td>+ Dieselfloater ({dieselfloater.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
+                                    <tr><td>+ Mautzuschlag ({mautzuschlag.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
+                                    <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                    <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
+                                     <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
+                                    <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                    <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
+                                </tbody>
+                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button type="button" variant="secondary" onClick={handlePrint}>Drucken</Button>
+                    <div className="flex-grow"></div>
+                    <DialogClose asChild><Button type="button" variant="ghost">Abbrechen</Button></DialogClose>
+                    <Button type="button" onClick={handleSave}>Berechnung speichern</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 
 export default function TransportReportPage() {
     const [tours, setTours] = useState<Tour[]>(tourData);
@@ -291,6 +423,10 @@ export default function TransportReportPage() {
 
     const addTour = (tour: Tour) => {
         setTours(prev => [tour, ...prev]);
+    }
+
+    const updateTour = (updatedTour: Tour) => {
+        setTours(prev => prev.map(t => t.id === updatedTour.id ? updatedTour : t));
     }
 
     const [columnVisibility, setColumnVisibility] = useState({
@@ -366,7 +502,7 @@ export default function TransportReportPage() {
     const kpis = useMemo(() => {
         const totalTours = filteredTours.length;
         const totalStops = filteredTours.reduce((sum, tour) => sum + tour.stops.length, 0);
-        const totalRevenue = filteredTours.reduce((sum, tour) => sum + (tour.totalRevenue || 0), 0);
+        const totalRevenue = filteredTours.reduce((sum, tour) => sum + (tour.calculatedRevenue || tour.totalRevenue || 0), 0);
         const totalProfit = filteredTours.reduce((sum, tour) => sum + (tour.profitability || 0), 0);
         
         return { totalTours, totalStops, totalRevenue, totalProfit };
@@ -525,6 +661,8 @@ export default function TransportReportPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem>Details anzeigen</DropdownMenuItem>
                                                     <DropdownMenuItem>Tour bearbeiten</DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <CalculationDialog tour={tour} onSave={updateTour} />
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -548,3 +686,4 @@ export default function TransportReportPage() {
     
 
     
+
