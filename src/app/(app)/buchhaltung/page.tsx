@@ -96,17 +96,19 @@ const columnLabels: Record<ColumnKeys, string> = {
 const statusVariant: Record<Invoice['status'], "default" | "destructive" | "secondary" | "outline"> = {
     'Entwurf': 'secondary',
     'Offen': 'default',
+    'Gesendet': 'default',
     'Bezahlt': 'outline',
     'Storniert': 'destructive',
     'Überfällig': 'destructive'
 };
 
 const statusColor: Record<Invoice['status'], string> = {
-    'Entwurf': '',
-    'Offen': 'bg-blue-600',
+    'Entwurf': 'bg-gray-400',
+    'Offen': 'bg-orange-500',
+    'Gesendet': 'bg-blue-500',
     'Bezahlt': 'bg-green-600',
-    'Storniert': '',
-    'Überfällig': 'bg-orange-600'
+    'Storniert': 'bg-red-500',
+    'Überfällig': 'bg-yellow-500',
 }
 
 const formatDate = (dateString: string) => {
@@ -384,6 +386,8 @@ const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, childre
         edit: 'Bearbeiten Sie die Rechnungsdetails.',
         view: 'Details der Rechnung.'
     };
+    
+    const statusOptions: Invoice['status'][] = ['Entwurf', 'Gesendet', 'Offen', 'Bezahlt', 'Storniert', 'Überfällig'];
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -396,8 +400,8 @@ const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, childre
                     </DialogHeader>
 
                     <div className="py-4 space-y-4 max-h-[65vh] overflow-y-auto pr-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-1.5">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="space-y-1.5 md:col-span-2">
                                 <Label>Kunde</Label>
                                 <Controller
                                     name="kundenId"
@@ -417,6 +421,27 @@ const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, childre
                              <div className="space-y-1.5">
                                 <Label>Fälligkeitsdatum</Label>
                                 <Input type="date" {...register('faelligkeitsdatum')} className="h-9" readOnly={isViewMode}/>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="space-y-1.5 md:col-span-3" />
+                            <div className="space-y-1.5">
+                                <Label>Status</Label>
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={isViewMode}>
+                                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                {statusOptions.map(status => (
+                                                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </div>
                         </div>
 

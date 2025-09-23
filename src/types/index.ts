@@ -261,7 +261,7 @@ export type Invoice = {
     kundenName: string;
     rechnungsdatum: string;
     faelligkeitsdatum: string;
-    status: 'Entwurf' | 'Offen' | 'Bezahlt' | 'Überfällig' | 'Storniert';
+    status: 'Entwurf' | 'Gesendet' | 'Offen' | 'Bezahlt' | 'Überfällig' | 'Storniert';
     betrag: number;
     waehrung: 'EUR';
     items: InvoiceItem[];
