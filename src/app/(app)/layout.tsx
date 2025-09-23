@@ -25,7 +25,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       '/': 'Dashboard',
       '/dashboard': 'Dashboard',
       '/route-planning': 'Routenplanung',
-      '/address-insights': 'Standort-Analyse',
       '/fleet': 'Fuhrpark',
       '/customers': 'Beziehungsmanagement',
       '/auftraege': 'Aufträge',

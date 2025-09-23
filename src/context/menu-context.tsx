@@ -18,7 +18,6 @@ interface MenuContextType {
 const initialNavItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Icons.dashboard, href: '/' },
   { id: 'route-planning', label: 'Routenplanung', icon: Icons.route, href: '/route-planning' },
-  { id: 'address-insights', label: 'Standort-Analyse', icon: Icons.address, href: '/address-insights' },
   { id: 'fleet', label: 'Fuhrpark', icon: Icons.fleet, href: '/fleet' },
   { id: 'customers', label: 'Beziehungsmanagement', icon: Icons.customers, href: '/customers' },
   { id: 'auftraege', label: 'Aufträge', icon: Icons.orders, href: '/auftraege' },
