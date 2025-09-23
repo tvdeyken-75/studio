@@ -3,7 +3,8 @@
 
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle } from '@/types';
+
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -198,4 +199,24 @@ export const kostenstellenData: Kostenstelle[] = [
     { id: 'ks-2', nummer: 'F-102', name: 'LKW H-LKW-456', beschreibung: 'Kosten für Fahrzeug H-LKW-456', typ: 'Fahrzeug', verantwortlicher: 'Erika Musterfrau' },
     { id: 'ks-3', nummer: 'IT-001', name: 'IT Abteilung', beschreibung: 'Allgemeine IT-Kosten', typ: 'Abteilung', verantwortlicher: 'Admin' },
     { id: 'ks-4', nummer: 'PROJ-Alpha', name: 'Projekt Alpha', beschreibung: 'Kosten für das Projekt Alpha', typ: 'Projekt' },
+];
+
+
+export const documentData: Document[] = [
+    { 
+        id: 'doc-1', name: 'Frachtbrief_T-2024-001.pdf', type: 'Lieferschein', date: '2024-07-20', fileUrl: '#',
+        zuordnung: { kategorie: 'Transportauftrag', id: '1', name: 'T-2024-001 (Musterfirma GmbH)' }
+    },
+    { 
+        id: 'doc-2', name: 'Rechnung_RN-000001-2024.pdf', type: 'Rechnung', date: '2024-07-28', fileUrl: '#',
+        zuordnung: { kategorie: 'Buchhaltung', id: '1', name: 'RN-000001-2024' }
+    },
+    { 
+        id: 'doc-3', name: 'TÜV_Bericht_B-LKW-123.pdf', type: 'TÜV', date: '2023-08-15', fileUrl: '#',
+        zuordnung: { kategorie: 'Fahrzeug', id: 'AT-001', name: 'B-LKW-123' }
+    },
+    { 
+        id: 'doc-4', name: 'Rahmenvertrag_Musterfirma.pdf', type: 'Vertrag', date: '2022-01-01', fileUrl: '#',
+        zuordnung: { kategorie: 'Kunde', id: '1', name: 'Musterfirma GmbH' }
+    },
 ];

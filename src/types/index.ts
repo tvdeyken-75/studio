@@ -212,11 +212,16 @@ export type Transport = {
 export type Document = {
   id: string;
   name: string;
-  type: 'TÜV' | 'SP' | 'Reparatur' | 'Schaden' | 'Sonstiges';
+  type: 'TÜV' | 'SP' | 'Reparatur' | 'Schaden' | 'Sonstiges' | 'Rechnung' | 'Lieferschein' | 'Wartung' | 'Vertrag' | 'Foto';
   date: string;
   fileUrl: string;
   notes?: string;
-}
+  zuordnung: {
+    kategorie: 'Kunde' | 'Fahrzeug' | 'Anhänger' | 'Transportauftrag' | 'Route' | 'Buchhaltung';
+    id: string; // The ID of the associated entity
+    name: string; // A display name for the association
+  }
+};
 
 export type Report = {
     id: string;
