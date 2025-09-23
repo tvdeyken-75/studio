@@ -49,7 +49,7 @@ const AddTemplateDialog = ({
     if (isEditMode && templateToEdit) {
       return templateToEdit;
     }
-    const pickupStop: Omit<TourStop, 'actualDateTime'> = {
+    const pickupStop: Omit<TourStop, 'actualDateTime' | 'status'> = {
       id: `stop-pickup-${Date.now()}`,
       stopSequence: 1,
       type: 'Pickup',
@@ -58,10 +58,9 @@ const AddTemplateDialog = ({
       location: '',
       plannedDateTime: '',
       goodsDescription: 'Sonstiges',
-      status: 'Planned',
       kilometers: 0,
     };
-     const deliveryStop: Omit<TourStop, 'actualDateTime'> = {
+     const deliveryStop: Omit<TourStop, 'actualDateTime' | 'status'> = {
       id: `stop-delivery-${Date.now()}`,
       stopSequence: 2,
       type: 'Delivery',
@@ -70,7 +69,6 @@ const AddTemplateDialog = ({
       location: '',
       plannedDateTime: '',
       goodsDescription: 'Sonstiges',
-      status: 'Planned',
       kilometers: 0,
     };
     return {
@@ -221,6 +219,7 @@ const AddTemplateDialog = ({
 
 export default function TripTemplatesPage() {
   const [templates, setTemplates] = useState<TripTemplate[]>(tripTemplateData);
+  const { toast } = useToast();
 
   const addOrUpdateTemplate = (template: TripTemplate) => {
     // Also update the goods description for the delivery stop
@@ -247,6 +246,29 @@ export default function TripTemplatesPage() {
     setTemplates(prev => prev.filter(t => t.id !== templateId));
   }
 
+  const createReverseTrip = (template: TripTemplate) => {
+    if (!template.stops || template.stops.length < 2) return;
+
+    const newName = template.name.includes('->') 
+        ? template.name.split(' -> ').reverse().join(' -> ')
+        : `Reverse: ${template.name}`;
+    
+    const reverseTemplate: TripTemplate = {
+      id: `template-reverse-${Date.now()}`,
+      name: newName,
+      description: `Rückfahrt für "${template.name}"`,
+      stops: [
+        { ...template.stops[1], type: 'Pickup', stopSequence: 1, goodsDescription: 'Leergut' },
+        { ...template.stops[0], type: 'Delivery', stopSequence: 2, goodsDescription: 'Leergut' },
+      ],
+    };
+    addOrUpdateTemplate(reverseTemplate);
+    toast({
+      title: "Reverse-Trip erstellt",
+      description: `Die Vorlage "${reverseTemplate.name}" wurde angelegt.`,
+    });
+  }
+
   return (
     <div>
         <div className="flex justify-between items-center mb-6">
@@ -263,40 +285,51 @@ export default function TripTemplatesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map(template => (
-                <Card key={template.id} className="flex flex-col">
-                    <CardHeader>
-                        <CardTitle>{template.name}</CardTitle>
-                        <CardDescription>{template.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <div className="text-sm space-y-2">
-                             <div className="flex items-start gap-2">
-                                <span className="text-muted-foreground font-semibold w-20">Von:</span>
-                                <span className="font-medium">{template.stops[0]?.addressName || 'N/A'}</span>
+            {templates.map(template => {
+                const hasReverse = templates.some(t => 
+                    t.id !== template.id &&
+                    t.stops[0]?.addressId === template.stops[1]?.addressId &&
+                    t.stops[1]?.addressId === template.stops[0]?.addressId
+                );
+
+                return (
+                    <Card key={template.id} className="flex flex-col">
+                        <CardHeader>
+                            <CardTitle>{template.name}</CardTitle>
+                            <CardDescription>{template.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                            <div className="text-sm space-y-2">
+                                <div className="flex items-start gap-2">
+                                    <span className="text-muted-foreground font-semibold w-20">Von:</span>
+                                    <span className="font-medium">{template.stops[0]?.addressName || 'N/A'}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <span className="text-muted-foreground font-semibold w-20">Nach:</span>
+                                    <span className="font-medium">{template.stops[1]?.addressName || 'N/A'}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <span className="text-muted-foreground font-semibold w-20">Distanz:</span>
+                                    <span className="font-medium">{template.stops[1]?.kilometers || '0'} km</span>
+                                </div>
+                                <div className="flex items-start gap-2 pt-2">
+                                    <span className="text-muted-foreground font-semibold w-20">Fracht:</span>
+                                    <span className="text-muted-foreground text-xs">{template.stops[0]?.goodsDescription || 'N/A'}</span>
+                                </div>
                             </div>
-                            <div className="flex items-start gap-2">
-                                <span className="text-muted-foreground font-semibold w-20">Nach:</span>
-                                <span className="font-medium">{template.stops[1]?.addressName || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <span className="text-muted-foreground font-semibold w-20">Distanz:</span>
-                                <span className="font-medium">{template.stops[1]?.kilometers || '0'} km</span>
-                            </div>
-                            <div className="flex items-start gap-2 pt-2">
-                                <span className="text-muted-foreground font-semibold w-20">Fracht:</span>
-                                <span className="text-muted-foreground text-xs">{template.stops[0]?.goodsDescription || 'N/A'}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end gap-2">
-                         <AddTemplateDialog onAdd={addOrUpdateTemplate} templateToEdit={template}>
-                            <Button variant="ghost" size="sm">Bearbeiten</Button>
-                         </AddTemplateDialog>
-                         <Button variant="outline" size="sm" onClick={() => deleteTemplate(template.id)}>Löschen</Button>
-                    </CardFooter>
-                </Card>
-            ))}
+                        </CardContent>
+                        <CardFooter className="flex justify-end gap-2 flex-wrap">
+                            {!hasReverse && (
+                               <Button variant="outline" size="sm" onClick={() => createReverseTrip(template)}>Reverse-Trip erstellen</Button>
+                            )}
+                             <AddTemplateDialog onAdd={addOrUpdateTemplate} templateToEdit={template}>
+                                <Button variant="ghost" size="sm">Bearbeiten</Button>
+                             </AddTemplateDialog>
+                             <Button variant="outline" size="sm" onClick={() => deleteTemplate(template.id)}>Löschen</Button>
+                        </CardFooter>
+                    </Card>
+                )
+            })}
         </div>
         
         {templates.length === 0 && (
