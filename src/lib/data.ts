@@ -245,7 +245,7 @@ export const tourData: Tour[] = [
         vehicleId: 'AT-001',
         trailerId: 'AN-001',
         driverId: 'max-mustermann',
-        status: 'Planned',
+        status: 'Geplant',
         stops: [
             { id: 'stop-1-1', stopSequence: 1, type: 'Pickup', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Lager Berlin', plannedDateTime: '2024-08-01T09:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' },
             { id: 'stop-1-2', stopSequence: 2, type: 'Delivery', addressId: '2', addressName: 'Lager München', location: 'Zentrallager Hamburg', plannedDateTime: '2024-08-01T15:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' }
@@ -261,7 +261,7 @@ export const tourData: Tour[] = [
         vehicleId: 'AT-002',
         trailerId: 'AN-002',
         driverId: 'erika-musterfrau',
-        status: 'Draft',
+        status: 'Entwurf',
         stops: [],
     }
 ];

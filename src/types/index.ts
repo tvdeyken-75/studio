@@ -1,4 +1,5 @@
 
+
 export type User = {
   id: string;
   email: string;
@@ -312,11 +313,9 @@ export type Tour = {
     trailerId?: string;
     driverId?: string;
     stops: TourStop[];
-    status: 'Draft' | 'Planned' | 'Assigned' | 'Ongoing' | 'Finished' | 'Closed';
+    status: 'Entwurf' | 'Geplant' | 'Zugewiesen' | 'Unterwegs' | 'Abgeschlossen' | 'Geschlossen' | 'Storniert';
     // Financials - placeholders for now
     totalCosts?: number;
     totalRevenue?: number;
     profitability?: number;
 };
-
-    

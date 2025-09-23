@@ -19,7 +19,7 @@ import { SlidersHorizontal, FileDown, Trash2 } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval, getISOWeek, parseISO } from 'date-fns';
+import { format, isWithinInterval, getISOWeek, parseISO, addWeeks, subWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
             id: `tour-${Date.now()}`,
             tourNumber: generateNewTourNumber(),
             tourDate: format(new Date(), 'yyyy-MM-dd'),
-            status: 'Draft',
+            status: 'Entwurf',
             stops: []
         }
     });
@@ -81,7 +81,7 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                 id: `tour-${Date.now()}`,
                 tourNumber: generateNewTourNumber(),
                 tourDate: format(new Date(), 'yyyy-MM-dd'),
-                status: 'Draft',
+                status: 'Entwurf',
                 stops: []
             });
         }
@@ -181,8 +181,8 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="Draft">Draft</SelectItem>
-                                                    <SelectItem value="Planned">Planned</SelectItem>
+                                                    <SelectItem value="Entwurf">Entwurf</SelectItem>
+                                                    <SelectItem value="Geplant">Geplant</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         )}
@@ -266,7 +266,7 @@ const AddTourDialog = ({ onAddTour, existingTours }: { onAddTour: (tour: Tour) =
 export default function TransportReportPage() {
     const [tours, setTours] = useState<Tour[]>(tourData);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedWeek, setSelectedWeek] = useState<string>('all');
+    const [selectedWeek, setSelectedWeek] = useState<string>('this-week');
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
     const addTour = (tour: Tour) => {
@@ -301,28 +301,32 @@ export default function TransportReportPage() {
         setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
     }
     
-    const weekOptions = useMemo(() => {
-        const weeks = new Set<number>();
-        tours.forEach(tour => {
-            weeks.add(getISOWeek(parseISO(tour.tourDate)));
-        });
-        return Array.from(weeks).sort((a, b) => a - b);
-    }, [tours]);
-    
-    const statusOptions = useMemo(() => {
-        const statuses = new Set<Tour['status']>();
-        tours.forEach(tour => {
-            statuses.add(tour.status);
-        });
-        return Array.from(statuses);
-    }, [tours]);
+    const statusOptions: Tour['status'][] = ['Entwurf', 'Geplant', 'Zugewiesen', 'Unterwegs', 'Abgeschlossen', 'Geschlossen', 'Storniert'];
 
 
     const filteredTours = useMemo(() => {
         let filtered = tours;
+        const now = new Date();
 
         if (selectedWeek !== 'all') {
-            filtered = filtered.filter(t => getISOWeek(parseISO(t.tourDate)) === parseInt(selectedWeek));
+            let weekStart, weekEnd;
+            if (selectedWeek === 'this-week') {
+                weekStart = startOfWeek(now, { weekStartsOn: 1 });
+                weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+            } else if (selectedWeek === 'last-week') {
+                 weekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+                 weekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+            } else if (selectedWeek === 'next-week') {
+                 weekStart = startOfWeek(addWeeks(now, 1), { weekStartsOn: 1 });
+                 weekEnd = endOfWeek(addWeeks(now, 1), { weekStartsOn: 1 });
+            }
+
+            if (weekStart && weekEnd) {
+                 filtered = filtered.filter(t => {
+                    const tourDate = parseISO(t.tourDate);
+                    return isWithinInterval(tourDate, { start: weekStart, end: weekEnd });
+                });
+            }
         }
         
         if (selectedStatus !== 'all') {
@@ -362,21 +366,23 @@ export default function TransportReportPage() {
     }
     
     const statusVariant: Record<Tour['status'], "default" | "destructive" | "secondary" | "outline"> = {
-        'Draft': 'secondary',
-        'Planned': 'default',
-        'Assigned': 'default',
-        'Ongoing': 'default',
-        'Finished': 'outline',
-        'Closed': 'outline'
+        'Entwurf': 'secondary',
+        'Geplant': 'default',
+        'Zugewiesen': 'default',
+        'Unterwegs': 'default',
+        'Abgeschlossen': 'outline',
+        'Geschlossen': 'outline',
+        'Storniert': 'destructive',
     };
     
     const statusColor: Record<Tour['status'], string> = {
-        'Draft': 'bg-gray-400',
-        'Planned': 'bg-blue-500',
-        'Assigned': 'bg-yellow-500',
-        'Ongoing': 'bg-purple-500',
-        'Finished': 'bg-green-600',
-        'Closed': 'bg-gray-700'
+        'Entwurf': 'bg-gray-400',
+        'Geplant': 'bg-blue-500',
+        'Zugewiesen': 'bg-yellow-500',
+        'Unterwegs': 'bg-purple-500',
+        'Abgeschlossen': 'bg-green-600',
+        'Geschlossen': 'bg-gray-700',
+        'Storniert': 'bg-red-600',
     }
 
     return (
@@ -411,19 +417,19 @@ export default function TransportReportPage() {
                     />
                     <div className="flex items-center gap-2">
                          <Select value={selectedWeek} onValueChange={setSelectedWeek}>
-                            <SelectTrigger className="h-9 w-40">
+                            <SelectTrigger className="h-9 w-[180px]">
                                 <SelectValue placeholder="Woche filtern..." />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Alle Wochen</SelectItem>
-                                {weekOptions.map(week => (
-                                    <SelectItem key={week} value={String(week)}>KW {week}</SelectItem>
-                                ))}
+                                <SelectItem value="last-week">Letzte Woche</SelectItem>
+                                <SelectItem value="this-week">Diese Woche</SelectItem>
+                                <SelectItem value="next-week">Nächste Woche</SelectItem>
                             </SelectContent>
                         </Select>
 
                         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                            <SelectTrigger className="h-9 w-40">
+                            <SelectTrigger className="h-9 w-[180px]">
                                 <SelectValue placeholder="Status filtern..." />
                             </SelectTrigger>
                             <SelectContent>
