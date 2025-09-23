@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { SlidersHorizontal, FileDown, Trash2 } from "lucide-react";
+import { SlidersHorizontal, FileDown, Trash2, Send, CodeXml } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import {
@@ -549,7 +549,7 @@ const CreateInvoiceDialog = ({ onSave, lastInvoiceNumber, invoiceToEdit, childre
     )
 }
 
-const InvoicePrintDialog = ({ invoice }: { invoice: Invoice }) => {
+const InvoiceDetailDialog = ({ invoice, onAction }: { invoice: Invoice, onAction: (action: string) => void }) => {
     const printRef = useRef<HTMLDivElement>(null);
     const handlePrint = () => {
         const printContent = printRef.current;
@@ -575,9 +575,12 @@ const InvoicePrintDialog = ({ invoice }: { invoice: Invoice }) => {
     return (
         <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
-                <DialogTitle>Druckvorschau: Rechnung {invoice.rechnungsnummer}</DialogTitle>
+                <DialogTitle>Rechnungsdetails: {invoice.rechnungsnummer}</DialogTitle>
+                 <DialogDescription>
+                    Hier können Sie die Rechnungsdetails einsehen und weitere Aktionen ausführen.
+                </DialogDescription>
             </DialogHeader>
-            <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm">
+            <div ref={printRef} className="py-4 max-h-[60vh] overflow-y-auto pr-4 text-sm">
                  <div className="grid grid-cols-2 gap-4 mb-8">
                     <div>
                         <h3 className="font-bold text-lg">AmbientTMS</h3>
@@ -621,9 +624,12 @@ const InvoicePrintDialog = ({ invoice }: { invoice: Invoice }) => {
                  </div>
                  <p className="mt-8">Fällig am: {formatDate(invoice.faelligkeitsdatum)}</p>
             </div>
-            <DialogFooter>
-                <DialogClose asChild><Button variant="ghost">Schließen</Button></DialogClose>
-                <Button onClick={handlePrint}>Drucken</Button>
+            <DialogFooter className="justify-start">
+                 <Button onClick={handlePrint}><FileDown className="mr-2 h-4 w-4" /> Als PDF drucken/speichern</Button>
+                 <Button onClick={() => onAction('email')} variant="outline"><Send className="mr-2 h-4 w-4" /> Per E-Mail senden</Button>
+                 <Button onClick={() => onAction('xml')} variant="outline"><CodeXml className="mr-2 h-4 w-4" /> Als E-Rechnung (XML) exportieren</Button>
+                 <div className="flex-grow"></div>
+                 <DialogClose asChild><Button variant="ghost">Schließen</Button></DialogClose>
             </DialogFooter>
         </DialogContent>
     );
@@ -636,7 +642,7 @@ export default function BuchhaltungPage() {
   const { toast } = useToast();
   
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'print' | 'cancel'>('view');
+  const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'cancel'>('view');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [columnVisibility, setColumnVisibility] = useState({
@@ -665,7 +671,7 @@ export default function BuchhaltungPage() {
     toast({ title: "Status aktualisiert", description: `Rechnung wurde als "${status}" markiert.` });
   }
 
-  const handleAction = (invoice: Invoice, action: 'view' | 'edit' | 'print' | 'cancel' | 'markPaid') => {
+  const handleAction = (invoice: Invoice, action: 'view' | 'edit' | 'cancel' | 'markPaid') => {
       setSelectedInvoice(invoice);
       if(action === 'markPaid') {
           updateInvoiceStatus(invoice.id, 'Bezahlt');
@@ -673,6 +679,13 @@ export default function BuchhaltungPage() {
       }
       setDialogMode(action);
       setIsDialogOpen(true);
+  }
+
+  const handleDetailAction = (action: string) => {
+    toast({
+        title: "Funktion in Entwicklung",
+        description: `Die Aktion "${action}" wird in Kürze implementiert.`,
+    });
   }
 
   const filteredInvoices = useMemo(() => {
@@ -784,7 +797,6 @@ export default function BuchhaltungPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleAction(invoice, 'view')}>Anzeigen</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction(invoice, 'edit')}>Bearbeiten</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction(invoice, 'print')}>Als PDF exportieren</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onSelect={() => handleAction(invoice, 'markPaid')} disabled={invoice.status === 'Bezahlt'}>Als bezahlt markieren</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onSelect={() => handleAction(invoice, 'cancel')}>Stornieren</DropdownMenuItem>
@@ -805,14 +817,14 @@ export default function BuchhaltungPage() {
       </CardContent>
     </Card>
     
-    <Dialog open={isDialogOpen && (dialogMode === 'view' || dialogMode === 'edit')} onOpenChange={setIsDialogOpen}>
-        <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode={dialogMode === 'view' ? 'view' : 'edit'}>
+    <Dialog open={isDialogOpen && dialogMode === 'edit'} onOpenChange={setIsDialogOpen}>
+        <CreateInvoiceDialog onSave={addOrUpdateInvoice} lastInvoiceNumber={lastInvoiceNumber} invoiceToEdit={selectedInvoice} mode='edit'>
             <span />
         </CreateInvoiceDialog>
     </Dialog>
 
-    <Dialog open={isDialogOpen && dialogMode === 'print'} onOpenChange={setIsDialogOpen}>
-        {selectedInvoice && <InvoicePrintDialog invoice={selectedInvoice} />}
+    <Dialog open={isDialogOpen && dialogMode === 'view'} onOpenChange={setIsDialogOpen}>
+        {selectedInvoice && <InvoiceDetailDialog invoice={selectedInvoice} onAction={handleDetailAction} />}
     </Dialog>
     
     <AlertDialog open={isDialogOpen && dialogMode === 'cancel'} onOpenChange={setIsDialogOpen}>
