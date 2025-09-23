@@ -27,10 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 
 const AddTemplateDialog = ({
   onAdd,
@@ -45,29 +43,46 @@ const AddTemplateDialog = ({
   const { toast } = useToast();
   const isEditMode = !!templateToEdit;
 
-  const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<TripTemplate>({
-    defaultValues: isEditMode ? templateToEdit : {
+  const getDefaultValues = () => {
+    if (isEditMode && templateToEdit) {
+      return templateToEdit;
+    }
+    const pickupStop: Omit<TourStop, 'kilometers' | 'actualDateTime'> = {
+      id: `stop-pickup-${Date.now()}`,
+      stopSequence: 1,
+      type: 'Pickup',
+      addressId: '',
+      addressName: '',
+      location: '',
+      plannedDateTime: '',
+      goodsDescription: '',
+      status: 'Planned',
+    };
+     const deliveryStop: Omit<TourStop, 'kilometers' | 'actualDateTime'> = {
+      id: `stop-delivery-${Date.now()}`,
+      stopSequence: 2,
+      type: 'Delivery',
+      addressId: '',
+      addressName: '',
+      location: '',
+      plannedDateTime: '',
+      goodsDescription: '',
+      status: 'Planned',
+    };
+    return {
       id: `template-${Date.now()}`,
       name: "",
       description: "",
-      stops: [],
-    },
+      stops: [pickupStop, deliveryStop],
+    };
+  };
+
+  const { register, handleSubmit, control, setValue, reset, formState: { errors } } = useForm<TripTemplate>({
+    defaultValues: getDefaultValues(),
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "stops",
-  });
 
   const onSubmit = (data: TripTemplate) => {
-    if (data.stops.length < 2) {
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Eine Vorlage muss mindestens zwei Stopps enthalten.",
-      });
-      return;
-    }
     onAdd(data);
     toast({
       title: isEditMode ? "Vorlage aktualisiert" : "Vorlage erstellt",
@@ -76,31 +91,20 @@ const AddTemplateDialog = ({
     setIsOpen(false);
   };
   
-  const addStop = (type: 'Pickup' | 'Delivery') => {
-    append({
-        id: `stop-${Date.now()}`,
-        stopSequence: fields.length + 1,
-        type,
-        addressId: '',
-        addressName: '',
-        location: '',
-        plannedDateTime: '',
-        goodsDescription: '',
-        status: 'Planned',
-    });
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        if (open) reset(getDefaultValues());
+        setIsOpen(open);
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Vorlage bearbeiten" : "Neue Trip-Vorlage erstellen"}
             </DialogTitle>
             <DialogDescription>
-              Definieren Sie eine wiederverwendbare Vorlage für Ihre Touren.
+              Definieren Sie eine wiederverwendbare Vorlage für Ihre Standardtouren (Abholung & Lieferung).
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-4">
@@ -113,37 +117,23 @@ const AddTemplateDialog = ({
               <Textarea {...register("description")} />
             </div>
             
-            <Separator />
-
-            <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-base">Stopps der Vorlage</h3>
-                <div className="flex gap-2">
-                     <Button type="button" variant="outline" size="sm" onClick={() => addStop('Pickup')}><Icons.add className="h-3 w-3 mr-1"/> Abholung</Button>
-                     <Button type="button" variant="outline" size="sm" onClick={() => addStop('Delivery')}><Icons.add className="h-3 w-3 mr-1"/> Lieferung</Button>
-                </div>
-            </div>
-
             <div className="space-y-3">
-              {fields.map((field, index) => (
-                 <div key={field.id} className="p-3 border rounded-md bg-muted/50 space-y-3 relative">
-                    <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-sm">Stopp {index + 1}: {watch(`stops.${index}.type`)}</h4>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                    </div>
+                {/* Pickup Stop */}
+                <div className="p-3 border rounded-md bg-muted/50 space-y-3">
+                    <h4 className="font-medium text-sm">Abholung</h4>
                      <div className="space-y-1.5">
-                        <Label>Tour Adresse</Label>
+                        <Label>Abholadresse</Label>
                         <Controller
-                            name={`stops.${index}.addressId`}
+                            name="stops.0.addressId"
                             control={control}
+                            rules={{ required: "Abholadresse ist erforderlich" }}
                             render={({ field }) => (
                                 <Select onValueChange={(val) => {
                                     field.onChange(val);
                                     const address = addressData.find(a => a.id === val);
-                                    setValue(`stops.${index}.addressName`, address?.name || '');
-                                    setValue(`stops.${index}.location`, `${address?.plz} ${address?.stadt}`);
-                                }}>
+                                    setValue(`stops.0.addressName`, address?.name || '');
+                                    setValue(`stops.0.location`, `${address?.plz} ${address?.stadt}`);
+                                }} value={field.value}>
                                     <SelectTrigger className="h-9 bg-background"><SelectValue placeholder="Adresse auswählen..." /></SelectTrigger>
                                     <SelectContent>
                                         {addressData.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.kurzname})</SelectItem>)}
@@ -151,18 +141,41 @@ const AddTemplateDialog = ({
                                 </Select>
                             )}
                         />
-                    </div>
-                     <div className="space-y-1.5">
-                        <Label>Frachtbeschreibung</Label>
-                        <Textarea {...register(`stops.${index}.goodsDescription`)} placeholder="z.B. 24t, 33 Paletten" rows={1} className="bg-background"/>
+                         {errors.stops?.[0]?.addressId && <p className="text-xs text-destructive">{errors.stops[0].addressId.message}</p>}
                     </div>
                 </div>
-              ))}
-            </div>
-             {fields.length === 0 && (
-                <p className="text-sm text-center text-muted-foreground py-8">Noch keine Stopps hinzugefügt.</p>
-            )}
 
+                {/* Delivery Stop */}
+                <div className="p-3 border rounded-md bg-muted/50 space-y-3">
+                    <h4 className="font-medium text-sm">Lieferung</h4>
+                     <div className="space-y-1.5">
+                        <Label>Lieferadresse</Label>
+                        <Controller
+                            name="stops.1.addressId"
+                            control={control}
+                            rules={{ required: "Lieferadresse ist erforderlich" }}
+                            render={({ field }) => (
+                                <Select onValueChange={(val) => {
+                                    field.onChange(val);
+                                    const address = addressData.find(a => a.id === val);
+                                    setValue(`stops.1.addressName`, address?.name || '');
+                                    setValue(`stops.1.location`, `${address?.plz} ${address?.stadt}`);
+                                }} value={field.value}>
+                                    <SelectTrigger className="h-9 bg-background"><SelectValue placeholder="Adresse auswählen..." /></SelectTrigger>
+                                    <SelectContent>
+                                        {addressData.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.kurzname})</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
+                        {errors.stops?.[1]?.addressId && <p className="text-xs text-destructive">{errors.stops[1].addressId.message}</p>}
+                    </div>
+                </div>
+                 <div className="space-y-1.5">
+                    <Label>Frachtbeschreibung (Standard)</Label>
+                    <Textarea {...register(`stops.0.goodsDescription`)} placeholder="z.B. 24t, 33 Paletten" rows={2}/>
+                </div>
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Abbrechen</Button></DialogClose>
@@ -178,14 +191,23 @@ export default function TripTemplatesPage() {
   const [templates, setTemplates] = useState<TripTemplate[]>(tripTemplateData);
 
   const addOrUpdateTemplate = (template: TripTemplate) => {
+    // Also update the goods description for the delivery stop
+    const finalTemplate = {
+        ...template,
+        stops: [
+            template.stops[0],
+            {...template.stops[1], goodsDescription: template.stops[0].goodsDescription}
+        ]
+    };
+
     setTemplates(prev => {
-        const index = prev.findIndex(t => t.id === template.id);
+        const index = prev.findIndex(t => t.id === finalTemplate.id);
         if (index > -1) {
             const newTemplates = [...prev];
-            newTemplates[index] = template;
+            newTemplates[index] = finalTemplate;
             return newTemplates;
         }
-        return [template, ...prev];
+        return [finalTemplate, ...prev];
     })
   }
   
@@ -217,14 +239,18 @@ export default function TripTemplatesPage() {
                     </CardHeader>
                     <CardContent className="flex-grow">
                         <div className="text-sm space-y-2">
-                             <h4 className="font-semibold mb-1">Stopps:</h4>
-                            {template.stops.map((stop, index) => (
-                                <div key={stop.id} className="flex items-center gap-2">
-                                   <span className="text-muted-foreground text-xs w-4">{index + 1}.</span>
-                                   <span className="font-medium">{stop.addressName}</span>
-                                   <span className="text-muted-foreground text-xs">({stop.type})</span>
-                                </div>
-                            ))}
+                             <div className="flex items-start gap-2">
+                                <span className="text-muted-foreground font-semibold w-20">Von:</span>
+                                <span className="font-medium">{template.stops[0]?.addressName || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="text-muted-foreground font-semibold w-20">Nach:</span>
+                                <span className="font-medium">{template.stops[1]?.addressName || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-start gap-2 pt-2">
+                                <span className="text-muted-foreground font-semibold w-20">Fracht:</span>
+                                <span className="text-muted-foreground text-xs">{template.stops[0]?.goodsDescription || 'N/A'}</span>
+                            </div>
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
