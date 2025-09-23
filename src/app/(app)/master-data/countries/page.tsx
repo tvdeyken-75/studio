@@ -33,6 +33,7 @@ import {
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { countryData as initialCountries } from "@/lib/data";
 
 
 const AddCountryDialog = ({ onAdd }: { onAdd: (country: Country) => void }) => {
@@ -222,7 +223,7 @@ const CountryTable = ({ countries, onAdd, setCountries }: { countries: Country[]
 }
 
 export default function CountriesPage() {
-  const [countries, setCountries] = useState<Country[]>([]);
+  const [countries, setCountries] = useState<Country[]>(initialCountries);
 
   const addCountry = (country: Country) => {
     setCountries(prev => [...prev, country]);
@@ -230,3 +231,5 @@ export default function CountriesPage() {
   
   return <CountryTable countries={countries} onAdd={addCountry} setCountries={setCountries} />;
 }
+
+    

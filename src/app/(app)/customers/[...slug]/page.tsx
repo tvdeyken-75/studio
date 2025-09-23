@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SlidersHorizontal } from "lucide-react";
+import { addressData as MOCK_ADDRESSES } from '@/lib/data';
 
 
 // MOCK DATA - In a real app, this would be fetched from a database
@@ -78,6 +79,7 @@ const MOCK_CUSTOMERS: Customer[] = [{
     kreditlimit: 10000,
     skontoProzent: 2,
     skontoTage: 14,
+    mautzuschlag: 0,
     bankname: 'Musterbank',
     iban: 'DE89370400440532013000',
     bic: 'COBADEFFXXX',
@@ -112,6 +114,7 @@ const MOCK_SUPPLIERS: Customer[] = [{
     kreditlimit: 0,
     skontoProzent: 0,
     skontoTage: 0,
+    mautzuschlag: 0,
     bankname: 'Hauptstadt Bank',
     iban: 'DE98765432109876543210',
     bic: 'BEVODEBBXXX',
@@ -146,6 +149,7 @@ const MOCK_SUBCONTRACTORS: Customer[] = [{
     kreditlimit: 25000,
     skontoProzent: 1.5,
     skontoTage: 10,
+    mautzuschlag: 0,
     bankname: 'Hafenbank',
     iban: 'DE12345678901234567891',
     bic: 'HASPDEHHXXX',
@@ -161,10 +165,6 @@ const MOCK_SUBCONTRACTORS: Customer[] = [{
 const MOCK_KONTAKTE: Kontakt[] = [
     { id: '1', kundenId: '1', anrede: 'Herr', vorname: 'Max', nachname: 'Mustermann', position: 'Einkauf', telefon: '01234-567892', mobil: '0171-1234567', email: 'max.mustermann@musterfirma.de', bemerkung: 'Hauptansprechpartner' },
     { id: '2', kundenId: '1', anrede: 'Frau', vorname: 'Erika', nachname: 'Musterfrau', position: 'Geschäftsführung', telefon: '01234-567893', mobil: '0172-1234567', email: 'erika.musterfrau@musterfirma.de', bemerkung: '' }
-];
-const MOCK_ADDRESSES: Address[] = [
-    { id: '1', kurzname: 'Zentrale BER', name: 'Hauptquartier Berlin', strasse: 'Willy-Brandt-Straße 1', plz: '10557', stadt: 'Berlin', land: 'Deutschland', koordinaten: '52.518, 13.376', tourPOI: true, kundenAdresse: false, mitarbeiterAdresse: false },
-    { id: '2', kurzname: 'Lager MUC', name: 'Lager München', strasse: 'Lagerstraße 5', plz: '80995', stadt: 'München', land: 'Deutschland', koordinaten: '48.177, 11.455', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
 ];
 
 const KontaktenForm = ({ control, register }: { control: any, register: any }) => {
@@ -489,6 +489,7 @@ export default function CustomerDetailPage() {
           strasse: '', hausnummer: '', plz: '', ort: '', land: 'DE',
           telefon: '', fax: '', email: '', website: '',
           zahlungsbedingungen: '30 Tage netto', zahlungsziel: 30, waehrung: 'EUR', kreditlimit: 0, skontoProzent: 0, skontoTage: 0,
+          mautzuschlag: 0,
           bankname: '', iban: '', bic: '', kontoinhaber: '',
           aktiv: true, bemerkung: '', erstelltAm: new Date().toISOString(), bearbeitetAm: new Date().toISOString(),
           name: '', contact: '', address: ''
@@ -653,3 +654,5 @@ export default function CustomerDetailPage() {
     </form>
   );
 }
+
+    

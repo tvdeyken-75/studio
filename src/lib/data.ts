@@ -1,12 +1,5 @@
 
-
-
-
-
-
-
-
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -229,6 +222,20 @@ export const addressData: Address[] = [
     { id: '3', kurzname: 'Musterfirma', name: 'Musterfirma GmbH Zentrale', strasse: 'Musterstraße 123', plz: '12345', stadt: 'Musterstadt', land: 'Deutschland', koordinaten: '50.110, 8.682', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
 ];
 
+export const countryData: Country[] = [
+    { id: '1', iso_code: 'DE', kurzname: 'DE', official_country_name: 'Deutschland' },
+    { id: '2', iso_code: 'AT', kurzname: 'AT', official_country_name: 'Österreich' },
+    { id: '3', iso_code: 'CH', kurzname: 'CH', official_country_name: 'Schweiz' },
+    { id: '4', iso_code: 'FR', kurzname: 'FR', official_country_name: 'Frankreich' },
+    { id: '5', iso_code: 'IT', kurzname: 'IT', official_country_name: 'Italien' },
+    { id: '6', iso_code: 'ES', kurzname: 'ES', official_country_name: 'Spanien' },
+    { id: '7', iso_code: 'PL', kurzname: 'PL', official_country_name: 'Polen' },
+    { id: '8', iso_code: 'NL', kurzname: 'NL', official_country_name: 'Niederlande' },
+    { id: '9', iso_code: 'BE', kurzname: 'BE', official_country_name: 'Belgien' },
+    { id: '10', iso_code: 'CZ', kurzname: 'CZ', official_country_name: 'Tschechien' },
+];
+
+
 export const tourData: Tour[] = [
     {
         id: 'tour-1',
@@ -257,3 +264,5 @@ export const tourData: Tour[] = [
         stops: [],
     }
 ];
+
+    

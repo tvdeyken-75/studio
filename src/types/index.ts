@@ -1,7 +1,4 @@
 
-
-
-
 export type User = {
   id: string;
   email: string;
@@ -321,3 +318,5 @@ export type Tour = {
     totalRevenue?: number;
     profitability?: number;
 };
+
+    

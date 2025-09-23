@@ -37,13 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SlidersHorizontal } from "lucide-react";
-
-// Mocked countries data. In a real application, this would come from an API or the countries state.
-const MOCK_COUNTRIES: Country[] = [
-    { id: '1', iso_code: 'DE', kurzname: 'DE', official_country_name: 'Deutschland' },
-    { id: '2', iso_code: 'AT', kurzname: 'AT', official_country_name: 'Österreich' },
-    { id: '3', iso_code: 'CH', kurzname: 'CH', official_country_name: 'Schweiz' },
-];
+import { addressData as initialAddresses, countryData as MOCK_COUNTRIES } from "@/lib/data";
 
 const AddAddressDialog = ({ onAdd, countries }: { onAdd: (address: Address) => void; countries: Country[] }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -406,7 +400,7 @@ const AddressTable = ({ addresses, onAdd, setAddresses }: { addresses: Address[]
 };
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
 
   const addAddress = (address: Address) => {
     setAddresses(prev => [...prev, address]);
@@ -414,3 +408,5 @@ export default function AddressesPage() {
   
   return <AddressTable addresses={addresses} onAdd={addAddress} setAddresses={setAddresses} />;
 }
+
+    
