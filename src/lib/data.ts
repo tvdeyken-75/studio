@@ -221,6 +221,8 @@ export const addressData: Address[] = [
     { id: '1', kurzname: 'Zentrale BER', name: 'Hauptquartier Berlin', strasse: 'Willy-Brandt-Straße 1', plz: '10557', stadt: 'Berlin', land: 'Deutschland', koordinaten: '52.518, 13.376', tourPOI: true, kundenAdresse: false, mitarbeiterAdresse: false },
     { id: '2', kurzname: 'Lager MUC', name: 'Lager München', strasse: 'Lagerstraße 5', plz: '80995', stadt: 'München', land: 'Deutschland', koordinaten: '48.177, 11.455', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
     { id: '3', kurzname: 'Musterfirma', name: 'Musterfirma GmbH Zentrale', strasse: 'Musterstraße 123', plz: '12345', stadt: 'Musterstadt', land: 'Deutschland', koordinaten: '50.110, 8.682', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
+    { id: '4', kurzname: 'BauAG HAM', name: 'Bau AG Hamburg', strasse: 'Hammerbrookstr. 94', plz: '20097', stadt: 'Hamburg', land: 'Deutschland', koordinaten: '53.548, 10.020', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
+    { id: '5', kurzname: 'BauAG FRA', name: 'Bau AG Frankfurt', strasse: 'Mainzer Landstr. 176', plz: '60327', stadt: 'Frankfurt am Main', land: 'Deutschland', koordinaten: '50.108, 8.652', tourPOI: true, kundenAdresse: true, mitarbeiterAdresse: false },
 ];
 
 export const countryData: Country[] = [
@@ -253,6 +255,8 @@ export const tourData: Tour[] = [
         totalRevenue: 1200,
         totalCosts: 750,
         profitability: 450,
+        customerId: '1',
+        customerReference: 'PO-45001'
     },
     {
         id: 'tour-2',
@@ -263,6 +267,79 @@ export const tourData: Tour[] = [
         driverId: 'erika-musterfrau',
         status: 'Entwurf',
         stops: [],
+        customerId: '2',
+        customerReference: 'C-Ref-889',
+    },
+    {
+        id: 'tour-3',
+        tourNumber: 'T-00003',
+        tourDate: '2024-08-05', // This week
+        vehicleId: 'AT-001',
+        trailerId: 'AN-001',
+        driverId: 'max-mustermann',
+        status: 'Unterwegs',
+        stops: [
+            { id: 'stop-3-1', stopSequence: 1, type: 'Pickup', addressId: '4', addressName: 'Bau AG Hamburg', location: 'Rampe 3', plannedDateTime: '2024-08-05T10:00:00', goodsDescription: 'Baumaterial', status: 'Completed' },
+            { id: 'stop-3-2', stopSequence: 2, type: 'Delivery', addressId: '5', addressName: 'Bau AG Frankfurt', location: 'Baustelle A', plannedDateTime: '2024-08-05T18:00:00', goodsDescription: 'Baumaterial', status: 'Planned' }
+        ],
+        totalRevenue: 2100,
+        totalCosts: 1400,
+        profitability: 700,
+        customerId: '2',
+        customerReference: 'PO-Bau-765'
+    },
+     {
+        id: 'tour-4',
+        tourNumber: 'T-00004',
+        tourDate: '2024-07-29', // Last week
+        vehicleId: 'AT-002',
+        trailerId: 'AN-002',
+        driverId: 'erika-musterfrau',
+        status: 'Abgeschlossen',
+        stops: [
+            { id: 'stop-4-1', stopSequence: 1, type: 'Pickup', addressId: '2', addressName: 'Lager München', location: '', plannedDateTime: '2024-07-29T08:00:00', goodsDescription: 'Elektronik', status: 'Completed' },
+            { id: 'stop-4-2', stopSequence: 2, type: 'Delivery', addressId: '3', addressName: 'Musterfirma GmbH Zentrale', location: 'Wareneingang', plannedDateTime: '2024-07-29T11:00:00', goodsDescription: 'Elektronik', status: 'Completed' }
+        ],
+        totalRevenue: 950,
+        totalCosts: 600,
+        profitability: 350,
+        customerId: '1',
+        customerReference: 'REF-XYZ'
+    },
+    {
+        id: 'tour-5',
+        tourNumber: 'T-00005',
+        tourDate: '2024-08-12', // Next week
+        vehicleId: 'AT-001',
+        trailerId: 'AN-001',
+        driverId: 'max-mustermann',
+        status: 'Geplant',
+        stops: [
+             { id: 'stop-5-1', stopSequence: 1, type: 'Pickup', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Lager 1', plannedDateTime: '2024-08-12T09:00:00', goodsDescription: 'Konsumgüter', status: 'Planned' },
+            { id: 'stop-5-2', stopSequence: 2, type: 'Delivery', addressId: '4', addressName: 'Bau AG Hamburg', location: 'Hauptlager', plannedDateTime: '2024-08-12T13:00:00', goodsDescription: 'Konsumgüter', status: 'Planned' }
+        ],
+        totalRevenue: 800,
+        totalCosts: 500,
+        profitability: 300,
+        customerId: '2',
+        customerReference: 'CUST-REF-123'
+    },
+     {
+        id: 'tour-6',
+        tourNumber: 'T-00006',
+        tourDate: '2024-07-30', // Last week
+        vehicleId: 'AT-001',
+        trailerId: 'AN-001',
+        driverId: 'max-mustermann',
+        status: 'Storniert',
+        stops: [
+             { id: 'stop-6-1', stopSequence: 1, type: 'Pickup', addressId: '3', addressName: 'Musterfirma GmbH Zentrale', location: 'Tor 4', plannedDateTime: '2024-07-30T12:00:00', goodsDescription: 'Storniert', status: 'Planned' }
+        ],
+        totalRevenue: 0,
+        totalCosts: 50,
+        profitability: -50,
+        customerId: '1',
+        customerReference: 'CANCELED-01'
     }
 ];
 
