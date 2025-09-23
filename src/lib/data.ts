@@ -132,6 +132,15 @@ export const weeklyDeliveriesData: ChartData[] = [
   { month: "Jun", onTime: 250, delayed: 7 },
 ];
 
+const today = new Date();
+const lastMonday = new Date();
+lastMonday.setDate(today.getDate() - today.getDay() - 6);
+const thisMonday = new Date();
+thisMonday.setDate(today.getDate() - today.getDay() + 1);
+const nextMonday = new Date();
+nextMonday.setDate(today.getDate() - today.getDay() + 8);
+
+
 export const transportData: Transport[] = [
   {
     id: '1',
@@ -243,14 +252,14 @@ export const tourData: Tour[] = [
     {
         id: 'tour-1',
         tourNumber: 'T-00001',
-        tourDate: '2024-08-01',
+        tourDate: lastMonday.toISOString().split('T')[0],
         vehicleId: 'AT-001',
         trailerId: 'AN-001',
         driverId: 'max-mustermann',
-        status: 'Geplant',
+        status: 'Geschlossen',
         stops: [
-            { id: 'stop-1-1', stopSequence: 1, type: 'Pickup', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Lager Berlin', plannedDateTime: '2024-08-01T09:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' },
-            { id: 'stop-1-2', stopSequence: 2, type: 'Delivery', addressId: '2', addressName: 'Lager München', location: 'Zentrallager Hamburg', plannedDateTime: '2024-08-01T15:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Planned' }
+            { id: 'stop-1-1', stopSequence: 1, type: 'Pickup', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Lager Berlin', plannedDateTime: '2024-08-01T09:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Completed' },
+            { id: 'stop-1-2', stopSequence: 2, type: 'Delivery', addressId: '2', addressName: 'Lager München', location: 'Zentrallager Hamburg', plannedDateTime: '2024-08-01T15:00:00', goodsDescription: '33 Paletten Lebensmittel', status: 'Completed' }
         ],
         totalRevenue: 1200,
         totalCosts: 750,
@@ -261,11 +270,11 @@ export const tourData: Tour[] = [
     {
         id: 'tour-2',
         tourNumber: 'T-00002',
-        tourDate: '2024-08-02',
+        tourDate: thisMonday.toISOString().split('T')[0],
         vehicleId: 'AT-002',
         trailerId: 'AN-002',
         driverId: 'erika-musterfrau',
-        status: 'Entwurf',
+        status: 'Geplant',
         stops: [],
         customerId: '2',
         customerReference: 'C-Ref-889',
@@ -273,7 +282,7 @@ export const tourData: Tour[] = [
     {
         id: 'tour-3',
         tourNumber: 'T-00003',
-        tourDate: '2024-08-05', // This week
+        tourDate: thisMonday.toISOString().split('T')[0],
         vehicleId: 'AT-001',
         trailerId: 'AN-001',
         driverId: 'max-mustermann',
@@ -291,7 +300,7 @@ export const tourData: Tour[] = [
      {
         id: 'tour-4',
         tourNumber: 'T-00004',
-        tourDate: '2024-07-29', // Last week
+        tourDate: lastMonday.toISOString().split('T')[0],
         vehicleId: 'AT-002',
         trailerId: 'AN-002',
         driverId: 'erika-musterfrau',
@@ -309,7 +318,7 @@ export const tourData: Tour[] = [
     {
         id: 'tour-5',
         tourNumber: 'T-00005',
-        tourDate: '2024-08-12', // Next week
+        tourDate: nextMonday.toISOString().split('T')[0],
         vehicleId: 'AT-001',
         trailerId: 'AN-001',
         driverId: 'max-mustermann',
@@ -327,7 +336,7 @@ export const tourData: Tour[] = [
      {
         id: 'tour-6',
         tourNumber: 'T-00006',
-        tourDate: '2024-07-30', // Last week
+        tourDate: lastMonday.toISOString().split('T')[0],
         vehicleId: 'AT-001',
         trailerId: 'AN-001',
         driverId: 'max-mustermann',
