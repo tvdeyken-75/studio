@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -21,22 +22,61 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { format } from "date-fns";
 
-const AddVehicleDialog = ({ onAdd, vehicleToEdit }: { onAdd: (vehicle: Vehicle) => void, vehicleToEdit?: Vehicle | null }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const AddVehicleDialog = ({ onSave, vehicleToEdit, isOpen, onOpenChange }: { onSave: (vehicle: Vehicle) => void, vehicleToEdit?: Vehicle | null, isOpen: boolean, onOpenChange: (isOpen: boolean) => void }) => {
   const isEditMode = !!vehicleToEdit;
   
-  const initialFormState: Omit<Vehicle, 'location' | 'capacity'> = {
-    id: `v${Date.now()}`,
-    kennzeichen: "", hersteller: "", modell: "", fahrgestellnummer: "",
-    baujahr: new Date().getFullYear(), typ: 'Sattelzugmaschine', fahrzeugart: 'LKW', fuhrparkNummer: "",
-    motorleistungKw: 0, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
-    nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 800, adblueVolumenLiter: 60,
-    tuevBis: "", spBis: "", versicherungsnummer: "", zulassungsdatum: new Date().toISOString().split('T')[0],
-    status: 'Aktiv',
-    tourStatus: 'Verfügbar',
+  const getInitialFormState = (): Omit<Vehicle, 'location' | 'capacity'> => {
+      if (isEditMode && vehicleToEdit) {
+          // Ensure all fields are present, providing defaults for any missing ones.
+          const { location, capacity, ...rest } = vehicleToEdit;
+          return {
+              id: rest.id || `v${Date.now()}`,
+              kennzeichen: rest.kennzeichen || "",
+              hersteller: rest.hersteller || "",
+              modell: rest.modell || "",
+              fahrgestellnummer: rest.fahrgestellnummer || "",
+              baujahr: rest.baujahr || new Date().getFullYear(),
+              typ: rest.typ || 'Sattelzugmaschine',
+              fahrzeugart: rest.fahrzeugart || 'LKW',
+              fuhrparkNummer: rest.fuhrparkNummer || "",
+              motorleistungKw: rest.motorleistungKw || 0,
+              kraftstoffart: rest.kraftstoffart || 'Diesel',
+              getriebeart: rest.getriebeart || 'Automatik',
+              achszahl: rest.achszahl || 2,
+              nutzlastKg: rest.nutzlastKg || 18000,
+              gesamtgewichtKg: rest.gesamtgewichtKg || 40000,
+              tankvolumenLiter: rest.tankvolumenLiter || 800,
+              adblueVolumenLiter: rest.adblueVolumenLiter || 60,
+              tuevBis: rest.tuevBis ? format(new Date(rest.tuevBis), 'yyyy-MM-dd') : "",
+              spBis: rest.spBis ? format(new Date(rest.spBis), 'yyyy-MM-dd') : "",
+              versicherungsnummer: rest.versicherungsnummer || "",
+              zulassungsdatum: rest.zulassungsdatum ? format(new Date(rest.zulassungsdatum), 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+              status: rest.status || 'Aktiv',
+              tourStatus: rest.tourStatus || 'Verfügbar',
+              fahrerId: rest.fahrerId || undefined,
+              gpsTrackerId: rest.gpsTrackerId || undefined,
+              simNummer: rest.simNummer || undefined,
+          };
+      }
+      return {
+          id: `v${Date.now()}`,
+          kennzeichen: "", hersteller: "", modell: "", fahrgestellnummer: "",
+          baujahr: new Date().getFullYear(), typ: 'Sattelzugmaschine', fahrzeugart: 'LKW', fuhrparkNummer: "",
+          motorleistungKw: 0, kraftstoffart: 'Diesel', getriebeart: 'Automatik', achszahl: 2,
+          nutzlastKg: 18000, gesamtgewichtKg: 40000, tankvolumenLiter: 800, adblueVolumenLiter: 60,
+          tuevBis: "", spBis: "", versicherungsnummer: "", zulassungsdatum: new Date().toISOString().split('T')[0],
+          status: 'Aktiv',
+          tourStatus: 'Verfügbar',
+      };
   };
 
-  const [formData, setFormData] = useState<Omit<Vehicle, 'location' | 'capacity'>>(initialFormState);
+  const [formData, setFormData] = useState(getInitialFormState());
+
+  useEffect(() => {
+    if (isOpen) {
+        setFormData(getInitialFormState());
+    }
+  }, [isOpen, vehicleToEdit]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value, type } = e.target;
@@ -51,95 +91,86 @@ const AddVehicleDialog = ({ onAdd, vehicleToEdit }: { onAdd: (vehicle: Vehicle) 
   const handleSave = () => {
     // Basic validation
     if (formData.kennzeichen && formData.hersteller && formData.modell) {
-      onAdd({ ...formData, location: '', capacity: '' }); // Add legacy fields for type compatibility
-      if (!isEditMode) {
-        setFormData(initialFormState);
-      }
-      setIsOpen(false);
+      onSave({ ...formData, location: '', capacity: '' }); // Add legacy fields for type compatibility
+      onOpenChange(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="link" className="text-primary">
-          <Icons.add className="mr-2 h-4 w-4" />
-          Neues Fahrzeug
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Fahrzeug bearbeiten' : 'Neues Fahrzeug anlegen'}</DialogTitle>
-          <DialogDescription>
-            Füllen Sie die Details für das Fahrzeug aus.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm">
-          {/* Section 1: General */}
-          <div className="md:col-span-1 space-y-4">
-              <h4 className="font-semibold text-base">Allgemein</h4>
-              <div className="space-y-1.5"><Label>Kennzeichen</Label><Input id="kennzeichen" value={formData.kennzeichen} onChange={handleInputChange} className="h-9"/></div>
-              <div className="space-y-1.5"><Label>Hersteller</Label><Input id="hersteller" value={formData.hersteller} onChange={handleInputChange} className="h-9"/></div>
-              <div className="space-y-1.5"><Label>Modell</Label><Input id="modell" value={formData.modell} onChange={handleInputChange} className="h-9"/></div>
-              <div className="space-y-1.5"><Label>Fahrgestellnummer (VIN)</Label><Input id="fahrgestellnummer" value={formData.fahrgestellnummer} onChange={handleInputChange} className="h-9"/></div>
-              <div className="space-y-1.5"><Label>Baujahr</Label><Input id="baujahr" type="number" value={formData.baujahr} onChange={handleInputChange} className="h-9"/></div>
-              <div className="space-y-1.5"><Label>Typ</Label>
-                <Select onValueChange={(v) => handleSelectChange('typ', v)} defaultValue={formData.typ}>
-                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="Solo">Solo</SelectItem><SelectItem value="Sattelzugmaschine">Sattelzugmaschine</SelectItem><SelectItem value="Hängerzug">Hängerzug</SelectItem></SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5"><Label>Interne Fuhrpark-Nr.</Label><Input id="fuhrparkNummer" value={formData.fuhrparkNummer} onChange={handleInputChange} className="h-9"/></div>
-               <div className="space-y-1.5"><Label>Status</Label>
-                <Select onValueChange={(v) => handleSelectChange('status', v)} defaultValue={formData.status}>
-                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Aktiv">Aktiv</SelectItem>
-                    <SelectItem value="Reparatur">Reparatur</SelectItem>
-                    <SelectItem value="Verkauft">Verkauft</SelectItem>
-                    <SelectItem value="Ausgemustert">Ausgemustert</SelectItem>
-                    </SelectContent>
-                </Select>
-              </div>
-          </div>
-          {/* Section 2: Technical */}
-          <div className="md:col-span-1 space-y-4">
-               <h4 className="font-semibold text-base">Technische Daten</h4>
-                <div className="space-y-1.5"><Label>Motorleistung (kW)</Label><Input id="motorleistungKw" type="number" value={formData.motorleistungKw} onChange={handleInputChange} className="h-9"/></div>
-                <div className="space-y-1.5"><Label>Kraftstoffart</Label>
-                    <Select onValueChange={(v) => handleSelectChange('kraftstoffart', v)} defaultValue={formData.kraftstoffart}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+            <DialogTitle>{isEditMode ? 'Fahrzeug bearbeiten' : 'Neues Fahrzeug anlegen'}</DialogTitle>
+            <DialogDescription>
+                Füllen Sie die Details für das Fahrzeug aus.
+            </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4 text-sm">
+            {/* Section 1: General */}
+            <div className="md:col-span-1 space-y-4">
+                <h4 className="font-semibold text-base">Allgemein</h4>
+                <div className="space-y-1.5"><Label>Kennzeichen</Label><Input id="kennzeichen" value={formData.kennzeichen} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Hersteller</Label><Input id="hersteller" value={formData.hersteller} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Modell</Label><Input id="modell" value={formData.modell} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Fahrgestellnummer (VIN)</Label><Input id="fahrgestellnummer" value={formData.fahrgestellnummer} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Baujahr</Label><Input id="baujahr" type="number" value={formData.baujahr} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Typ</Label>
+                    <Select onValueChange={(v) => handleSelectChange('typ', v)} value={formData.typ}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="Diesel">Diesel</SelectItem><SelectItem value="Elektro">Elektro</SelectItem><SelectItem value="H2">H2</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="Solo">Solo</SelectItem><SelectItem value="Sattelzugmaschine">Sattelzugmaschine</SelectItem><SelectItem value="Hängerzug">Hängerzug</SelectItem></SelectContent>
                     </Select>
                 </div>
-                <div className="space-y-1.5"><Label>Getriebeart</Label>
-                    <Select onValueChange={(v) => handleSelectChange('getriebeart', v)} defaultValue={formData.getriebeart}>
+                <div className="space-y-1.5"><Label>Interne Fuhrpark-Nr.</Label><Input id="fuhrparkNummer" value={formData.fuhrparkNummer} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Status</Label>
+                    <Select onValueChange={(v) => handleSelectChange('status', v)} value={formData.status}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="Automatik">Automatik</SelectItem><SelectItem value="Manuell">Manuell</SelectItem></SelectContent>
+                    <SelectContent>
+                        <SelectItem value="Aktiv">Aktiv</SelectItem>
+                        <SelectItem value="Reparatur">Reparatur</SelectItem>
+                        <SelectItem value="Verkauft">Verkauft</SelectItem>
+                        <SelectItem value="Ausgemustert">Ausgemustert</SelectItem>
+                        </SelectContent>
                     </Select>
                 </div>
-                <div className="space-y-1.5"><Label>Anzahl Achsen</Label><Input id="achszahl" type="number" value={formData.achszahl} onChange={handleInputChange} className="h-9"/></div>
-                <div className="space-y-1.5"><Label>Nutzlast (kg)</Label><Input id="nutzlastKg" type="number" value={formData.nutzlastKg} onChange={handleInputChange} className="h-9"/></div>
-                <div className="space-y-1.5"><Label>Gesamtgewicht (kg)</Label><Input id="gesamtgewichtKg" type="number" value={formData.gesamtgewichtKg} onChange={handleInputChange} className="h-9"/></div>
-                <div className="space-y-1.5"><Label>Tankvolumen (l)</Label><Input id="tankvolumenLiter" type="number" value={formData.tankvolumenLiter} onChange={handleInputChange} className="h-9"/></div>
-                <div className="space-y-1.5"><Label>AdBlue-Volumen (l)</Label><Input id="adblueVolumenLiter" type="number" value={formData.adblueVolumenLiter} onChange={handleInputChange} className="h-9"/></div>
-          </div>
-           {/* Section 3: Documents */}
-          <div className="md:col-span-1 space-y-4">
-              <h4 className="font-semibold text-base">Dokumente & Fristen</h4>
-               <div className="space-y-1.5"><Label>TÜV bis</Label><Input id="tuevBis" type="date" value={formData.tuevBis} onChange={handleInputChange} className="h-9"/></div>
-               <div className="space-y-1.5"><Label>SP bis</Label><Input id="spBis" type="date" value={formData.spBis} onChange={handleInputChange} className="h-9"/></div>
-               <div className="space-y-1.5"><Label>Versicherungsnummer</Label><Input id="versicherungsnummer" value={formData.versicherungsnummer} onChange={handleInputChange} className="h-9"/></div>
-               <div className="space-y-1.5"><Label>Zulassungsdatum</Label><Input id="zulassungsdatum" type="date" value={formData.zulassungsdatum} onChange={handleInputChange} className="h-9"/></div>
-               <div className="space-y-1.5"><Label>GPS-Tracker ID</Label><Input id="gpsTrackerId" value={formData.gpsTrackerId || ''} onChange={handleInputChange} className="h-9"/></div>
-               <div className="space-y-1.5"><Label>SIM-Nummer</Label><Input id="simNummer" value={formData.simNummer || ''} onChange={handleInputChange} className="h-9"/></div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={() => setIsOpen(false)} variant="ghost" size="sm">Abbrechen</Button>
-          <Button onClick={handleSave} size="sm">Speichern</Button>
-        </DialogFooter>
-      </DialogContent>
+            </div>
+            {/* Section 2: Technical */}
+            <div className="md:col-span-1 space-y-4">
+                <h4 className="font-semibold text-base">Technische Daten</h4>
+                    <div className="space-y-1.5"><Label>Motorleistung (kW)</Label><Input id="motorleistungKw" type="number" value={formData.motorleistungKw} onChange={handleInputChange} className="h-9"/></div>
+                    <div className="space-y-1.5"><Label>Kraftstoffart</Label>
+                        <Select onValueChange={(v) => handleSelectChange('kraftstoffart', v)} value={formData.kraftstoffart}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="Diesel">Diesel</SelectItem><SelectItem value="Elektro">Elektro</SelectItem><SelectItem value="H2">H2</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1.5"><Label>Getriebeart</Label>
+                        <Select onValueChange={(v) => handleSelectChange('getriebeart', v)} value={formData.getriebeart}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="Automatik">Automatik</SelectItem><SelectItem value="Manuell">Manuell</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1.5"><Label>Anzahl Achsen</Label><Input id="achszahl" type="number" value={formData.achszahl} onChange={handleInputChange} className="h-9"/></div>
+                    <div className="space-y-1.5"><Label>Nutzlast (kg)</Label><Input id="nutzlastKg" type="number" value={formData.nutzlastKg} onChange={handleInputChange} className="h-9"/></div>
+                    <div className="space-y-1.5"><Label>Gesamtgewicht (kg)</Label><Input id="gesamtgewichtKg" type="number" value={formData.gesamtgewichtKg} onChange={handleInputChange} className="h-9"/></div>
+                    <div className="space-y-1.5"><Label>Tankvolumen (l)</Label><Input id="tankvolumenLiter" type="number" value={formData.tankvolumenLiter} onChange={handleInputChange} className="h-9"/></div>
+                    <div className="space-y-1.5"><Label>AdBlue-Volumen (l)</Label><Input id="adblueVolumenLiter" type="number" value={formData.adblueVolumenLiter} onChange={handleInputChange} className="h-9"/></div>
+            </div>
+            {/* Section 3: Documents */}
+            <div className="md:col-span-1 space-y-4">
+                <h4 className="font-semibold text-base">Dokumente & Fristen</h4>
+                <div className="space-y-1.5"><Label>TÜV bis</Label><Input id="tuevBis" type="date" value={formData.tuevBis} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>SP bis</Label><Input id="spBis" type="date" value={formData.spBis} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Versicherungsnummer</Label><Input id="versicherungsnummer" value={formData.versicherungsnummer} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>Zulassungsdatum</Label><Input id="zulassungsdatum" type="date" value={formData.zulassungsdatum} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>GPS-Tracker ID</Label><Input id="gpsTrackerId" value={formData.gpsTrackerId || ''} onChange={handleInputChange} className="h-9"/></div>
+                <div className="space-y-1.5"><Label>SIM-Nummer</Label><Input id="simNummer" value={formData.simNummer || ''} onChange={handleInputChange} className="h-9"/></div>
+            </div>
+            </div>
+            <DialogFooter>
+            <Button onClick={() => onOpenChange(false)} variant="ghost" size="sm">Abbrechen</Button>
+            <Button onClick={handleSave} size="sm">Speichern</Button>
+            </DialogFooter>
+        </DialogContent>
     </Dialog>
   );
 };
@@ -336,6 +367,9 @@ export default function FleetPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+
   const statusMap = {
     'Aktiv': 'Aktiv',
     'Reparatur': 'Reparatur',
@@ -354,9 +388,25 @@ export default function FleetPage() {
       fuhrparkNummer: false,
   });
 
-  const addVehicle = (vehicle: Vehicle) => {
-    setFleet(prev => [vehicle, ...prev]);
-    toast({ title: 'Fahrzeug hinzugefügt', description: `Das Fahrzeug ${vehicle.kennzeichen} wurde erfolgreich angelegt.` });
+  const handleSaveVehicle = (vehicle: Vehicle) => {
+    const isEditing = fleet.some(v => v.id === vehicle.id);
+    if (isEditing) {
+        setFleet(prev => prev.map(v => v.id === vehicle.id ? vehicle : v));
+        toast({ title: 'Fahrzeug aktualisiert', description: `Das Fahrzeug ${vehicle.kennzeichen} wurde erfolgreich aktualisiert.` });
+    } else {
+        setFleet(prev => [vehicle, ...prev]);
+        toast({ title: 'Fahrzeug hinzugefügt', description: `Das Fahrzeug ${vehicle.kennzeichen} wurde erfolgreich angelegt.` });
+    }
+  };
+
+  const handleAddNew = () => {
+    setEditingVehicle(null);
+    setIsDialogOpen(true);
+  };
+  
+  const handleEdit = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setIsDialogOpen(true);
   };
   
   const filteredFleet = useMemo(() => {
@@ -410,6 +460,7 @@ export default function FleetPage() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
@@ -417,7 +468,10 @@ export default function FleetPage() {
               <CardTitle>Fahrzeuge</CardTitle>
               <CardDescription>Eine Übersicht aller Fahrzeuge in Ihrem Fuhrpark.</CardDescription>
             </div>
-            <AddVehicleDialog onAdd={addVehicle} />
+            <Button variant="link" className="text-primary" onClick={handleAddNew}>
+                <Icons.add className="mr-2 h-4 w-4" />
+                Neues Fahrzeug
+            </Button>
         </div>
       </CardHeader>
       <div className="p-4 border-b border-t flex justify-between items-center gap-4">
@@ -500,7 +554,7 @@ export default function FleetPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleEdit(vehicle)}>Bearbeiten</DropdownMenuItem>
                             <ReportsDialog asset={vehicle} assetType="Fahrzeug" />
                             <DropdownMenuSeparator/>
                             <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
@@ -513,7 +567,15 @@ export default function FleetPage() {
         </Table>
       </CardContent>
     </Card>
+    <AddVehicleDialog 
+        isOpen={isDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+        onSave={handleSaveVehicle} 
+        vehicleToEdit={editingVehicle}
+    />
+    </>
   );
 }
+    
 
     
