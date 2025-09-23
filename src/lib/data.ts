@@ -1,6 +1,6 @@
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate } from '@/types';
 
 export const customerData: Customer[] = [
     {
@@ -350,6 +350,20 @@ export const tourData: Tour[] = [
         profitability: -50,
         customerId: '1',
         customerReference: 'CANCELED-01'
+    }
+];
+
+export const tripTemplateData: TripTemplate[] = [
+    {
+        id: 'template-1',
+        name: 'Rundlauf Berlin-München',
+        description: 'Standard-Rundlauf zwischen den Lagern Berlin und München.',
+        stops: [
+            { id: 'ts-1-1', stopSequence: 1, type: 'Pickup', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Lager 1', plannedDateTime: '', goodsDescription: 'Volle Palette', status: 'Planned'},
+            { id: 'ts-1-2', stopSequence: 2, type: 'Delivery', addressId: '2', addressName: 'Lager München', location: 'Rampe 5', plannedDateTime: '', goodsDescription: 'Volle Palette', status: 'Planned'},
+            { id: 'ts-1-3', stopSequence: 3, type: 'Pickup', addressId: '2', addressName: 'Lager München', location: 'Rampe 2', plannedDateTime: '', goodsDescription: 'Leergut', status: 'Planned'},
+            { id: 'ts-1-4', stopSequence: 4, type: 'Delivery', addressId: '1', addressName: 'Hauptquartier Berlin', location: 'Leergutlager', plannedDateTime: '', goodsDescription: 'Leergut', status: 'Planned'},
+        ]
     }
 ];
 
