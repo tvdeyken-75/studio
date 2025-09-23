@@ -296,15 +296,25 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
 
     const printRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    const tourDetails = useMemo(() => {
         const customer = customerData.find(c => c.id === tour.customerId);
-        setMautzuschlag(customer?.mautzuschlag || 0);
+        const vehicle = fleetData.find(v => v.id === tour.vehicleId);
+        const trailer = trailerData.find(t => t.id === tour.trailerId);
+        // In a real app, you'd fetch driver data properly
+        const driverName = tour.driverId?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+        return { customer, vehicle, trailer, driverName };
+    }, [tour]);
+
+
+    useEffect(() => {
+        setMautzuschlag(tourDetails.customer?.mautzuschlag || 0);
         
         const latestDieselpreis = dieselpreiseData.sort((a,b) => new Date(b.von).getTime() - new Date(a.von).getTime())[0];
         setDieselfloater(latestDieselpreis?.zuschlag || 0);
 
         setRohertrag(tour.rohertrag || 0);
-    }, [tour]);
+    }, [tour, tourDetails]);
     
     const totalKilometers = useMemo(() => {
         return tour.stops.reduce((sum, stop) => sum + (stop.kilometers || 0), 0);
@@ -333,10 +343,10 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
     const handlePrint = () => {
        const printContent = printRef.current;
        if (printContent) {
-           const printWindow = window.open('', '', 'height=600,width=800');
+           const printWindow = window.open('', '', 'height=800,width=800');
            if (printWindow) {
                printWindow.document.write('<html><head><title>Tour Kalkulation</title>');
-               printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } td, th { border: 1px solid #ddd; padding: 8px; } .text-right { text-align: right; } .font-bold { font-weight: bold; }</style>');
+               printWindow.document.write('<style>body { font-family: sans-serif; font-size: 10px; } table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; } td, th { border: 1px solid #ddd; padding: 4px; text-align: left;} .text-right { text-align: right; } .font-bold { font-weight: bold; } .mb-4 { margin-bottom: 1rem; } h1, h2, h3 { margin: 0; padding: 0; } h1 {font-size: 1.5rem; margin-bottom: 0.5rem;} h2 { font-size: 1.2rem; margin-bottom: 0.5rem; border-bottom: 1px solid #ddd; padding-bottom: 2px;} h3 { font-size: 1rem; margin-bottom: 0.25rem; } .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } .col-span-2 { grid-column: span 2; }</style>');
                printWindow.document.write('</head><body>');
                printWindow.document.write(printContent.innerHTML);
                printWindow.document.write('</body></html>');
@@ -348,8 +358,16 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
     };
     
     const formatCurrency = (value?: number) => {
-        if (value === undefined) return 'N/A';
+        if (value === undefined || isNaN(value)) return 'N/A';
         return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+    }
+    
+    const formatDate = (date: string, formatString: string = 'dd.MM.yyyy HH:mm') => {
+        try {
+            return format(new Date(date), formatString, { locale: de });
+        } catch (e) {
+            return 'Ungültiges Datum';
+        }
     }
 
     return (
@@ -357,45 +375,98 @@ const CalculationDialog = ({ tour, onSave }: { tour: Tour; onSave: (updatedTour:
             <DialogTrigger asChild>
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Kalkulation &amp; Report</DropdownMenuItem>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Kalkulation für Tour {tour.tourNumber}</DialogTitle>
-                    <DialogDescription>Berechnen Sie den Ertrag für diese Tour.</DialogDescription>
+                    <DialogDescription>Berechnen Sie den Ertrag für diese Tour und erstellen Sie einen Report.</DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-4">
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <h4 className="font-medium">Eingabewerte</h4>
-                             <div className="space-y-1.5">
-                                <Label>Rohertrag (Vereinbarter Betrag)</Label>
-                                <Input type="number" value={rohertrag} onChange={(e) => setRohertrag(Number(e.target.value))} className="h-9"/>
-                            </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[70vh] overflow-y-auto pr-2">
+                    <div className="space-y-4">
+                        <h4 className="font-medium">Eingabewerte</h4>
                             <div className="space-y-1.5">
-                                <Label>Dieselfloater (%)</Label>
-                                <Input type="number" value={dieselfloater} onChange={(e) => setDieselfloater(Number(e.target.value))} className="h-9"/>
-                            </div>
+                            <Label>Rohertrag (Vereinbarter Betrag)</Label>
+                            <Input type="number" value={rohertrag} onChange={(e) => setRohertrag(Number(e.target.value))} className="h-9"/>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Dieselfloater (%)</Label>
+                            <Input type="number" value={dieselfloater} onChange={(e) => setDieselfloater(Number(e.target.value))} className="h-9"/>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Mautzuschlag (%)</Label>
+                            <Input type="number" value={mautzuschlag} onChange={(e) => setMautzuschlag(Number(e.target.value))} className="h-9"/>
+                        </div>
                             <div className="space-y-1.5">
-                                <Label>Mautzuschlag (%)</Label>
-                                <Input type="number" value={mautzuschlag} onChange={(e) => setMautzuschlag(Number(e.target.value))} className="h-9"/>
-                            </div>
-                             <div className="space-y-1.5">
-                                <Label>Gesamtkilometer</Label>
-                                <Input type="number" value={totalKilometers} readOnly disabled className="h-9"/>
+                            <Label>Gesamtkilometer</Label>
+                            <Input type="number" value={totalKilometers} readOnly disabled className="h-9"/>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 p-4 border rounded-md bg-muted/50">
+                        <h4 className="font-medium text-center">Berechnungs-Vorschau</h4>
+                        <Separator />
+                        <table className="w-full text-sm">
+                            <tbody>
+                                <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(rohertrag)}</td></tr>
+                                <tr><td>+ Dieselfloater ({dieselfloater.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
+                                <tr><td>+ Mautzuschlag ({mautzuschlag.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
+                                <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
+                                    <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
+                                <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
+                                <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Hidden printable report */}
+                <div className="hidden">
+                    <div ref={printRef} className="p-4">
+                        <h1>Tour Report: {tour.tourNumber}</h1>
+                        <div className="grid mb-4">
+                            <div>
+                                <h3>Tour-Informationen</h3>
+                                <table>
+                                    <tbody>
+                                        <tr><td><b>Tour-Datum:</b></td><td>{formatDate(tour.tourDate, 'dd.MM.yyyy')}</td></tr>
+                                        <tr><td><b>Kunde:</b></td><td>{tourDetails.customer?.firmenname || 'N/A'}</td></tr>
+                                        <tr><td><b>Referenz:</b></td><td>{tour.customerReference || 'N/A'}</td></tr>
+                                        <tr><td><b>Fahrer:</b></td><td>{tourDetails.driverName || 'N/A'}</td></tr>
+                                        <tr><td><b>Fahrzeug:</b></td><td>{tourDetails.vehicle?.kennzeichen || 'N/A'}</td></tr>
+                                        <tr><td><b>Anhänger:</b></td><td>{tourDetails.trailer?.kennzeichen || 'N/A'}</td></tr>
+                                        <tr><td><b>Gesamtkilometer:</b></td><td>{totalKilometers} km</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <div ref={printRef} className="space-y-4 p-4 border rounded-md bg-muted/50">
-                             <h4 className="font-medium text-center">Berechnung</h4>
-                             <Separator />
-                             <table className="w-full text-sm">
+                        <div className="mb-4">
+                            <h2>Tour-Stopps</h2>
+                            <table>
+                                <thead><tr><th>Sequenz</th><th>Typ</th><th>Adresse</th><th>Geplante Zeit</th></tr></thead>
+                                <tbody>
+                                    {tour.stops.map(stop => (
+                                        <tr key={stop.id}>
+                                            <td>{stop.stopSequence}</td>
+                                            <td>{stop.type}</td>
+                                            <td>{stop.addressName}</td>
+                                            <td>{formatDate(stop.plannedDateTime)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div className="col-span-2">
+                             <h2>Kalkulation</h2>
+                             <table>
                                 <tbody>
                                     <tr><td>Rohertrag</td><td className="text-right">{formatCurrency(rohertrag)}</td></tr>
                                     <tr><td>+ Dieselfloater ({dieselfloater.toFixed(2)}%)</td><td className="text-right">{formatCurrency(dieselfloaterAmount)}</td></tr>
                                     <tr><td>+ Mautzuschlag ({mautzuschlag.toFixed(2)}%)</td><td className="text-right">{formatCurrency(mautzuschlagAmount)}</td></tr>
-                                    <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
                                     <tr className="font-bold"><td>Zwischensumme (Netto)</td><td className="text-right">{formatCurrency(zwischensumme)}</td></tr>
                                      <tr><td>+ MwSt. (19%)</td><td className="text-right">{formatCurrency(mwstAmount)}</td></tr>
-                                    <tr><td colSpan={2}><Separator className="my-2"/></td></tr>
                                     <tr className="font-bold text-base"><td>Gesamtbetrag (Brutto)</td><td className="text-right">{formatCurrency(bruttoAmount)}</td></tr>
                                 </tbody>
                              </table>
@@ -682,8 +753,3 @@ export default function TransportReportPage() {
         </div>
     );
 }
-
-    
-
-    
-
