@@ -670,7 +670,7 @@ export default function CustomerDetailPage() {
                 </CardContent>
             </Card>
 
-            {!isNew && <KontaktenForm control={control} register={register} />}
+            <KontaktenForm control={control} register={register} />
         </div>
       </div>
     </form>
