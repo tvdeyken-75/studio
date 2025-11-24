@@ -76,8 +76,8 @@ export function AddTransportDialog({
     };
     onAdd(newTransport);
     toast({
-      title: "Transportauftrag erstellt",
-      description: `Der Auftrag für ${values.customer} wurde erfolgreich angelegt.`,
+      title: "Transportanfrage erstellt",
+      description: `Die Anfrage für ${values.customer} wurde erfolgreich angelegt.`,
     });
     setIsOpen(false);
     reset();
@@ -89,9 +89,9 @@ export function AddTransportDialog({
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Neuen Transportauftrag anlegen</DialogTitle>
+            <DialogTitle>Neue Transportanfrage</DialogTitle>
             <DialogDescription>
-              Füllen Sie die Details aus, um einen neuen Transportauftrag zu
+              Füllen Sie die Details aus, um eine neue Transportanfrage zu
               erstellen.
             </DialogDescription>
           </DialogHeader>

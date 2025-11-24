@@ -8,17 +8,16 @@ export default function AuftraegeLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   const getActiveTab = () => {
-    if (pathname.includes("berichte")) return "berichte";
-    if (pathname.includes("vorbereiten")) return "vorbereiten";
-    if (pathname.includes("templates")) return "templates";
-    return "berichte";
+    if (pathname === "/auftraege/vorbereiten") return "vorbereiten";
+    if (pathname === "/auftraege/templates") return "templates";
+    return "anfragen";
   };
   
   return (
     <Tabs defaultValue={getActiveTab()} className="w-full">
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="berichte" asChild>
-          <Link href="/auftraege">Kundenberichte</Link>
+        <TabsTrigger value="anfragen" asChild>
+          <Link href="/auftraege">Transportanfragen</Link>
         </TabsTrigger>
         <TabsTrigger value="vorbereiten" asChild>
           <Link href="/auftraege/vorbereiten">Transportauftrag vorbereiten</Link>
