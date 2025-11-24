@@ -3,8 +3,9 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { Tour, TourStop, Address } from '@/types';
-import { tourData, customerData, fleetData, trailerData, addressData, dieselpreiseData } from '@/lib/data';
+import { useSearchParams } from 'next/navigation';
+import type { Tour, TourStop, Address, Transport } from '@/types';
+import { tourData, customerData, fleetData, trailerData, addressData, dieselpreiseData, transportData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -45,7 +46,7 @@ const formatCurrency = (value?: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
-const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave: (tour: Tour) => void; existingTours: Tour[], tourToEdit?: Tour | null, children: React.ReactNode }) => {
+const AddTourDialog = ({ onSave, existingTours, tourToEdit, children, presetTour }: { onSave: (tour: Tour) => void; existingTours: Tour[], tourToEdit?: Tour | null, children: React.ReactNode, presetTour?: Partial<Tour> }) => {
     const [isOpen, setIsOpen] = useState(false);
     
     const generateNewTourNumber = () => {
@@ -78,7 +79,7 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
     };
 
     const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<Tour>({
-        defaultValues: tourToEdit || {
+        defaultValues: tourToEdit || presetTour || {
             id: `tour-${Date.now()}`,
             tourNumber: generateNewTourNumber(),
             tourDate: format(new Date(), 'yyyy-MM-dd'),
@@ -98,6 +99,12 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
     const tourPOIs = useMemo(() => addressData.filter(a => a.tourPOI), []);
 
     const watchedFields = watch();
+
+    useEffect(() => {
+        if (presetTour) {
+            reset(presetTour);
+        }
+    }, [presetTour, reset]);
 
     useEffect(() => {
         const customer = customerData.find(c => c.id === watchedFields.customerId);
@@ -136,7 +143,7 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
 
     const handleOpenChange = (open: boolean) => {
         if (open) {
-            const defaultValues = tourToEdit || {
+            const defaultValues = tourToEdit || presetTour || {
                 id: `tour-${Date.now()}`,
                 tourNumber: generateNewTourNumber(),
                 tourDate: format(new Date(), 'yyyy-MM-dd'),
@@ -198,7 +205,7 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
                                             control={control}
                                             rules={{ required: 'Kunde ist erforderlich' }}
                                             render={({ field }) => (
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <Select onValueChange={field.onChange} value={field.value}>
                                                     <SelectTrigger className="h-9"><SelectValue placeholder="Kunde auswählen" /></SelectTrigger>
                                                     <SelectContent>
                                                         {customerData.map(c => <SelectItem key={c.id} value={c.id}>{c.firmenname}</SelectItem>)}
@@ -224,16 +231,22 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label>Fahrzeug</Label>
-                                        <Select onValueChange={(val) => setValue('vehicleId', val)}>
-                                            <SelectTrigger className="h-9"><SelectValue placeholder="Fahrzeug auswählen" /></SelectTrigger>
-                                            <SelectContent>
-                                                {fleetData.map((v) => (
-                                                  <SelectItem key={v.id} value={v.id}>
-                                                    {v.kennzeichen}
-                                                  </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                         <Controller
+                                            name="vehicleId"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <SelectTrigger className="h-9"><SelectValue placeholder="Fahrzeug auswählen" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {fleetData.map((v) => (
+                                                        <SelectItem key={v.id} value={v.id}>
+                                                            {v.kennzeichen}
+                                                        </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label>Anhänger</Label>
@@ -346,7 +359,7 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children }: { onSave
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1.5">
                                                 <Label>Standortdetails (z.B. Rampe)</Label>
-                                                <Input {...register(`stops.${index}.location`)} placeholder="z.B. Rampe 5" className="h-9" />
+                                                <Controller name={`stops.${index}.location`} control={control} render={({field}) => <Input {...field} placeholder="z.B. Rampe 5" className="h-9" />} />
                                             </div>
                                             <div className="space-y-1.5">
                                                 <Label>Kilometer</Label>
@@ -546,12 +559,60 @@ const TourDetailDialog = ({ tour, onSave, children, mode = 'view' }: { tour: Tou
     );
 };
 
-
-export default function TransportReportPage() {
+function TransportReportPage() {
     const [tours, setTours] = useState<Tour[]>(tourData);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedWeek, setSelectedWeek] = useState<string>('this-week');
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
+    const [isAddTourDialogOpen, setIsAddTourDialogOpen] = useState(false);
+    const [presetTour, setPresetTour] = useState<Partial<Tour> | undefined>();
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const action = searchParams.get('action');
+        const transportId = searchParams.get('transportId');
+        if (action === 'create-tour' && transportId) {
+            const transport = transportData.find(t => t.id === transportId);
+            if (transport) {
+                const customer = customerData.find(c => c.firmenname === transport.customer);
+                const preset: Partial<Tour> = {
+                    customerId: customer?.id,
+                    customerReference: transport.transportNumber,
+                    vehicleId: transport.vehicleId,
+                    stops: [
+                        {
+                            id: `stop-p-${Date.now()}`,
+                            stopSequence: 1,
+                            type: 'Pickup',
+                            addressName: transport.pickupLocation,
+                            location: transport.pickupLocation,
+                            plannedDateTime: transport.plannedPickupDate,
+                            status: 'Planned',
+                            addressId: '',
+                            goodsDescription: '',
+                        },
+                        {
+                            id: `stop-d-${Date.now()}`,
+                            stopSequence: 2,
+                            type: 'Delivery',
+                            addressName: transport.deliveryLocation,
+                            location: transport.deliveryLocation,
+                            plannedDateTime: transport.plannedDeliveryDate,
+                            status: 'Planned',
+                            addressId: '',
+                            goodsDescription: '',
+                        }
+                    ]
+                };
+                setPresetTour(preset);
+                // We need to wrap this in a timeout to ensure the state update is processed
+                // before the dialog is triggered.
+                setTimeout(() => setIsAddTourDialogOpen(true), 0);
+            }
+        }
+    }, [searchParams]);
+    
 
     const addOrUpdateTour = (tour: Tour) => {
         setTours(prev => {
@@ -689,7 +750,7 @@ export default function TransportReportPage() {
                             </CardDescription>
                         </div>
                          <div className="flex items-center gap-2">
-                             <AddTourDialog onSave={addOrUpdateTour} existingTours={tours}>
+                             <AddTourDialog onSave={addOrUpdateTour} existingTours={tours} presetTour={presetTour}>
                                 <Button size="sm" variant="outline">
                                     <Icons.add className="mr-2 h-4 w-4" />
                                     Neue Tour
@@ -816,6 +877,22 @@ export default function TransportReportPage() {
                     </Table>
                 </CardContent>
             </Card>
+            <AddTourDialog onSave={addOrUpdateTour} existingTours={tours} presetTour={presetTour}>
+                <div style={{ display: isAddTourDialogOpen ? 'block' : 'none' }} />
+            </AddTourDialog>
         </div>
     );
+}
+
+export default function TransportReportPage() {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <TourReportPageInternal />
+        </React.Suspense>
+    );
+}
+
+// Renamed original component
+function TourReportPageInternal() {
+  return <TransportReportPage />;
 }

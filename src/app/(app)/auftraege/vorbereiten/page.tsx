@@ -13,6 +13,8 @@ import { Icons } from '@/components/icons';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { AddTransportDialog } from './AddTransportDialog';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 const statusColors: { [key: string]: string } = {
   Geplant: 'bg-blue-500',
@@ -26,9 +28,15 @@ const statusColors: { [key: string]: string } = {
 export default function TransportVorbereitenPage() {
     const [transports, setTransports] = useState<Transport[]>(transportData.filter(t => t.status !== 'Abgeschlossen'));
     const [searchTerm, setSearchTerm] = useState('');
+    const { toast } = useToast();
 
     const addTransport = (transport: Transport) => {
         setTransports(prev => [transport, ...prev]);
+    }
+    
+    const deleteTransport = (id: string) => {
+        setTransports(prev => prev.filter(t => t.id !== id));
+        toast({ title: 'Transportauftrag gelöscht' });
     }
 
     const filteredTransports = useMemo(() => {
@@ -115,9 +123,14 @@ export default function TransportVorbereitenPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem>Bearbeiten & Disponieren</DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                   <Link href={`/reports?action=create-tour&transportId=${t.id}`} className="w-full">
+                                                        Tour erstellen
+                                                    </Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem>Duplizieren</DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive">Stornieren</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => deleteTransport(t.id)} className="text-destructive">Stornieren</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
