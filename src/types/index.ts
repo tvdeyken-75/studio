@@ -366,3 +366,14 @@ export type TripTemplate = {
     description: string;
     stops: Omit<TourStop, 'actualDateTime' | 'status'>[];
 };
+
+
+export type ReportTemplate = {
+    id: string;
+    name: string;
+    description: string;
+    module: 'Touren' | 'Rechnungen' | 'Kunden' | 'Fahrzeuge';
+    content: string; // HTML/CSS/JS content
+    createdAt: string; // ISO Date
+    updatedAt: string; // ISO Date
+};

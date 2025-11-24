@@ -1,6 +1,86 @@
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate, Mitarbeiter, Lohnabrechnung } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate, Mitarbeiter, Lohnabrechnung, ReportTemplate } from '@/types';
+
+export const reportTemplateData: ReportTemplate[] = [
+    {
+        id: 'tpl-tour-summary',
+        name: 'Tourenübersicht Report',
+        description: 'Ein Standardreport, der die Details einer einzelnen Tour zusammenfasst.',
+        module: 'Touren',
+        content: `
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tourenreport {{tour.tourNumber}}</title>
+<style>
+    body { font-family: sans-serif; font-size: 12px; }
+    .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; }
+    h1 { font-size: 1.5em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Tourenreport</h1>
+                <p><strong>Tour-Nr:</strong> {{tour.tourNumber}}</p>
+                <p><strong>Datum:</strong> {{tour.tourDate}}</p>
+            </div>
+            <div>
+                <p><strong>Kunde:</strong> {{tour.customerName}}</p>
+                <p><strong>Fahrzeug:</strong> {{tour.vehicleKennzeichen}}</p>
+            </div>
+        </div>
+
+        <h2>Stopps</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Typ</th>
+                    <th>Adresse</th>
+                    <th>Geplante Zeit</th>
+                    <th>Fracht</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each tour.stops}}
+                <tr>
+                    <td>{{this.stopSequence}}</td>
+                    <td>{{this.type}}</td>
+                    <td>{{this.addressName}}</td>
+                    <td>{{this.plannedDateTime}}</td>
+                    <td>{{this.goodsDescription}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+        <h2>Finanzen</h2>
+        <table>
+            <tbody>
+                <tr><td>Umsatz</td><td>{{tour.totalRevenue}} €</td></tr>
+                <tr><td>Kosten</td><td>{{tour.totalCosts}} €</td></tr>
+                <tr><td><strong>Profit</strong></td><td><strong>{{tour.profitability}} €</strong></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Example of how JS could be used
+        // const tourNumber = '{{tour.tourNumber}}';
+        // console.log('Report generated for tour:', tourNumber);
+    </script>
+</body>
+</html>`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    },
+];
 
 export const mitarbeiterData: Mitarbeiter[] = [
     { id: 'MA-1', personalnummer: '1001', vorname: 'Max', nachname: 'Mustermann', position: 'LKW-Fahrer', eintrittsdatum: '2020-01-15', status: 'Aktiv', email: 'max.mustermann@example.com', telefon: '0171-1234567' },
