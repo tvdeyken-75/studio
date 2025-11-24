@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -78,6 +79,7 @@ const AddUserDialog = ({ onAdd }: { onAdd: (user: User) => void }) => {
                                         <SelectContent>
                                             <SelectItem value="Admin">Admin</SelectItem>
                                             <SelectItem value="User">User</SelectItem>
+                                            <SelectItem value="Fahrer">Fahrer</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}
