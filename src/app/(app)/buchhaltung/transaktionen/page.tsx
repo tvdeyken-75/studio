@@ -48,7 +48,7 @@ import { Icons } from "@/components/icons";
 import { SlidersHorizontal, FileDown, ArrowUpRight, ArrowDownLeft, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format, isWithinInterval, parseISO } from "date-fns";
+import { format, isWithinInterval, parseISO, isValid } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from 'react-day-picker';
@@ -71,11 +71,13 @@ const KpiCard = ({ title, value, icon, change, changeType, description }: { titl
     </Card>
 );
 
-const AddTransactionDialog = ({ onAdd }: { onAdd: (transaction: Transaction) => void }) => {
+const TransactionDialog = ({ onSave, transaction, children }: { onSave: (transaction: Transaction) => void, transaction?: Transaction | null, children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
+    const isEditMode = !!transaction;
+
     const { register, handleSubmit, control, watch, reset } = useForm<Transaction>({
-        defaultValues: {
+        defaultValues: transaction || {
             id: `trans-${Date.now()}`,
             datum: new Date().toISOString(),
             art: 'Ausgabe',
@@ -84,42 +86,56 @@ const AddTransactionDialog = ({ onAdd }: { onAdd: (transaction: Transaction) => 
             waehrung: 'EUR'
         }
     });
+
+    const openDialog = (open: boolean) => {
+        if (open) {
+             const defaultValues = transaction || {
+                id: `trans-${Date.now()}`,
+                datum: new Date().toISOString().split('T')[0],
+                art: 'Ausgabe',
+                betrag: 0,
+                status: 'Offen',
+                waehrung: 'EUR',
+                beschreibung: '',
+                kategorie: '',
+                belegnummer: '',
+            };
+            const formattedValues = {
+                ...defaultValues,
+                datum: defaultValues.datum ? format(parseISO(defaultValues.datum), 'yyyy-MM-dd') : ''
+            };
+            reset(formattedValues);
+        }
+        setIsOpen(open);
+    }
     
     const onSubmit = (data: Transaction) => {
         if (!data.beschreibung || data.betrag <= 0 || !data.kategorie) {
             toast({ variant: "destructive", title: "Fehler", description: "Bitte füllen Sie alle erforderlichen Felder aus." });
             return;
         }
-        onAdd(data);
-        toast({ title: 'Erfolg', description: 'Transaktion wurde hinzugefügt.' });
+
+        const dataWithISO = {
+            ...data,
+            datum: new Date(data.datum).toISOString()
+        };
+
+        onSave(dataWithISO);
+        toast({ title: 'Erfolg', description: `Transaktion wurde ${isEditMode ? 'aktualisiert' : 'hinzugefügt'}.` });
         setIsOpen(false);
-        reset({
-            id: `trans-${Date.now()}`,
-            datum: new Date().toISOString(),
-            art: 'Ausgabe',
-            betrag: 0,
-            status: 'Offen',
-            waehrung: 'EUR',
-            beschreibung: '',
-            kategorie: '',
-            belegnummer: '',
-        });
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={openDialog}>
             <DialogTrigger asChild>
-                <Button variant="link" className="text-primary">
-                    <Icons.add className="mr-2 h-4 w-4" />
-                    Neue Transaktion
-                </Button>
+                {children}
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
                  <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader>
-                        <DialogTitle>Neue Transaktion</DialogTitle>
+                        <DialogTitle>{isEditMode ? 'Transaktion bearbeiten' : 'Neue Transaktion'}</DialogTitle>
                         <DialogDescription>
-                            Erfassen Sie eine neue Einnahme oder Ausgabe.
+                            {isEditMode ? 'Bearbeiten Sie die Details dieser Transaktion.' : 'Erfassen Sie eine neue Einnahme oder Ausgabe.'}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
@@ -148,7 +164,7 @@ const AddTransactionDialog = ({ onAdd }: { onAdd: (transaction: Transaction) => 
                          <div className="grid grid-cols-2 gap-4">
                              <div className="space-y-1.5">
                                 <Label>Datum</Label>
-                                <Input type="date" {...register('datum')} defaultValue={format(new Date(), 'yyyy-MM-dd')} className="h-9" />
+                                <Input type="date" {...register('datum')} className="h-9" />
                             </div>
                             <div className="space-y-1.5">
                                 <Label>Betrag (€)</Label>
@@ -205,8 +221,22 @@ export default function TransaktionenPage() {
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const addTransaction = (transaction: Transaction) => {
-    setTransactions(prev => [transaction, ...prev]);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  
+  const addOrUpdateTransaction = (transaction: Transaction) => {
+    setTransactions(prev => {
+        const index = prev.findIndex(t => t.id === transaction.id);
+        if (index > -1) {
+            const newTransactions = [...prev];
+            newTransactions[index] = transaction;
+            return newTransactions;
+        }
+        return [transaction, ...prev];
+    });
+  }
+  
+  const handleEdit = (transaction: Transaction) => {
+    setTransactionToEdit(transaction);
   }
   
   const [columnVisibility, setColumnVisibility] = useState({
@@ -268,15 +298,13 @@ export default function TransaktionenPage() {
   }
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = parseISO(dateString);
+    if (!dateString || !isValid(parseISO(dateString))) return 'N/A';
     try {
-        return format(date, 'dd.MM.yyyy');
+        return format(parseISO(dateString), 'dd.MM.yyyy');
     } catch {
         return 'Ungültiges Datum';
     }
   }
-
 
   return (
     <div className="space-y-6">
@@ -294,7 +322,12 @@ export default function TransaktionenPage() {
                         Verwalten Sie alle finanziellen Transaktionen.
                     </CardDescription>
                 </div>
-                <AddTransactionDialog onAdd={addTransaction} />
+                 <TransactionDialog onSave={addOrUpdateTransaction}>
+                    <Button variant="link" className="text-primary">
+                        <Icons.add className="mr-2 h-4 w-4" />
+                        Neue Transaktion
+                    </Button>
+                </TransactionDialog>
             </div>
         </CardHeader>
         <div className="p-4 border-b flex justify-between items-center gap-4">
@@ -401,18 +434,20 @@ export default function TransaktionenPage() {
                             </Badge>
                         </TableCell>}
                     <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <Icons.more className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
-                                <DropdownMenuItem>Als verbucht markieren</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <TransactionDialog onSave={addOrUpdateTransaction} transaction={transaction}>
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <Icons.more className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Bearbeiten</DropdownMenuItem>
+                                    <DropdownMenuItem>Als verbucht markieren</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive">Löschen</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TransactionDialog>
                     </TableCell>
                     </TableRow>
                 ))
@@ -430,3 +465,5 @@ export default function TransaktionenPage() {
     </div>
   );
 }
+
+    
