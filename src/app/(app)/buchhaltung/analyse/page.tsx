@@ -13,7 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieCha
 import { transactionData, tourData, customerData } from '@/lib/data';
 import { Wallet, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, getMonth, getYear, parseISO } from 'date-fns';
+import { format, getMonth, getYear, parseISO, startOfQuarter, endOfQuarter, startOfMonth, endOfMonth } from 'date-fns';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
@@ -34,8 +34,20 @@ const KpiCard = ({ title, value, icon, description }: { title: string; value: st
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
+const periodOptions = [
+    { value: 'year', label: 'Gesamtes Jahr' },
+    { value: 's1', label: '1. Semester' },
+    { value: 's2', label: '2. Semester' },
+    { value: 'q1', label: '1. Quartal' },
+    { value: 'q2', label: '2. Quartal' },
+    { value: 'q3', label: '3. Quartal' },
+    { value: 'q4', label: '4. Quartal' },
+    ...Array.from({ length: 12 }, (_, i) => ({ value: `${i}`, label: format(new Date(0, i), 'MMMM') }))
+];
+
 export default function AnalysePage() {
     const [selectedYear, setSelectedYear] = useState(getYear(new Date()));
+    const [selectedPeriod, setSelectedPeriod] = useState('year');
 
     const yearsWithData = useMemo(() => {
         const years = new Set(transactionData.map(t => getYear(parseISO(t.datum))));
@@ -43,8 +55,28 @@ export default function AnalysePage() {
     }, []);
 
     const filteredData = useMemo(() => {
-        return transactionData.filter(t => getYear(parseISO(t.datum)) === selectedYear);
-    }, [selectedYear]);
+        return transactionData.filter(t => {
+            const date = parseISO(t.datum);
+            if (getYear(date) !== selectedYear) return false;
+
+            switch(selectedPeriod) {
+                case 'year': return true;
+                case 's1': return getMonth(date) < 6;
+                case 's2': return getMonth(date) >= 6;
+                case 'q1': return getMonth(date) < 3;
+                case 'q2': return getMonth(date) >= 3 && getMonth(date) < 6;
+                case 'q3': return getMonth(date) >= 6 && getMonth(date) < 9;
+                case 'q4': return getMonth(date) >= 9;
+                default: // month
+                    return getMonth(date) === parseInt(selectedPeriod);
+            }
+        });
+    }, [selectedYear, selectedPeriod]);
+
+    const periodLabel = useMemo(() => {
+        const option = periodOptions.find(p => p.value === selectedPeriod);
+        return `${option?.label} ${selectedYear}`;
+    }, [selectedPeriod, selectedYear]);
 
     const monthlyIOData = useMemo(() => {
         const months = Array.from({ length: 12 }, (_, i) => ({
@@ -63,17 +95,33 @@ export default function AnalysePage() {
         });
         return months;
     }, [filteredData, selectedYear]);
-
+    
     const revenueByCustomerData = useMemo(() => {
         const revenueMap = new Map<string, number>();
-        tourData.forEach(tour => {
-            if (getYear(parseISO(tour.tourDate)) !== selectedYear) return;
+        const toursInPeriod = tourData.filter(tour => {
+             const date = parseISO(tour.tourDate);
+            if (getYear(date) !== selectedYear) return false;
+
+            switch(selectedPeriod) {
+                case 'year': return true;
+                case 's1': return getMonth(date) < 6;
+                case 's2': return getMonth(date) >= 6;
+                case 'q1': return getMonth(date) < 3;
+                case 'q2': return getMonth(date) >= 3 && getMonth(date) < 6;
+                case 'q3': return getMonth(date) >= 6 && getMonth(date) < 9;
+                case 'q4': return getMonth(date) >= 9;
+                default: return getMonth(date) === parseInt(selectedPeriod);
+            }
+        });
+
+        toursInPeriod.forEach(tour => {
             const revenue = tour.calculatedRevenue || tour.totalRevenue || 0;
             const customerName = customerData.find(c => c.id === tour.customerId)?.firmenname || 'Unbekannt';
             revenueMap.set(customerName, (revenueMap.get(customerName) || 0) + revenue);
         });
         return Array.from(revenueMap.entries()).map(([name, value]) => ({ name, value }));
-    }, [selectedYear]);
+    }, [selectedYear, selectedPeriod]);
+
 
     const expensesByCategoryData = useMemo(() => {
         const expenseMap = new Map<string, number>();
@@ -102,21 +150,33 @@ export default function AnalysePage() {
                     <h1 className="text-2xl font-bold">Finanzanalyse</h1>
                     <p className="text-muted-foreground">Ein Überblick über Ihre finanzielle Performance.</p>
                 </div>
-                 <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Jahr auswählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {yearsWithData.map(year => (
-                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                 <div className="flex items-center gap-2">
+                     <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Zeitraum auswählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {periodOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                     <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+                        <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Jahr" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {yearsWithData.map(year => (
+                                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
             </div>
              <div className="grid gap-4 md:grid-cols-3">
-                <KpiCard title="Gesamteinnahmen" value={formatCurrency(kpis.totalEinnahmen)} icon={<ArrowUpRight />} description={`Für das Jahr ${selectedYear}`} />
-                <KpiCard title="Gesamtausgaben" value={formatCurrency(kpis.totalAusgaben)} icon={<ArrowDownLeft />} description={`Für das Jahr ${selectedYear}`} />
-                <KpiCard title="Profit" value={formatCurrency(kpis.profit)} icon={<Wallet />} description={`Für das Jahr ${selectedYear}`} />
+                <KpiCard title="Gesamteinnahmen" value={formatCurrency(kpis.totalEinnahmen)} icon={<ArrowUpRight />} description={periodLabel} />
+                <KpiCard title="Gesamtausgaben" value={formatCurrency(kpis.totalAusgaben)} icon={<ArrowDownLeft />} description={periodLabel} />
+                <KpiCard title="Profit" value={formatCurrency(kpis.profit)} icon={<Wallet />} description={periodLabel} />
             </div>
 
             <Card>
@@ -145,7 +205,7 @@ export default function AnalysePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Umsatz nach Kunden</CardTitle>
-                         <CardDescription>Umsatzverteilung für {selectedYear}</CardDescription>
+                         <CardDescription>Umsatzverteilung für {periodLabel}</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <ChartContainer config={{}} className="h-[300px] w-full">
@@ -166,7 +226,7 @@ export default function AnalysePage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>Ausgaben nach Kategorie</CardTitle>
-                        <CardDescription>Kostenverteilung für {selectedYear}</CardDescription>
+                        <CardDescription>Kostenverteilung für {periodLabel}</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <ChartContainer config={{}} className="h-[300px] w-full">
