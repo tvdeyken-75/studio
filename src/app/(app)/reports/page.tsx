@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { Tour, TourStop, Address, Transport } from '@/types';
 import { tourData, customerData, fleetData, trailerData, addressData, dieselpreiseData, transportData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -559,7 +559,7 @@ const TourDetailDialog = ({ tour, onSave, children, mode = 'view' }: { tour: Tou
     );
 };
 
-function TransportReportPage() {
+function TourReportPageInternal() {
     const [tours, setTours] = useState<Tour[]>(tourData);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedWeek, setSelectedWeek] = useState<string>('this-week');
@@ -568,6 +568,7 @@ function TransportReportPage() {
     const [presetTour, setPresetTour] = useState<Partial<Tour> | undefined>();
 
     const searchParams = useSearchParams();
+    const router = useRouter();
 
     useEffect(() => {
         const action = searchParams.get('action');
@@ -606,12 +607,16 @@ function TransportReportPage() {
                     ]
                 };
                 setPresetTour(preset);
+                
                 // We need to wrap this in a timeout to ensure the state update is processed
-                // before the dialog is triggered.
-                setTimeout(() => setIsAddTourDialogOpen(true), 0);
+                // before the dialog is triggered. Also reset the URL.
+                setTimeout(() => {
+                    setIsAddTourDialogOpen(true);
+                    router.replace('/reports');
+                }, 0);
             }
         }
-    }, [searchParams]);
+    }, [searchParams, router]);
     
 
     const addOrUpdateTour = (tour: Tour) => {
@@ -890,9 +895,4 @@ export default function TransportReportPage() {
             <TourReportPageInternal />
         </React.Suspense>
     );
-}
-
-// Renamed original component
-function TourReportPageInternal() {
-  return <TransportReportPage />;
 }
