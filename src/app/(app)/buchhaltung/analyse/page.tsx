@@ -67,12 +67,13 @@ export default function AnalysePage() {
     const revenueByCustomerData = useMemo(() => {
         const revenueMap = new Map<string, number>();
         tourData.forEach(tour => {
+            if (getYear(parseISO(tour.tourDate)) !== selectedYear) return;
             const revenue = tour.calculatedRevenue || tour.totalRevenue || 0;
             const customerName = customerData.find(c => c.id === tour.customerId)?.firmenname || 'Unbekannt';
             revenueMap.set(customerName, (revenueMap.get(customerName) || 0) + revenue);
         });
         return Array.from(revenueMap.entries()).map(([name, value]) => ({ name, value }));
-    }, []);
+    }, [selectedYear]);
 
     const expensesByCategoryData = useMemo(() => {
         const expenseMap = new Map<string, number>();
@@ -144,7 +145,7 @@ export default function AnalysePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Umsatz nach Kunden</CardTitle>
-                         <CardDescription>Gesamtumsatzverteilung (alle Zeiten)</CardDescription>
+                         <CardDescription>Umsatzverteilung für {selectedYear}</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <ChartContainer config={{}} className="h-[300px] w-full">
