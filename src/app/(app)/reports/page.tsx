@@ -4,8 +4,8 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import type { Tour, TourStop, Address, Transport } from '@/types';
-import { tourData, customerData, fleetData, trailerData, addressData, dieselpreiseData, transportData } from '@/lib/data';
+import type { Tour, TourStop, Address, Transport, TripTemplate } from '@/types';
+import { tourData, customerData, fleetData, trailerData, addressData, dieselpreiseData, transportData, tripTemplateData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 
 const KpiCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description: string }) => (
@@ -46,8 +47,68 @@ const formatCurrency = (value?: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
+const SaveTemplateDialog = ({ stops, onSave }: { stops: TourStop[], onSave: (template: TripTemplate) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const { toast } = useToast();
+
+    const handleSave = () => {
+        if (!name) {
+            toast({ variant: 'destructive', title: 'Fehler', description: 'Bitte geben Sie einen Namen für die Vorlage ein.' });
+            return;
+        }
+
+        const newTemplate: TripTemplate = {
+            id: `template-${Date.now()}`,
+            name,
+            description,
+            stops: stops.map(({ id, actualDateTime, status, ...rest }) => rest)
+        };
+
+        onSave(newTemplate);
+        toast({ title: 'Vorlage gespeichert', description: `Die Vorlage "${name}" wurde erfolgreich erstellt.` });
+        setIsOpen(false);
+        setName('');
+        setDescription('');
+    }
+
+    return (
+         <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm" disabled={!stops || stops.length === 0}>
+                    <Icons.add className="h-3 w-3 mr-1"/> Als Vorlage speichern
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Als Trip-Vorlage speichern</DialogTitle>
+                    <DialogDescription>
+                        Speichern Sie die aktuelle Stopp-Konfiguration als wiederverwendbare Vorlage.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-1.5">
+                        <Label>Name der Vorlage</Label>
+                        <Input value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Beschreibung</Label>
+                        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+                    </div>
+                </div>
+                 <DialogFooter>
+                    <DialogClose asChild><Button variant="ghost">Abbrechen</Button></DialogClose>
+                    <Button onClick={handleSave}>Speichern</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 const AddTourDialog = ({ onSave, existingTours, tourToEdit, children, presetTour }: { onSave: (tour: Tour) => void; existingTours: Tour[], tourToEdit?: Tour | null, children: React.ReactNode, presetTour?: Partial<Tour> }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [templates, setTemplates] = useState(tripTemplateData);
     
     const generateNewTourNumber = () => {
         const defaultStartNumber = '00001';
@@ -172,6 +233,26 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children, presetTour
             kilometers: 0,
         });
     };
+    
+    const handleLoadTemplate = (templateId: string) => {
+        const template = templates.find(t => t.id === templateId);
+        if (!template) return;
+        
+        const newStops = template.stops.map(stop => ({
+            ...stop,
+            id: `stop-tpl-${Date.now()}-${stop.id}`,
+            status: 'Planned',
+            plannedDateTime: new Date().toISOString(),
+        } as TourStop));
+        
+        setValue('stops', newStops, { shouldDirty: true });
+    };
+
+    const handleSaveTemplate = (template: TripTemplate) => {
+        setTemplates(prev => [...prev, template]);
+        // Here you would also persist this to your main data source
+    };
+
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -317,9 +398,25 @@ const AddTourDialog = ({ onSave, existingTours, tourToEdit, children, presetTour
                              <div className="flex justify-between items-center">
                                 <h3 className="font-semibold text-base">Tour-Stopps</h3>
                                 <div className="flex gap-2">
-                                     <Button type="button" variant="outline" size="sm" onClick={() => addStop('Pickup')}><Icons.add className="h-3 w-3 mr-1"/> Abholung</Button>
-                                     <Button type="button" variant="outline" size="sm" onClick={() => addStop('Delivery')}><Icons.add className="h-3 w-3 mr-1"/> Lieferung</Button>
+                                     <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button type="button" variant="outline" size="sm">Vorlage laden</Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {templates.map(t => (
+                                                <DropdownMenuItem key={t.id} onSelect={() => handleLoadTemplate(t.id)}>
+                                                    {t.name}
+                                                </DropdownMenuItem>
+                                            ))}
+                                            {templates.length === 0 && <DropdownMenuItem disabled>Keine Vorlagen</DropdownMenuItem>}
+                                        </DropdownMenuContent>
+                                     </DropdownMenu>
+                                     <SaveTemplateDialog stops={watchedFields.stops} onSave={handleSaveTemplate} />
                                 </div>
+                             </div>
+                             <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={() => addStop('Pickup')}><Icons.add className="h-3 w-3 mr-1"/> Abholung</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => addStop('Delivery')}><Icons.add className="h-3 w-3 mr-1"/> Lieferung</Button>
                              </div>
                              <div className="space-y-3">
                                 {fields.map((field, index) => (
