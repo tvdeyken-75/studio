@@ -586,15 +586,6 @@ export default function CustomerDetailPage() {
             </Card>
 
             <Card>
-                <CardHeader><CardTitle>Kontakt</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="space-y-1.5"><Label>Telefon</Label><Input {...register("telefon")} className="h-9"/></div>
-                    <div className="space-y-1.5"><Label>Fax</Label><Input {...register("fax")} className="h-9"/></div>
-                    <div className="space-y-1.5"><Label>E-Mail</Label><Input {...register("email")} type="email" className="h-9"/></div>
-                    <div className="space-y-1.5"><Label>Webseite</Label><Input {...register("website")} className="h-9"/></div>
-                </CardContent>
-            </Card>
-             <Card>
                 <CardHeader><CardTitle>Sonstiges</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center space-x-2">
@@ -676,5 +667,3 @@ export default function CustomerDetailPage() {
     </form>
   );
 }
-
-    
