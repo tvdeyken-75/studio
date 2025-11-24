@@ -8,6 +8,18 @@ export type User = {
   password?: string;
 };
 
+export type Mitarbeiter = {
+    id: string;
+    personalnummer: string;
+    vorname: string;
+    nachname: string;
+    position: string;
+    eintrittsdatum: string; // ISO Date
+    status: 'Aktiv' | 'Inaktiv' | 'Gekündigt';
+    email: string;
+    telefon: string;
+};
+
 
 export type Vehicle = {
   // General

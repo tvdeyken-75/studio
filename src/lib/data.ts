@@ -1,6 +1,14 @@
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate, Mitarbeiter } from '@/types';
+
+export const mitarbeiterData: Mitarbeiter[] = [
+    { id: 'MA-1', personalnummer: '1001', vorname: 'Max', nachname: 'Mustermann', position: 'LKW-Fahrer', eintrittsdatum: '2020-01-15', status: 'Aktiv', email: 'max.mustermann@example.com', telefon: '0171-1234567' },
+    { id: 'MA-2', personalnummer: '1002', vorname: 'Erika', nachname: 'Musterfrau', position: 'Disponentin', eintrittsdatum: '2018-05-20', status: 'Aktiv', email: 'erika.musterfrau@example.com', telefon: '0172-2345678' },
+    { id: 'MA-3', personalnummer: '1003', vorname: 'Klaus', nachname: 'Kleber', position: 'LKW-Fahrer', eintrittsdatum: '2022-11-01', status: 'Aktiv', email: 'klaus.kleber@example.com', telefon: '0173-3456789' },
+    { id: 'MA-4', personalnummer: '1004', vorname: 'Sabine', nachname: 'Schmidt', position: 'Buchhaltung', eintrittsdatum: '2019-08-01', status: 'Inaktiv', email: 'sabine.schmidt@example.com', telefon: '0174-4567890' },
+];
+
 
 export const customerData: Customer[] = [
     {
