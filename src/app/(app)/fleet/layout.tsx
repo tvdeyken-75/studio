@@ -10,12 +10,13 @@ export default function FleetLayout({ children }: { children: React.ReactNode })
   const getActiveTab = () => {
     if (pathname.includes("trailers")) return "trailers";
     if (pathname.includes("dieselfloater")) return "dieselfloater";
+    if (pathname.includes("fahrer-wochenagenda")) return "fahrer-wochenagenda";
     return "vehicles";
   };
   
   return (
     <Tabs defaultValue={getActiveTab()} className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="vehicles" asChild>
           <Link href="/fleet">Fahrzeuge</Link>
         </TabsTrigger>
@@ -24,6 +25,9 @@ export default function FleetLayout({ children }: { children: React.ReactNode })
         </TabsTrigger>
         <TabsTrigger value="dieselfloater" asChild>
           <Link href="/fleet/dieselfloater">Dieselfloater</Link>
+        </TabsTrigger>
+        <TabsTrigger value="fahrer-wochenagenda" asChild>
+          <Link href="/fleet/fahrer-wochenagenda">Fahrer Wochenagenda</Link>
         </TabsTrigger>
       </TabsList>
       <div className="mt-4">{children}</div>
