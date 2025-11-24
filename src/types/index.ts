@@ -20,6 +20,24 @@ export type Mitarbeiter = {
     telefon: string;
 };
 
+export type Lohnabrechnung = {
+    id: string;
+    mitarbeiterId: string;
+    abrechnungsmonat: string; // Format: YYYY-MM
+    bruttogehalt: number;
+    lohnsteuer: number;
+    solidaritaetszuschlag: number;
+    kirchensteuer: number;
+    krankenversicherung: number;
+    rentenversicherung: number;
+    arbeitslosenversicherung: number;
+    pflegeversicherung: number;
+    abzuegeGesamt: number;
+    nettogehalt: number;
+    auszahlungsbetrag: number;
+    status: 'Entwurf' | 'Freigegeben' | 'Ausgezahlt';
+    erstelltAm: string;
+}
 
 export type Vehicle = {
   // General

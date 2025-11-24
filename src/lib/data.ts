@@ -1,6 +1,6 @@
 
 
-import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate, Mitarbeiter } from '@/types';
+import type { Vehicle, Kpi, ChartData, Transport, Trailer, Dieselpreis, Customer, Transaction, Kostenstelle, Document, Tour, TourStop, Address, Country, TripTemplate, Mitarbeiter, Lohnabrechnung } from '@/types';
 
 export const mitarbeiterData: Mitarbeiter[] = [
     { id: 'MA-1', personalnummer: '1001', vorname: 'Max', nachname: 'Mustermann', position: 'LKW-Fahrer', eintrittsdatum: '2020-01-15', status: 'Aktiv', email: 'max.mustermann@example.com', telefon: '0171-1234567' },
@@ -9,6 +9,22 @@ export const mitarbeiterData: Mitarbeiter[] = [
     { id: 'MA-4', personalnummer: '1004', vorname: 'Sabine', nachname: 'Schmidt', position: 'Buchhaltung', eintrittsdatum: '2019-08-01', status: 'Inaktiv', email: 'sabine.schmidt@example.com', telefon: '0174-4567890' },
 ];
 
+export const lohnabrechnungsData: Lohnabrechnung[] = [
+    {
+        id: 'L-1', mitarbeiterId: 'MA-1', abrechnungsmonat: '2024-07', bruttogehalt: 3200,
+        lohnsteuer: 480.50, solidaritaetszuschlag: 0, kirchensteuer: 0, krankenversicherung: 256.00,
+        rentenversicherung: 297.60, arbeitslosenversicherung: 41.60, pflegeversicherung: 54.40,
+        abzuegeGesamt: 1130.10, nettogehalt: 2069.90, auszahlungsbetrag: 2069.90,
+        status: 'Ausgezahlt', erstelltAm: '2024-07-28'
+    },
+    {
+        id: 'L-2', mitarbeiterId: 'MA-2', abrechnungsmonat: '2024-07', bruttogehalt: 3800,
+        lohnsteuer: 650.80, solidaritaetszuschlag: 0, kirchensteuer: 0, krankenversicherung: 304.00,
+        rentenversicherung: 353.40, arbeitslosenversicherung: 49.40, pflegeversicherung: 64.60,
+        abzuegeGesamt: 1422.20, nettogehalt: 2377.80, auszahlungsbetrag: 2377.80,
+        status: 'Ausgezahlt', erstelltAm: '2024-07-28'
+    },
+];
 
 export const customerData: Customer[] = [
     {
