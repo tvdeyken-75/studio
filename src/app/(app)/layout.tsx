@@ -29,6 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       '/fleet': 'Fuhrpark',
       '/customers': 'Beziehungsmanagement',
       '/buchhaltung': 'Buchhaltung',
+      '/hr': 'HR & Lohn',
       '/master-data/addresses': 'Stammdaten',
       '/master-data/countries': 'Stammdaten',
       '/adminpanel': 'Adminpanel',

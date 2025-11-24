@@ -23,6 +23,7 @@ export function SidebarNav() {
   const isAuftraegeActive = pathname.startsWith('/auftraege');
   const isBuchhaltungActive = pathname.startsWith('/buchhaltung');
   const isAdminpanelActive = pathname.startsWith('/adminpanel');
+  const isHrActive = pathname.startsWith('/hr');
 
   return (
     <>
@@ -48,6 +49,8 @@ export function SidebarNav() {
                 isActive = isBuchhaltungActive;
             } else if (item.href.startsWith('/adminpanel')) {
                 isActive = isAdminpanelActive;
+            } else if (item.href.startsWith('/hr')) {
+                isActive = isHrActive;
             }
             else {
                 isActive = pathname.startsWith(item.href);

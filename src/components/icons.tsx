@@ -26,6 +26,7 @@ import {
   Wallet,
   ArrowUp,
   ArrowDown,
+  Briefcase,
 } from 'lucide-react'
 
 export type Icon = typeof LucideIcon
@@ -57,4 +58,5 @@ export const Icons = {
   wallet: Wallet,
   arrowUp: ArrowUp,
   arrowDown: ArrowDown,
+  hr: Briefcase,
 }

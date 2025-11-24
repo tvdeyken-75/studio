@@ -22,6 +22,7 @@ const initialNavItems: MenuItem[] = [
   { id: 'fleet', label: 'Fuhrpark', icon: Icons.fleet, href: '/fleet' },
   { id: 'customers', label: 'Beziehungsmanagement', icon: Icons.customers, href: '/customers' },
   { id: 'buchhaltung', label: 'Buchhaltung', icon: Icons.accounting, href: '/buchhaltung' },
+  { id: 'hr', label: 'HR & Lohn', icon: Icons.hr, href: '/hr' },
   { id: 'master-data', label: 'Stammdaten', icon: Icons.database, href: '/master-data/addresses' },
   { id: 'adminpanel', label: 'Adminpanel', icon: Icons.admin, href: '/adminpanel' },
   { id: 'settings', label: 'Einstellungen', icon: Icons.settings, href: '/settings' },
