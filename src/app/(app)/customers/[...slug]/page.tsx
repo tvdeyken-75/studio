@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import type { Customer, Kontakt, Address } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,7 +52,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Trash2 } from "lucide-react";
 import { addressData as MOCK_ADDRESSES } from '@/lib/data';
 
 
@@ -224,7 +224,7 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
                     <CardTitle>Ansprechpartner</CardTitle>
                     <CardDescription>Zugeordnete Kontakte für diesen Kunden.</CardDescription>
                 </div>
-                <Button type="button" variant="link" onClick={() => append({ anrede: 'Herr', vorname: '', nachname: '', position: '', telefon: '', mobil: '', email: '', bemerkung: '' })}>
+                <Button type="button" variant="link" onClick={() => append({ id: `kontakt-${Date.now()}`, kundenId: '', anrede: 'Herr', vorname: '', nachname: '', position: '', telefon: '', mobil: '', email: '', bemerkung: '' })}>
                     <Icons.add className="mr-2 h-4 w-4" /> Kontakt hinzufügen
                 </Button>
             </div>
@@ -264,7 +264,7 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
              <Table>
                 <TableHeader>
                     <TableRow>
-                        {columnVisibility.anrede && <TableHead>Anrede</TableHead>}
+                        {columnVisibility.anrede && <TableHead className="w-28">Anrede</TableHead>}
                         {columnVisibility.vorname && <TableHead>Vorname</TableHead>}
                         {columnVisibility.nachname && <TableHead>Nachname</TableHead>}
                         {columnVisibility.position && <TableHead>Position</TableHead>}
@@ -272,23 +272,29 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
                         {columnVisibility.telefon && <TableHead>Telefon</TableHead>}
                         {columnVisibility.mobil && <TableHead>Mobil</TableHead>}
                         {columnVisibility.bemerkung && <TableHead>Bemerkung</TableHead>}
-                        <TableHead className="text-right">Aktion</TableHead>
+                        <TableHead className="w-12 text-right">Aktion</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {filteredFields.map((field) => (
                         <TableRow key={field.id}>
-                            {columnVisibility.anrede && <TableCell className="w-24">
-                                <Select defaultValue={field.anrede} onValueChange={(value) => console.log(value)}>
-                                    <SelectTrigger {...register(`kontakte.${field.originalIndex}.anrede`)} className="h-9">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Herr">Herr</SelectItem>
-                                        <SelectItem value="Frau">Frau</SelectItem>
-                                        <SelectItem value="Divers">Divers</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            {columnVisibility.anrede && <TableCell>
+                                <Controller
+                                    name={`kontakte.${field.originalIndex}.anrede`}
+                                    control={control}
+                                    render={({ field: controllerField }) => (
+                                        <Select onValueChange={controllerField.onChange} value={controllerField.value}>
+                                            <SelectTrigger className="h-9">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Herr">Herr</SelectItem>
+                                                <SelectItem value="Frau">Frau</SelectItem>
+                                                <SelectItem value="Divers">Divers</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </TableCell>}
                             {columnVisibility.vorname && <TableCell><Input {...register(`kontakte.${field.originalIndex}.vorname`)} className="h-9" /></TableCell>}
                             {columnVisibility.nachname && <TableCell><Input {...register(`kontakte.${field.originalIndex}.nachname`)} className="h-9" /></TableCell>}
@@ -299,7 +305,7 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
                             {columnVisibility.bemerkung && <TableCell><Textarea {...register(`kontakte.${field.originalIndex}.bemerkung`)} className="h-9" /></TableCell>}
                             <TableCell className="text-right">
                                 <Button type="button" variant="ghost" size="icon" onClick={() => remove(field.originalIndex)}>
-                                    <Icons.logout className="h-4 w-4 text-destructive" />
+                                    <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                             </TableCell>
                         </TableRow>
@@ -307,7 +313,7 @@ const KontaktenForm = ({ control, register }: { control: any, register: any }) =
                       {filteredFields.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length + 1} className="h-24 text-center">
-                                {searchTerm ? "Keine Kontakte gefunden." : "Keine Kontakte für diesen Kunden."}
+                                {searchTerm ? "Keine Kontakte gefunden." : "Keine Kontakte für diesen Kunden. Fügen Sie einen hinzu."}
                             </TableCell>
                         </TableRow>
                     )}

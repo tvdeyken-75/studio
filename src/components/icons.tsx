@@ -58,5 +58,3 @@ export const Icons = {
   arrowUp: ArrowUp,
   arrowDown: ArrowDown,
 }
-
-    
