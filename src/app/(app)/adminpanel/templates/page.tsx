@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -85,7 +86,7 @@ const TemplateDialog = ({ onSave, template, children }: { onSave: (template: Rep
                 <DialogHeader>
                     <DialogTitle>{isEditMode ? 'Vorlage bearbeiten' : 'Neue Berichtsvorlage erstellen'}</DialogTitle>
                     <DialogDescription>
-                        Erstellen Sie eine Vorlage mit HTML, CSS und JavaScript. Verwenden Sie Handlebars-Syntax `{{variable}}` für dynamische Daten.
+                        Erstellen Sie eine Vorlage mit HTML, CSS und JavaScript. Verwenden Sie Handlebars-Syntax `{'{{variable}}'}` für dynamische Daten.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[70vh] overflow-y-auto pr-2">
