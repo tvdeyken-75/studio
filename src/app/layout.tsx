@@ -3,10 +3,12 @@ import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { MenuProvider } from '@/context/menu-context';
 import { Toaster } from "@/components/ui/toaster";
+import AppLayout from './(app)/layout';
+import { usePathname } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'AmbientTMS',
-  description: 'AmbientTMS - Ihr modernes Transportmanagementsystem.',
+  title: 'CargoPilot',
+  description: 'CargoPilot - Ihr modernes Transportmanagementsystem.',
 };
 
 export default function RootLayout({
