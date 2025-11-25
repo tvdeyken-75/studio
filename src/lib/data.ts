@@ -80,6 +80,60 @@ export const reportTemplateData: ReportTemplate[] = [
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     },
+    {
+        id: 'tpl-fahrbefehl',
+        name: 'Fahrbefehl',
+        description: 'Standardvorlage für den Fahrbefehl, der dem Fahrer ausgehändigt wird.',
+        module: 'Touren',
+        content: `
+<div class="fahrbefehl-container">
+    <div class="header-grid">
+        <div>
+            <h1>Fahrbefehl</h1>
+            <p><strong>Tour-Nr:</strong> {{tour.tourNumber}}</p>
+            <p><strong>Datum:</strong> {{tour.tourDate}}</p>
+        </div>
+        <div class="logo">
+             <p style="font-size: 1.5rem; font-weight: bold; color: #5E7360;">AmbientTMS</p>
+        </div>
+    </div>
+
+    <h2>Informationen</h2>
+    <table>
+        <tbody>
+            <tr><td><strong>Fahrer:</strong></td><td>{{tour.driverName}}</td></tr>
+            <tr><td><strong>Fahrzeug:</strong></td><td>{{tour.vehicleKennzeichen}} ({{tour.vehicleInfo}})</td></tr>
+            <tr><td><strong>Anhänger:</strong></td><td>{{tour.trailerKennzeichen}} ({{tour.trailerInfo}})</td></tr>
+            <tr><td><strong>Kundenreferenz:</strong></td><td>{{tour.customerReference}}</td></tr>
+        </tbody>
+    </table>
+    
+    <h2>Stopps</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Typ</th>
+                <th>Adresse</th>
+                <th>Standortdetails</th>
+                <th>Geplante Zeit</th>
+                <th>Fracht</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each tour.stops}}...{{/each}}
+        </tbody>
+    </table>
+        <div class="mt-8">
+        <h2>Unterschrift Fahrer</h2>
+        <div class="mt-12 border-t pt-2">
+            <p>{{tour.driverName}}</p>
+        </div>
+    </div>
+</div>`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    }
 ];
 
 export const mitarbeiterData: Mitarbeiter[] = [
