@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { Logo } from '@/components/logo';
 
 
 const KpiCard = ({ title, value, icon, description }: { title: string; value: string; icon: React.ReactNode; description: string }) => (
@@ -656,6 +657,114 @@ const TourDetailDialog = ({ tour, onSave, children, mode = 'view' }: { tour: Tou
     );
 };
 
+const FahrbefehlDialog = ({ tour }: { tour: Tour }) => {
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = () => {
+       const printContent = printRef.current;
+       if (printContent) {
+           const printWindow = window.open('', '', 'height=800,width=800');
+           if (printWindow) {
+               printWindow.document.write('<html><head><title>Fahrbefehl</title>');
+               printWindow.document.write('<style>body { font-family: sans-serif; font-size: 12px; } .container { max-width: 800px; margin: auto; padding: 20px; } h1, h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; } table { width: 100%; border-collapse: collapse; margin-top: 1rem; } td, th { border: 1px solid #ddd; padding: 8px; text-align: left; } .header-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1rem; } .logo { align-self: start; } </style>');
+               printWindow.document.write('</head><body>');
+               printWindow.document.write(printContent.innerHTML);
+               printWindow.document.write('</body></html>');
+               printWindow.document.close();
+               printWindow.focus();
+               printWindow.print();
+           }
+       }
+    };
+
+    const tourDetails = useMemo(() => {
+        const vehicle = fleetData.find(v => v.id === tour.vehicleId);
+        const trailer = trailerData.find(t => t.id === tour.trailerId);
+        const driverName = tour.driverId?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return { vehicle, trailer, driverName };
+    }, [tour]);
+    
+    const formatDate = (date: string, formatString: string = 'dd.MM.yyyy HH:mm') => {
+        try {
+            return format(new Date(date), formatString, { locale: de });
+        } catch (e) {
+            return 'Ungültiges Datum';
+        }
+    }
+
+    return (
+        <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+                <DialogTitle>Fahrbefehl für Tour {tour.tourNumber}</DialogTitle>
+                <DialogDescription>
+                    Dies ist die Ansicht für den Fahrer. Sie kann gedruckt und mitgegeben werden.
+                </DialogDescription>
+            </DialogHeader>
+            <div ref={printRef} className="py-4 max-h-[70vh] overflow-y-auto pr-4">
+                <div className="header-grid">
+                    <div>
+                        <h1>Fahrbefehl</h1>
+                        <p><strong>Tour-Nr:</strong> {tour.tourNumber}</p>
+                        <p><strong>Datum:</strong> {formatDate(tour.tourDate, 'dd.MM.yyyy')}</p>
+                    </div>
+                    <div className="logo">
+                        <Logo />
+                    </div>
+                </div>
+
+                <h2>Informationen</h2>
+                <table>
+                    <tbody>
+                        <tr><td><strong>Fahrer:</strong></td><td>{tourDetails.driverName || 'N/A'}</td></tr>
+                        <tr><td><strong>Fahrzeug:</strong></td><td>{tourDetails.vehicle?.kennzeichen || 'N/A'} ({tourDetails.vehicle?.hersteller} {tourDetails.vehicle?.modell})</td></tr>
+                        <tr><td><strong>Anhänger:</strong></td><td>{tourDetails.trailer?.kennzeichen || 'N/A'} ({tourDetails.trailer?.hersteller})</td></tr>
+                        <tr><td><strong>Kundenreferenz:</strong></td><td>{tour.customerReference || 'N/A'}</td></tr>
+                    </tbody>
+                </table>
+                
+                <h2>Stopps</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Typ</th>
+                            <th>Adresse</th>
+                            <th>Standortdetails</th>
+                            <th>Geplante Zeit</th>
+                            <th>Fracht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tour.stops.map((stop, index) => (
+                            <tr key={stop.id}>
+                                <td>{index + 1}</td>
+                                <td>{stop.type === 'Pickup' ? 'Abholung' : 'Lieferung'}</td>
+                                <td>{stop.addressName}</td>
+                                <td>{stop.location}</td>
+                                <td>{formatDate(stop.plannedDateTime)}</td>
+                                <td>{stop.goodsDescription}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                 <div className="mt-8">
+                    <h2>Unterschrift Fahrer</h2>
+                    <div className="mt-12 border-t pt-2">
+                       <p>{tourDetails.driverName || '__________________________'}</p>
+                    </div>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="secondary" onClick={handlePrint}>Drucken</Button>
+                <DialogClose asChild>
+                    <Button variant="ghost">Schließen</Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    );
+};
+
+
 function TourReportPageInternal() {
     const [tours, setTours] = useState<Tour[]>(tourData);
     const [searchTerm, setSearchTerm] = useState("");
@@ -946,25 +1055,31 @@ function TourReportPageInternal() {
                                             </Badge>
                                         </TableCell>}
                                         <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <Icons.more className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <TourDetailDialog tour={tour} onSave={addOrUpdateTour} mode="view">
-                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Details anzeigen</DropdownMenuItem>
-                                                    </TourDetailDialog>
-                                                    <AddTourDialog onSave={addOrUpdateTour} existingTours={tours} tourToEdit={tour}>
-                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Tour bearbeiten</DropdownMenuItem>
-                                                    </AddTourDialog>
-                                                    <DropdownMenuSeparator />
-                                                    <TourDetailDialog tour={tour} onSave={addOrUpdateTour} mode="edit">
-                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Kalkulation &amp; Report</DropdownMenuItem>
-                                                    </TourDetailDialog>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <Dialog>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <Icons.more className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <TourDetailDialog tour={tour} onSave={addOrUpdateTour} mode="view">
+                                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Details anzeigen</DropdownMenuItem>
+                                                        </TourDetailDialog>
+                                                         <AddTourDialog onSave={addOrUpdateTour} existingTours={tours} tourToEdit={tour}>
+                                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Tour bearbeiten</DropdownMenuItem>
+                                                        </AddTourDialog>
+                                                         <DropdownMenuSeparator />
+                                                         <DialogTrigger asChild>
+                                                            <DropdownMenuItem>Fahrbefehl erstellen</DropdownMenuItem>
+                                                         </DialogTrigger>
+                                                        <TourDetailDialog tour={tour} onSave={addOrUpdateTour} mode="edit">
+                                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Kalkulation &amp; Report</DropdownMenuItem>
+                                                        </TourDetailDialog>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                                <FahrbefehlDialog tour={tour} />
+                                            </Dialog>
                                         </TableCell>
                                     </TableRow>
                                 ))
